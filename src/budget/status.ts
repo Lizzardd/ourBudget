@@ -16,7 +16,7 @@ export function status(
 	annual: boolean,
 	cur: string
 ): StatusResult {
-	const pct = spentMinor / limitMinor;
+	const pct = limitMinor <= 0 ? 0 : spentMinor / limitMinor;
 	const left = limitMinor - spentMinor;
 	const over = spentMinor - limitMinor;
 

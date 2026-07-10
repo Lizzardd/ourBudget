@@ -148,6 +148,12 @@ describe('toSummary()', () => {
 		expect(summary.summaryLine2).toBe('you’ve got this 🌿');
 	});
 
+	it('a blank household (zero categories, zero limit) yields ringPct 0 and ringLabel "0%", not NaN', () => {
+		const summary = toSummary([], 0, 0, 'AED', true);
+		expect(summary.ringPct).toBe(0);
+		expect(summary.ringLabel).toBe('0%');
+	});
+
 	it('summaryColor is green when under/at limit, red when over', () => {
 		const under = toSummary(cards, 325000, 500000, 'AED', true);
 		expect(under.summaryColor).toBe('#8FBF7E');

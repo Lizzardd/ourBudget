@@ -2,7 +2,7 @@
   "expo": {
     "name": "Our Budget",
     "slug": "our-budget",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -16,7 +16,7 @@
     "android": {
       "package": "app.ourbudget.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#C96287",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -45,11 +45,12 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#17120E"
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

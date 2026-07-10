@@ -45,6 +45,7 @@
         <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px; font-weight: 800; color: var(--accent, #C96287)">G</span> Continue with Google</button>
         <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px"></span> Continue with Apple</button>
         <div style="text-align: center; font-size: 12px; color: var(--sub, #B5A493); margin-top: 4px">Free for households of any size</div>
+        <div style="text-align: center; font-size: 11px; color: var(--sub, #B5A493); opacity: 0.7; margin-top: 6px">{{ versionLabel }}</div>
       </div>
     </div>
   </sc-if>
@@ -148,7 +149,6 @@
                       <div style="flex: 1; min-width: 0">
                         <div style="display: flex; align-items: center; gap: 7px">
                           <div style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ c.name }}</div>
-                          <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 9px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 7px; flex: none">ANNUAL</div></sc-if>
                         </div>
                         <div style="font-size: 14px; font-weight: 700; margin-top: 2px; color: {{ c.subColor }}">{{ c.sub1 }}</div>
                         <sc-if value="{{ c.sub2 }}" hint-placeholder-val="{{ false }}"><div style="font-size: 14px; font-weight: 700; margin-top: 1px; color: {{ c.subColor }}">{{ c.sub2 }}</div></sc-if>
@@ -181,7 +181,6 @@
                   <div onClick="{{ c.open }}" style="border-radius: 22px; background: var(--card, #2D251F); padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 10px" style-active="transform: scale(0.97)">
                     <div style="display: flex; align-items: center; justify-content: space-between">
                       <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 24px; color: var(--text, #F6EDE3)">{{ c.emoji }}</span></div>
-                      <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 8px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 6px">ANNUAL</div></sc-if>
                     </div>
                     <div>
                       <div style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ c.name }}</div>
@@ -212,7 +211,6 @@
                     <div style="display: flex; align-items: center; gap: 10px">
                       <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 22px; color: var(--text, #F6EDE3)">{{ c.emoji }}</div>
                       <div style="font-size: 14px; font-weight: 700; flex: 1">{{ c.name }}</div>
-                      <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 8px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287)">ANNUAL</div></sc-if>
                       <div style="font-size: 13px; font-weight: 800">{{ c.amtFmt }}</div>
                       <div style="font-size: 11px; color: var(--sub, #B5A493)">{{ c.ofFmt }}</div>
                     </div>
@@ -345,6 +343,7 @@
           </div>
         </div>
         <button onClick="{{ signOut }}" style="width: 100%; height: 52px; margin-top: 12px; border: none; border-radius: 999px; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer">Sign out</button>
+        <div style="text-align: center; font-size: 11px; color: var(--sub, #B5A493); opacity: 0.7; margin-top: 8px">ourbudget. · {{ versionLabel }}</div>
       </div>
     </sc-if>
 
@@ -423,6 +422,19 @@
             </sc-for>
           </div>
           <button onClick="{{ addToThisCat }}" style="width: 100%; height: 54px; margin-top: 16px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">{{ det.addLabel }}</button>
+          <sc-if value="{{ confirmDelete }}" hint-placeholder-val="{{ false }}">
+            <div style="border-radius: 20px; background: var(--card, #2D251F); padding: 18px; margin-top: 12px; text-align: center">
+              <div style="font-size: 14px; font-weight: 700">{{ det.deleteConfirmTitle }}</div>
+              <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 4px; line-height: 1.5">{{ det.deleteConfirmBody }}</div>
+              <div style="display: flex; gap: 8px; margin-top: 14px">
+                <button onClick="{{ cancelDelete }}" style="flex: 1; height: 46px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.97)">Keep it</button>
+                <button onClick="{{ doDelete }}" style="flex: 1; height: 46px; border: none; border-radius: 999px; background: #C8402E; color: #FFF3F0; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.97)">{{ det.deleteConfirmCta }}</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ det.canConfirmShow }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ askDelete }}" style="width: 100%; height: 48px; margin-top: 10px; border: none; border-radius: 999px; background: none; color: {{ det.deleteColor }}; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px" style-active="opacity: 0.6"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px">{{ det.deleteIcon }}</span>{{ det.deleteLabel }}</button>
+          </sc-if>
         </div>
       </div>
     </sc-if>
@@ -714,7 +726,7 @@ class Component extends DCLogic {
     sheet: false, sheetCat: null, amount: '', note: '', payer: 'Sara',
     monthIdx: 0, theme: null, toast: null, extra: {}, extraTx: {}, limitOv: {},
     customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
-    notif: false, weekly: false,
+    notif: false, weekly: false, confirmDelete: false, archived: [],
     profOpen: false, profName: 'Sara', profEmail: 'sara.almarri@gmail.com', profColor: '#D98BA4',
     prefWeekly: true, prefOver: true, prefMonthly: false,
   };
@@ -814,8 +826,9 @@ class Component extends DCLogic {
     const themeVarsCss = (isDark ? '' : lightVars) + '--accent:' + accent + ';';
 
     // ── overall (current month) ──
-    const allM = [...this.MCATS, ...s.customCats.filter(c => c.ytd === undefined)];
-    const allA = [...this.ACATS, ...s.customCats.filter(c => c.ytd !== undefined)];
+    const isArch = c => s.archived.includes(c.id);
+    const allM = [...this.MCATS, ...s.customCats.filter(c => c.ytd === undefined)].filter(c => !isArch(c));
+    const allA = [...this.ACATS, ...s.customCats.filter(c => c.ytd !== undefined)].filter(c => !isArch(c));
     const totalSpent = allM.reduce((a, c) => a + this.spentOf(c, 0), 0);
     const totalLimit = allM.reduce((a, c) => a + this.limitOf(c), 0);
     const ringP = Math.min(100, Math.round((totalSpent / totalLimit) * 100));
@@ -829,6 +842,7 @@ class Component extends DCLogic {
     // ── detail ──
     const detCatDef = [...allM, ...allA].find(c => c.id === s.catId);
     let det = null;
+    const detIsCustom = detCatDef ? s.customCats.some(c => c.id === detCatDef.id) : false;
     if (detCatDef) {
       const base = this.card(detCatDef, 0);
       const annual = detCatDef.ytd !== undefined;
@@ -840,6 +854,15 @@ class Component extends DCLogic {
         limitFmt: this.fmt(this.limitOf(detCatDef)),
         limitVal: this.fmtN(this.limitOf(detCatDef)),
         addLabel: '+ Add to ' + detCatDef.name,
+        canConfirmShow: !s.confirmDelete,
+        deleteLabel: detIsCustom ? 'Delete category' : 'Archive category',
+        deleteIcon: detIsCustom ? 'delete' : 'archive',
+        deleteColor: detIsCustom ? '#DE4B37' : 'var(--sub, #B5A493)',
+        deleteConfirmTitle: detIsCustom ? 'Delete ' + detCatDef.name + '?' : 'Archive ' + detCatDef.name + '?',
+        deleteConfirmBody: detIsCustom
+          ? 'This removes the category and its expenses for everyone. This can\u2019t be undone.'
+          : 'It disappears from your budgets but past months keep their history. You can add it back anytime.',
+        deleteConfirmCta: detIsCustom ? 'Delete' : 'Archive',
         txns: [...(s.extraTx[detCatDef.id] || []), ...(this.TXNS[detCatDef.id] || [])].map(t => ({
           note: t.note, amtFmt: this.fmt(t.amt),
           whoInitial: t.who === 'Sara' ? (s.profName.trim()[0] || 'S').toUpperCase() : t.who[0],
@@ -975,6 +998,7 @@ class Component extends DCLogic {
       joinChange: e => this.setState({ joinCode: e.target.value.toUpperCase() }),
       shareInvite: () => this.toastNow('Invite link copied 📋'),
       signOut: () => this.setState({ phase: 'welcome', tab: 'home', catId: null }),
+      versionLabel: 'Version 0.1.0 (MVP)',
       // tabs
       tabHome: s.tab === 'home', tabReports: s.tab === 'reports', tabSettings: s.tab === 'settings',
       goHome: () => this.setState({ tab: 'home', catId: null }),
@@ -996,7 +1020,21 @@ class Component extends DCLogic {
       layoutCards: layout === 'cozy-cards', layoutGrid: layout === 'grid', layoutCompact: layout === 'compact',
       // detail
       showCat: !!det, det: det || {},
-      backHome: () => this.setState({ catId: null }),
+      backHome: () => this.setState({ catId: null, confirmDelete: false }),
+      confirmDelete: s.confirmDelete,
+      askDelete: () => this.setState({ confirmDelete: true }),
+      cancelDelete: () => this.setState({ confirmDelete: false }),
+      doDelete: () => {
+        if (!detCatDef) return;
+        const name = detCatDef.name;
+        if (detIsCustom) {
+          this.setState(st => ({ customCats: st.customCats.filter(c => c.id !== detCatDef.id), catId: null, confirmDelete: false }));
+          this.toastNow(name + ' deleted');
+        } else {
+          this.setState(st => ({ archived: [...st.archived, detCatDef.id], catId: null, confirmDelete: false }));
+          this.toastNow(name + ' archived');
+        }
+      },
       incLimit: () => this.bumpLimit(detCatDef, 1),
       decLimit: () => this.bumpLimit(detCatDef, -1),
       curSym: this.sym(),

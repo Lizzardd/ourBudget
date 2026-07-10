@@ -22,11 +22,46 @@ async function seedUser(t: ReturnType<typeof makeCtx>, name: string) {
 	return { userId, asUser: t.withIdentity({ subject: `${userId}|testsession` }) };
 }
 
+/**
+ * A brand-new household starts BLANK (no default categories), so tests that
+ * need Groceries/Dining out/Transport/Car service create them explicitly
+ * here — limits match the old DEFAULT_CATEGORIES seed data the tests were
+ * originally written against.
+ */
 async function seedHousehold(t: ReturnType<typeof makeCtx>, asUser: ReturnType<typeof t.withIdentity>) {
 	const householdId = await asUser.mutation(api.households.createHousehold, {
 		name: 'Our Home',
 		currency: 'AED',
 	});
+	await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🛒',
+		period: 'monthly',
+		limit: 250000,
+	});
+	await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Dining out',
+		emoji: '🍽️',
+		period: 'monthly',
+		limit: 120000,
+	});
+	await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Transport',
+		emoji: '🚕',
+		period: 'monthly',
+		limit: 60000,
+	});
+	await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Car service',
+		emoji: '🚗',
+		period: 'annual',
+		limit: 400000,
+	});
+
 	const categories = await asUser.query(api.categories.listCategories, { householdId });
 	const groceries = categories.find((c) => c.name === 'Groceries')!; // monthly
 	const carService = categories.find((c) => c.name === 'Car service')!; // annual

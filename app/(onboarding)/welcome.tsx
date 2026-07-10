@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../src/hooks/useAuth';
 import { useToast } from '../../src/lib/toast';
+import { versionLabel } from '../../src/lib/version';
 import { fontFamily } from '../../src/theme/fonts';
 import { useTheme } from '../../src/theme/useTheme';
 
@@ -16,7 +17,7 @@ import { useTheme } from '../../src/theme/useTheme';
  */
 export default function Welcome() {
 	const { t, accent } = useTheme();
-	const { signIn } = useAuth();
+	const { signInWithGoogle } = useAuth();
 	const { toast } = useToast();
 	const insets = useSafeAreaInsets();
 	const [signingIn, setSigningIn] = useState(false);
@@ -27,7 +28,7 @@ export default function Welcome() {
 		}
 		setSigningIn(true);
 		try {
-			await signIn('google');
+			await signInWithGoogle();
 		} catch (err) {
 			toast(err instanceof Error ? err.message : 'Could not start Google sign-in');
 		} finally {
@@ -95,6 +96,7 @@ export default function Welcome() {
 					</Text>
 				</Pressable>
 				<Text style={[styles.footer, { color: t.sub }]}>Free for households of any size</Text>
+				<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
 			</View>
 		</View>
 	);
@@ -168,5 +170,11 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		fontSize: 12,
 		marginTop: 4,
+	},
+	version: {
+		textAlign: 'center',
+		fontSize: 11,
+		opacity: 0.7,
+		marginTop: 6,
 	},
 });

@@ -14,6 +14,7 @@ import { useSettings, useSetCurrency, useUpdateSettings } from '../../src/hooks/
 import type { Currency } from '../../src/hooks/types';
 import { hexToRgba } from '../../src/lib/color';
 import { useToast } from '../../src/lib/toast';
+import { versionLabel } from '../../src/lib/version';
 import { fontFamily } from '../../src/theme/fonts';
 import { GLYPH } from '../../src/theme/tokens';
 import { useTheme } from '../../src/theme/useTheme';
@@ -55,7 +56,7 @@ const NOTIF_ROWS = [
  */
 export default function Settings() {
 	const { mode, t, accent, toggle } = useTheme();
-	const { householdId, currency } = useHousehold();
+	const { householdId, currency, inviteCode } = useHousehold();
 	const { settings, loading } = useSettings();
 	const updateSettings = useUpdateSettings();
 	const setCurrency = useSetCurrency();
@@ -97,6 +98,28 @@ export default function Settings() {
 
 	const onPressProfile = () => {
 		setProfileOpen(true);
+	};
+
+	const handleShareInviteCode = async () => {
+		if (!inviteCode) {
+			return;
+		}
+		const message = `Join our household on Our Budget — use invite code ${inviteCode}`;
+		try {
+			if (Platform.OS === 'web') {
+				const copied = await navigator.clipboard
+					?.writeText(message)
+					.then(() => true, () => false);
+				if (copied) {
+					toast('Copied');
+				}
+				return;
+			}
+			await Share.share({ message });
+			toast('Invite code shared');
+		} catch {
+			// Share sheet dismissed or unavailable — no-op.
+		}
 	};
 
 	const onPressDeleteAccount = () => {
@@ -169,6 +192,30 @@ export default function Settings() {
 			</Pressable>
 
 			<ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+			{householdId ? (
+				<View style={[styles.card, { backgroundColor: t.card }]}>
+					<Text style={[styles.inviteEyebrow, { color: t.sub, fontFamily: fontFamily(700) }]}>
+						INVITE CODE
+					</Text>
+					<Text style={[styles.inviteCode, { color: accent, fontFamily: fontFamily(900) }]}>
+						{inviteCode ?? '…'}
+					</Text>
+					<Text style={[styles.rowSub, { color: t.sub }]}>
+						Share this code so someone can join your household.
+					</Text>
+					<Pressable
+						onPress={handleShareInviteCode}
+						disabled={!inviteCode}
+						accessibilityRole="button"
+						style={[styles.inviteShareBtn, { backgroundColor: t.el }]}
+					>
+						<Text style={[styles.inviteShareLabel, { color: t.text, fontFamily: fontFamily(800) }]}>
+							Share
+						</Text>
+					</Pressable>
+				</View>
+			) : null}
 
 			<Pressable
 				onPress={toggle}
@@ -354,6 +401,7 @@ export default function Settings() {
 					Sign out
 				</Text>
 			</Pressable>
+			<Text style={[styles.version, { color: t.sub }]}>ourbudget. · {versionLabel()}</Text>
 		</ScrollView>
 		</FadeIn>
 	);
@@ -388,6 +436,25 @@ const styles = StyleSheet.create({
 	},
 	sectionLabel: {
 		fontSize: 13,
+	},
+	inviteEyebrow: {
+		fontSize: 12,
+		letterSpacing: 2,
+	},
+	inviteCode: {
+		fontSize: 28,
+		letterSpacing: 2,
+		marginTop: 10,
+	},
+	inviteShareBtn: {
+		height: 46,
+		borderRadius: 999,
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginTop: 14,
+	},
+	inviteShareLabel: {
+		fontSize: 15,
 	},
 	profileRow: {
 		flexDirection: 'row',
@@ -464,5 +531,11 @@ const styles = StyleSheet.create({
 	},
 	signOutLabel: {
 		fontSize: 14,
+	},
+	version: {
+		textAlign: 'center',
+		fontSize: 11,
+		opacity: 0.7,
+		marginTop: 8,
 	},
 });

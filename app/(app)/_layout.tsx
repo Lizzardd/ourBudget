@@ -1,5 +1,6 @@
 import { Redirect, Slot, usePathname } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fab } from '../../src/components/Fab';
 import { TabBar } from '../../src/components/TabBar';
@@ -28,6 +29,7 @@ import { useTheme } from '../../src/theme/useTheme';
  */
 export default function AppLayout() {
 	const { t } = useTheme();
+	const insets = useSafeAreaInsets();
 	const { householdId, loading: householdLoading } = useHousehold();
 	// The prototype shows the "+ Add expense" pill on the Home tab only
 	// (`<sc-if value="{{ tabHome }}">`); mount the Fab conditionally to match.
@@ -45,7 +47,7 @@ export default function AppLayout() {
 			<NewCategoryProvider>
 				<AddExpenseProvider>
 					<MonthTransactionsProvider>
-						<View style={styles.content}>
+						<View style={[styles.content, { paddingTop: insets.top }]}>
 							<Slot />
 						</View>
 						{onHome ? <Fab /> : null}

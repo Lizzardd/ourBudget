@@ -21,7 +21,7 @@ async function seedUser(t: ReturnType<typeof makeCtx>, name: string) {
 	return { userId, asUser: t.withIdentity({ subject: `${userId}|testsession` }) };
 }
 
-test('createHousehold makes caller owner, seeds 9 categories, and a settings row', async () => {
+test('createHousehold makes caller owner, starts blank (no categories), and a settings row', async () => {
 	const t = makeCtx();
 	const { userId, asUser } = await seedUser(t, 'Amira');
 
@@ -54,23 +54,8 @@ test('createHousehold makes caller owner, seeds 9 categories, and a settings row
 			.withIndex('by_household', (q) => q.eq('householdId', householdId))
 			.collect(),
 	);
-	expect(categories).toHaveLength(9);
-	const groceries = categories.find((c) => c.name === 'Groceries');
-	expect(groceries).toMatchObject({
-		emoji: 'grocery',
-		color: '#7FA86F',
-		period: 'monthly',
-		limit: 250000,
-		archived: false,
-		createdBy: userId,
-	});
-	const carService = categories.find((c) => c.name === 'Car service');
-	expect(carService).toMatchObject({
-		emoji: 'directions_car',
-		color: '#8AA3C4',
-		period: 'annual',
-		limit: 400000,
-	});
+	// A new household starts blank — members add their own categories.
+	expect(categories).toHaveLength(0);
 
 	const settings = await t.run(async (ctx) =>
 		ctx.db

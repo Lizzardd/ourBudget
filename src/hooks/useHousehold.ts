@@ -7,6 +7,7 @@ export interface UseHouseholdResult {
 	householdId: Id<'households'> | undefined;
 	name: string | undefined;
 	currency: Currency | undefined;
+	inviteCode: string | undefined;
 	loading: boolean;
 }
 
@@ -23,6 +24,7 @@ export function useHousehold(): UseHouseholdResult {
 		householdId: active?._id,
 		name: active?.name,
 		currency: active?.currency,
+		inviteCode: active?.inviteCode,
 		loading,
 	};
 }

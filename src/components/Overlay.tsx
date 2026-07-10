@@ -77,5 +77,10 @@ export function Overlay({ open, onClose, children }: OverlayProps) {
 const styles = StyleSheet.create({
 	panel: {
 		...StyleSheet.absoluteFill,
+		// Sit above everything in the host screen. On Android `elevation`
+		// (not just zIndex) decides stacking, so the elevated Settings cards
+		// would otherwise paint over this full-screen overlay.
+		zIndex: 100,
+		elevation: 100,
 	},
 });

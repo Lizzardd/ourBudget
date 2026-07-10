@@ -29,8 +29,19 @@ test('createCategory appears in listCategories with cycled color and next sortOr
 		currency: 'AED',
 	});
 
-	// createHousehold seeds 9 default categories (sortOrder 0..8), palette cycles
-	// every 8 entries, so the 10th category (index 9) wraps back to palette[1].
+	// A brand-new household starts BLANK, so create 9 categories first (sortOrder
+	// 0..8, palette cycles every 8 entries), then confirm the 10th category
+	// (index 9) wraps back to palette[1].
+	for (let i = 0; i < 9; i++) {
+		await asUser.mutation(api.categories.createCategory, {
+			householdId,
+			name: `Category ${i}`,
+			emoji: '📦',
+			period: 'monthly',
+			limit: 10000,
+		});
+	}
+
 	const categoryId = await asUser.mutation(api.categories.createCategory, {
 		householdId,
 		name: 'Fun money',
@@ -66,15 +77,20 @@ test('updateCategoryLimit persists the new absolute limit', async () => {
 		name: 'Our Home',
 		currency: 'AED',
 	});
-	const categories = await asUser.query(api.categories.listCategories, { householdId });
-	const groceries = categories.find((c) => c.name === 'Groceries')!;
+	const groceriesId = await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🛒',
+		period: 'monthly',
+		limit: 250000,
+	});
 
 	await asUser.mutation(api.categories.updateCategoryLimit, {
-		categoryId: groceries._id,
+		categoryId: groceriesId,
 		limit: 300000,
 	});
 
-	const updated = await t.run(async (ctx) => ctx.db.get(groceries._id));
+	const updated = await t.run(async (ctx) => ctx.db.get(groceriesId));
 	expect(updated?.limit).toBe(300000);
 });
 
@@ -85,19 +101,121 @@ test('archiveCategory hides it from listCategories', async () => {
 		name: 'Our Home',
 		currency: 'AED',
 	});
-	const categories = await asUser.query(api.categories.listCategories, { householdId });
-	const groceries = categories.find((c) => c.name === 'Groceries')!;
+	const groceriesId = await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🛒',
+		period: 'monthly',
+		limit: 250000,
+	});
+	// A second category so we can assert the archived one specifically drops
+	// out while the household isn't left empty.
+	await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Dining out',
+		emoji: '🍽️',
+		period: 'monthly',
+		limit: 120000,
+	});
 
 	await asUser.mutation(api.categories.archiveCategory, {
-		categoryId: groceries._id,
+		categoryId: groceriesId,
 	});
 
 	const remaining = await asUser.query(api.categories.listCategories, { householdId });
-	expect(remaining.find((c) => c._id === groceries._id)).toBeUndefined();
-	expect(remaining).toHaveLength(8);
+	expect(remaining.find((c) => c._id === groceriesId)).toBeUndefined();
+	expect(remaining).toHaveLength(1);
 
-	const archived = await t.run(async (ctx) => ctx.db.get(groceries._id));
+	const archived = await t.run(async (ctx) => ctx.db.get(groceriesId));
 	expect(archived?.archived).toBe(true);
+});
+
+test('deleteCategory removes the category and its transactions', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const householdId = await asUser.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const groceriesId = await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🛒',
+		period: 'monthly',
+		limit: 250000,
+	});
+	// A second category so we can assert it (and its transactions) survive.
+	const diningId = await asUser.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Dining out',
+		emoji: '🍽️',
+		period: 'monthly',
+		limit: 120000,
+	});
+
+	const tx1 = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceriesId,
+		amount: 5000,
+		note: 'Milk',
+		payerName: 'Amira',
+	});
+	const tx2 = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceriesId,
+		amount: 3000,
+		note: 'Bread',
+		payerName: 'Amira',
+	});
+	const otherTx = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: diningId,
+		amount: 2000,
+		note: 'Coffee',
+		payerName: 'Amira',
+	});
+
+	await asUser.mutation(api.categories.deleteCategory, {
+		categoryId: groceriesId,
+	});
+
+	const deletedCategory = await t.run(async (ctx) => ctx.db.get(groceriesId));
+	expect(deletedCategory).toBeNull();
+
+	const deletedTx1 = await t.run(async (ctx) => ctx.db.get(tx1));
+	const deletedTx2 = await t.run(async (ctx) => ctx.db.get(tx2));
+	expect(deletedTx1).toBeNull();
+	expect(deletedTx2).toBeNull();
+
+	const survivingTx = await t.run(async (ctx) => ctx.db.get(otherTx));
+	expect(survivingTx).toBeTruthy();
+
+	const remaining = await asUser.query(api.categories.listCategories, { householdId });
+	expect(remaining.find((c) => c._id === groceriesId)).toBeUndefined();
+	expect(remaining.find((c) => c._id === diningId)).toBeTruthy();
+});
+
+test('deleteCategory throws for a non-member', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Private House',
+		currency: 'AED',
+	});
+	const groceriesId = await owner.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🛒',
+		period: 'monthly',
+		limit: 250000,
+	});
+
+	const { asUser: outsider } = await seedUser(t, 'Outsider');
+	await expect(
+		outsider.mutation(api.categories.deleteCategory, {
+			categoryId: groceriesId,
+		}),
+	).rejects.toThrow('Not a member of this household');
 });
 
 test('createCategory throws for a non-member', async () => {

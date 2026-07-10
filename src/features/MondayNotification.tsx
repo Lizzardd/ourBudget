@@ -62,7 +62,9 @@ export function MondayNotification() {
 
 	const cur = currency ?? 'AED';
 	const ready = !settingsLoading && !!householdId && !!monthSummary && !!weekly;
-	const visible = !!settings?.weeklyCheckin && !dismissed && ready;
+	// Only surface the "Monday check-in" on an actual Monday (getDay: 0=Sun, 1=Mon).
+	const isMonday = now.getDay() === 1;
+	const visible = !!settings?.weeklyCheckin && isMonday && !dismissed && ready;
 
 	useEffect(() => {
 		if (visible) {

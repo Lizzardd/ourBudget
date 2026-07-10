@@ -2,6 +2,7 @@
 import { convexTest } from 'convex-test';
 import { expect, test } from 'vitest';
 import { api } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
 const modules = (import.meta as unknown as { glob: (pattern: string) => Record<string, () => Promise<unknown>> }).glob(
@@ -19,6 +20,32 @@ async function seedUser(t: ReturnType<typeof makeCtx>, name: string) {
 	return { userId, asUser: t.withIdentity({ subject: `${userId}|testsession` }) };
 }
 
+/**
+ * A brand-new household starts BLANK (no default categories) — tests that
+ * need a category to hang a transaction off of create one explicitly here.
+ */
+async function seedCategory(
+	t: ReturnType<typeof makeCtx>,
+	householdId: Id<'households'>,
+	createdBy: Id<'users'>,
+	sortOrder = 0,
+) {
+	return await t.run(async (ctx) =>
+		ctx.db.insert('categories', {
+			householdId,
+			name: 'Groceries',
+			emoji: '🛒',
+			color: '#7FA86F',
+			period: 'monthly',
+			limit: 250000,
+			sortOrder,
+			archived: false,
+			createdBy,
+			createdAt: Date.now(),
+		}),
+	);
+}
+
 test('exportMyData returns the caller records, their household data, and not an unrelated user\'s', async () => {
 	const t = makeCtx();
 
@@ -27,6 +54,7 @@ test('exportMyData returns the caller records, their household data, and not an 
 		name: 'Our Home',
 		currency: 'AED',
 	});
+	await seedCategory(t, householdId, userId);
 	const categories = await t.run(async (ctx) =>
 		ctx.db
 			.query('categories')
@@ -52,6 +80,7 @@ test('exportMyData returns the caller records, their household data, and not an 
 		name: 'Stranger House',
 		currency: 'USD',
 	});
+	await seedCategory(t, strangerHouseholdId, strangerId);
 	const strangerCategories = await t.run(async (ctx) =>
 		ctx.db
 			.query('categories')
@@ -126,6 +155,7 @@ test('deleteMyAccount cascades a solely-owned household and erases the user', as
 		name: 'Our Home',
 		currency: 'AED',
 	});
+	await seedCategory(t, householdId, userId);
 	const categories = await t.run(async (ctx) =>
 		ctx.db
 			.query('categories')
@@ -278,6 +308,7 @@ test('deleteMyAccount on a shared household only removes the caller\'s membershi
 		}),
 	);
 
+	await seedCategory(t, householdId, ownerId);
 	const categories = await t.run(async (ctx) =>
 		ctx.db
 			.query('categories')

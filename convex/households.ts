@@ -68,34 +68,6 @@ async function generateUniqueInviteCode(ctx: MutationCtx): Promise<string> {
 	);
 }
 
-type SeedCategory = {
-	name: string;
-	/**
-	 * Despite the field name, this holds a Material Symbols Rounded ligature
-	 * string (e.g. "grocery"), not an emoji character — the prototype
-	 * replaced category emoji with Material Symbols icons, and the client
-	 * renders this value via `src/components/Icon.tsx`. Kept as `emoji` to
-	 * avoid a schema/field rename across the app.
-	 */
-	emoji: string;
-	color: string;
-	period: "monthly" | "annual";
-	limit: number;
-	sortOrder: number;
-};
-
-const DEFAULT_CATEGORIES: SeedCategory[] = [
-	{ name: "Groceries", emoji: "grocery", color: "#7FA86F", period: "monthly", limit: 250000, sortOrder: 0 },
-	{ name: "Dining out", emoji: "restaurant", color: "#E08B6F", period: "monthly", limit: 120000, sortOrder: 1 },
-	{ name: "Transport", emoji: "local_taxi", color: "#E3B063", period: "monthly", limit: 60000, sortOrder: 2 },
-	{ name: "Kids", emoji: "toys", color: "#D492A6", period: "monthly", limit: 90000, sortOrder: 3 },
-	{ name: "Housing", emoji: "home", color: "#9C8FC7", period: "monthly", limit: 600000, sortOrder: 4 },
-	{ name: "Everything else", emoji: "auto_awesome", color: "#B0A08C", period: "monthly", limit: 80000, sortOrder: 5 },
-	{ name: "Household maintenance", emoji: "handyman", color: "#8FB5B0", period: "annual", limit: 1200000, sortOrder: 6 },
-	{ name: "Car service", emoji: "directions_car", color: "#8AA3C4", period: "annual", limit: 400000, sortOrder: 7 },
-	{ name: "Gifts", emoji: "redeem", color: "#D97A8F", period: "annual", limit: 600000, sortOrder: 8 },
-];
-
 /**
  * Throws if the authenticated caller has no membership row for the given
  * household. Reused by later tasks to authorize household-scoped functions.
@@ -177,21 +149,8 @@ export const createHousehold = mutation({
 
 		await insertDefaultSettings(ctx, userId, householdId);
 
-		for (const category of DEFAULT_CATEGORIES) {
-			await ctx.db.insert("categories", {
-				householdId,
-				name: category.name,
-				emoji: category.emoji,
-				color: category.color,
-				period: category.period,
-				limit: category.limit,
-				sortOrder: category.sortOrder,
-				archived: false,
-				createdBy: userId,
-				createdAt: now,
-			});
-		}
-
+		// A brand-new household starts BLANK — no default categories. Members
+		// add their own budgets via the "+ New category" flow.
 		return householdId;
 	},
 });

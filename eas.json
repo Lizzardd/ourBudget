@@ -23,8 +23,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CONVEX_URL": "https://glorious-panda-32.convex.cloud",
-        "EXPO_PUBLIC_CONVEX_SITE_URL": "https://glorious-panda-32.convex.site"
+        "EXPO_PUBLIC_CONVEX_URL": "https://shiny-scorpion-150.convex.cloud",
+        "EXPO_PUBLIC_CONVEX_SITE_URL": "https://shiny-scorpion-150.convex.site"
       }
     },
     "production": {
@@ -32,6 +32,10 @@
       "channel": "production",
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "https://shiny-scorpion-150.convex.cloud",
+        "EXPO_PUBLIC_CONVEX_SITE_URL": "https://shiny-scorpion-150.convex.site"
       }
     }
   },

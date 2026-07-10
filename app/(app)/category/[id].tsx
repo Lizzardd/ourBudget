@@ -54,7 +54,9 @@ export default function CategoryDetail() {
 		category ? { categoryId: category._id } : 'skip'
 	);
 	const updateLimit = useMutation(api.categories.updateCategoryLimit);
+	const deleteCategory = useMutation(api.categories.deleteCategory);
 	const [limitInput, setLimitInput] = useState('');
+	const [confirmDelete, setConfirmDelete] = useState(false);
 
 	useEffect(() => {
 		if (category) {
@@ -115,6 +117,16 @@ export default function CategoryDetail() {
 
 	const openAdd = () => {
 		openAddExpense(category._id);
+	};
+
+	const handleDelete = () => {
+		deleteCategory({ categoryId: category._id })
+			.then(() => {
+				router.replace('/(app)/home');
+			})
+			.catch(() => {
+				toast("Couldn't delete the category — try again");
+			});
 	};
 
 	return (
@@ -246,14 +258,61 @@ export default function CategoryDetail() {
 					)}
 				</View>
 
-				<TouchableOpacity
-					accessibilityRole="button"
-					accessibilityLabel={det.addLabel}
-					onPress={openAdd}
-					style={[styles.addButton, { backgroundColor: accent }]}
-				>
-					<Text style={styles.addButtonText}>{det.addLabel}</Text>
-				</TouchableOpacity>
+				{confirmDelete ? (
+					<View style={[styles.confirmCard, { backgroundColor: t.card }]}>
+						<Text style={[styles.confirmTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
+							Delete {category.name}?
+						</Text>
+						<Text style={[styles.confirmBody, { color: t.sub }]}>
+							This removes the category and its expenses for everyone. This can’t be undone.
+						</Text>
+						<View style={styles.confirmRow}>
+							<TouchableOpacity
+								accessibilityRole="button"
+								accessibilityLabel="Keep it"
+								onPress={() => setConfirmDelete(false)}
+								style={[styles.confirmBtn, { backgroundColor: t.el }]}
+							>
+								<Text style={[styles.confirmBtnText, { color: t.text, fontFamily: fontFamily(800) }]}>
+									Keep it
+								</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								accessibilityRole="button"
+								accessibilityLabel="Delete"
+								onPress={handleDelete}
+								style={[styles.confirmBtn, { backgroundColor: '#C8402E' }]}
+							>
+								<Text style={[styles.confirmBtnText, { color: '#FFF3F0', fontFamily: fontFamily(800) }]}>
+									Delete
+								</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				) : (
+					<>
+						<TouchableOpacity
+							accessibilityRole="button"
+							accessibilityLabel={det.addLabel}
+							onPress={openAdd}
+							style={[styles.addButton, { backgroundColor: accent }]}
+						>
+							<Text style={styles.addButtonText}>{det.addLabel}</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							accessibilityRole="button"
+							accessibilityLabel="Delete category"
+							onPress={() => setConfirmDelete(true)}
+							style={styles.deleteButton}
+							activeOpacity={0.6}
+						>
+							<Icon name="delete" size={18} color="#DE4B37" />
+							<Text style={[styles.deleteButtonText, { fontFamily: fontFamily(700) }]}>
+								Delete category
+							</Text>
+						</TouchableOpacity>
+					</>
+				)}
 			</ScrollView>
 			</SlideIn>
 		</View>
@@ -464,5 +523,50 @@ const styles = StyleSheet.create({
 		fontFamily: fontFamily(800),
 		fontSize: 16,
 		color: '#2B0E1A',
+	},
+	deleteButton: {
+		width: '100%',
+		height: 48,
+		marginTop: 10,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		gap: 6,
+	},
+	deleteButtonText: {
+		fontSize: 14,
+		color: '#DE4B37',
+	},
+	confirmCard: {
+		borderRadius: 20,
+		padding: 18,
+		marginTop: 12,
+		alignItems: 'center',
+	},
+	confirmTitle: {
+		fontSize: 14,
+		textAlign: 'center',
+	},
+	confirmBody: {
+		fontSize: 12,
+		marginTop: 4,
+		lineHeight: 18,
+		textAlign: 'center',
+	},
+	confirmRow: {
+		flexDirection: 'row',
+		gap: 8,
+		marginTop: 14,
+		width: '100%',
+	},
+	confirmBtn: {
+		flex: 1,
+		height: 46,
+		borderRadius: 999,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	confirmBtnText: {
+		fontSize: 14,
 	},
 });

@@ -102,3 +102,23 @@ export const archiveCategory = mutation({
 		await ctx.db.patch(args.categoryId, { archived: true });
 	},
 });
+
+export const deleteCategory = mutation({
+	args: {
+		categoryId: v.id("categories"),
+	},
+	handler: async (ctx, args) => {
+		await requireCategoryMembership(ctx, args.categoryId);
+
+		const transactions = await ctx.db
+			.query("transactions")
+			.withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+			.collect();
+
+		for (const transaction of transactions) {
+			await ctx.db.delete(transaction._id);
+		}
+
+		await ctx.db.delete(args.categoryId);
+	},
+});
