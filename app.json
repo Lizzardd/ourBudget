@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Our Budget",
+    "slug": "our-budget",
+    "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ourbudget",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "app.ourbudget.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": []
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png",
+      "name": "Our Budget",
+      "shortName": "Our Budget",
+      "description": "Our Budget — track and manage your household budget.",
+      "themeColor": "#17120E",
+      "backgroundColor": "#17120E",
+      "display": "standalone",
+      "orientation": "portrait",
+      "lang": "en",
+      "startUrl": "/"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4bec8f53-4521-4629-9cb2-5aeae5421e08"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4bec8f53-4521-4629-9cb2-5aeae5421e08"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+# Files excluded from the EAS Build upload archive (same syntax as .gitignore).
+# EAS reinstalls dependencies on its servers, so node_modules must NOT be uploaded.
+node_modules/
+
+# Local build outputs / caches
+.expo/
+dist/
+web-build/
+
+# Dev scratch, screenshots, reports, preview harness output
+.superpowers/
+coverage/
+*.log
+
+# Local env (EAS uses the env in eas.json, not this file)
+.env.local
+.env*.local

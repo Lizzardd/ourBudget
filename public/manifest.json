@@ -1,0 +1,25 @@
+{
+  "name": "Our Budget",
+  "short_name": "Our Budget",
+  "description": "Our Budget — track and manage your household budget.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17120E",
+  "theme_color": "#17120E",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

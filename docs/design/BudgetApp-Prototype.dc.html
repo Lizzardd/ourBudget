@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..1000&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #17120E; }
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  a { color: #C96287; text-decoration: none; }
+  a:hover { color: #EC9276; }
+  input { font-family: 'DM Sans', sans-serif; }
+  input::placeholder { color: rgba(181,164,147,0.7); }
+  @property --rp { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+  @keyframes sheetUp { from { transform: translateY(90px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideIn { from { transform: translateX(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes toastPop { from { transform: translateY(14px) scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes notifDown { from { transform: translateY(-110px); opacity: 0; } to { transform: none; opacity: 1; } }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 36px; background: radial-gradient(120% 100% at 50% 0%, #221A14, #14100C)">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ isDark }}" hint-size="412px,892px">
+<div style="height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--bg, #221B16); color: var(--text, #F6EDE3); {{ themeVarsCss }}">
+
+  <!-- ══════════ ONBOARDING: WELCOME ══════════ -->
+  <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Onboarding — Welcome" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 48px 28px 40px; animation: fadeIn 0.4s ease">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center">
+        <div style="width: 84px; height: 84px; border-radius: 28px; background: var(--accent, #C96287); display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(201,98,135,0.35)"><span style="font-size: 38px; font-weight: 900; letter-spacing: -2px; color: #FFF3F0">ob<span style="color: #2B0E1A">.</span></span></div>
+        <div style="font-size: 38px; font-weight: 900; letter-spacing: -1.2px; line-height: 1.1">ourbudget<span style="color: var(--accent, #C96287)">.</span></div>
+        <div style="font-size: 14px; font-weight: 800; letter-spacing: 2px; color: var(--accent, #C96287)">money. sorted. together.</div>
+        <div style="font-size: 16px; line-height: 1.5; color: var(--sub, #B5A493); max-width: 280px">One shared budget for your household. Same numbers, live, for everyone.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px; font-weight: 800; color: var(--accent, #C96287)">G</span> Continue with Google</button>
+        <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px"></span> Continue with Apple</button>
+        <div style="text-align: center; font-size: 12px; color: var(--sub, #B5A493); margin-top: 4px">Free for households of any size</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ══════════ ONBOARDING: FORK ══════════ -->
+  <sc-if value="{{ isFork }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Onboarding — Create or Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Welcome, Sara 👋</div>
+      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">A household shares one pool of budgets. Start yours, or join one that's waiting for you.</div>
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 36px">
+        <button onClick="{{ goInvite }}" style="border: none; text-align: left; border-radius: 24px; background: var(--accent, #C96287); color: #2B0E1A; padding: 22px 22px; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 16px" style-active="transform: scale(0.98)">
+          <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 30px">add_home</div>
+          <div style="flex: 1"><div style="font-size: 18px; font-weight: 800">Create a household</div><div style="font-size: 13px; opacity: 0.75; margin-top: 2px">Set up budgets and invite your partner</div></div>
+        </button>
+        <button onClick="{{ goJoin }}" style="border: none; text-align: left; border-radius: 24px; background: var(--card, #2D251F); color: var(--text, #F6EDE3); padding: 22px 22px; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 16px" style-active="transform: scale(0.98)">
+          <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 30px">key</div>
+          <div style="flex: 1"><div style="font-size: 18px; font-weight: 800">Join with a code</div><div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px">Someone sent you an invite code</div></div>
+        </button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ══════════ ONBOARDING: INVITE CODE ══════════ -->
+  <sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Onboarding — Invite code" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">The Al-Marri Home is ready 🎉</div>
+      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">Share this code so Omar can join. Everything you both add stays perfectly in sync.</div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
+        <div style="border-radius: 28px; background: var(--card, #2D251F); padding: 32px 40px; text-align: center; border: 1px dashed rgba(201,98,135,0.5)">
+          <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--sub, #B5A493)">INVITE CODE</div>
+          <div style="font-size: 40px; font-weight: 900; letter-spacing: 2px; color: var(--accent, #C96287); margin-top: 8px">SUNNY-42</div>
+        </div>
+        <button onClick="{{ shareInvite }}" style="height: 52px; padding: 0 32px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer" style-active="transform: scale(0.97)">Share invite ↗</button>
+      </div>
+      <button onClick="{{ toDash }}" style="height: 58px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Go to your dashboard</button>
+    </div>
+  </sc-if>
+
+  <!-- ══════════ ONBOARDING: JOIN ══════════ -->
+  <sc-if value="{{ isJoin }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Onboarding — Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Enter your invite code</div>
+      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px">It looks like SUNNY-42 — check your messages.</div>
+      <input value="{{ joinCode }}" onChange="{{ joinChange }}" placeholder="SUNNY-42" style="margin-top: 32px; height: 64px; border-radius: 20px; border: 1.5px solid rgba(201,98,135,0.4); background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 26px; font-weight: 800; letter-spacing: 2px; text-align: center; outline: none">
+      <div style="flex: 1"></div>
+      <button onClick="{{ toDash }}" style="height: 58px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Join The Al-Marri Home</button>
+      <button onClick="{{ goFork }}" style="height: 44px; border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px">Back</button>
+    </div>
+  </sc-if>
+
+  <!-- ══════════ MAIN APP ══════════ -->
+  <sc-if value="{{ inApp }}" hint-placeholder-val="{{ true }}">
+
+    <!-- ─── HOME TAB ─── -->
+    <sc-if value="{{ tabHome }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Dashboard" style="flex: 1; overflow-y: auto; padding: 12px 18px 150px; animation: fadeIn 0.3s ease">
+        <div style="display: flex; align-items: flex-start; gap: 12px; padding: 8px 4px 16px">
+          <div style="flex: 1">
+            <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.4px">Hi {{ profFirst }} 👋</div>
+            <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">July 2026</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+            <div style="font-size: 13px; font-weight: 800; letter-spacing: -0.2px">The Al-Marri Home</div>
+            <div style="display: flex">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16)">{{ profInitial }}</div>
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: #7FA8A0; color: #0F2B26; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16); margin-left: -8px">O</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-radius: 26px; background: var(--card, #2D251F); padding: 20px; display: flex; align-items: center; gap: 18px">
+          <div style="width: 96px; height: 96px; border-radius: 50%; background: conic-gradient({{ ringColor }} var(--rp, 0%), var(--track, rgba(246,237,227,0.12)) 0); transition: --rp 1.4s cubic-bezier(0.25, 0.8, 0.3, 1); --rp: {{ ringPct }}; display: flex; align-items: center; justify-content: center; flex: none">
+            <div style="width: 76px; height: 76px; border-radius: 50%; background: var(--card, #2D251F); display: flex; flex-direction: column; align-items: center; justify-content: center">
+              <div style="font-size: 21px; font-weight: 900; letter-spacing: -0.5px">{{ ringLabel }}</div>
+              <div style="font-size: 10px; font-weight: 600; color: var(--sub, #B5A493)">spent</div>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end">
+            <div style="display: flex; flex-direction: column; align-items: flex-end">
+              <div style="font-size: 26px; font-weight: 900; letter-spacing: -0.6px; margin-top: 2px">{{ totalSpentFmt }}</div>
+              <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">of {{ totalLimitFmt }}</div>
+            </div>
+            
+            <div style="font-size: 14px; font-weight: 700; color: {{ summaryColor }}; margin-top: 2px; align-self: stretch">{{ summaryLine1 }}</div><div style="font-size: 13px; font-weight: 700; color: {{ summaryColor }}; margin-top: 1px; align-self: stretch">{{ summaryLine2 }}</div>
+          </div>
+        </div>
+
+        <!-- COZY CARDS layout -->
+        <sc-if value="{{ layoutCards }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+            <div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 24px 4px 12px">
+                <div style="font-size: 16px; font-weight: 800">{{ sec.title }}</div>
+                <div style="font-size: 12px; color: var(--sub, #B5A493)">{{ sec.hint }}</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <sc-for list="{{ sec.cards }}" as="c" hint-placeholder-count="4">
+                  <div onClick="{{ c.open }}" style="border-radius: 22px; background: var(--card, #2D251F); padding: 16px; cursor: pointer" style-active="transform: scale(0.985)">
+                    <div style="display: flex; align-items: center; gap: 12px">
+                      <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex: none"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 26px; color: var(--text, #F6EDE3)">{{ c.emoji }}</span></div>
+                      <div style="flex: 1; min-width: 0">
+                        <div style="display: flex; align-items: center; gap: 7px">
+                          <div style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ c.name }}</div>
+                          <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 9px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 7px; flex: none">ANNUAL</div></sc-if>
+                        </div>
+                        <div style="font-size: 14px; font-weight: 700; margin-top: 2px; color: {{ c.subColor }}">{{ c.sub1 }}</div>
+                        <sc-if value="{{ c.sub2 }}" hint-placeholder-val="{{ false }}"><div style="font-size: 14px; font-weight: 700; margin-top: 1px; color: {{ c.subColor }}">{{ c.sub2 }}</div></sc-if>
+                      </div>
+                      <div style="text-align: right">
+                        <div style="font-size: 16px; font-weight: 800; letter-spacing: -0.3px">{{ c.amtFmt }}</div>
+                        <div style="font-size: 11px; color: var(--sub, #B5A493)">{{ c.ofFmt }}</div>
+                      </div>
+                    </div>
+                    <div style="height: 8px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); overflow: hidden; margin-top: 12px">
+                      <div style="height: 100%; border-radius: 99px; background: {{ c.bar }}; width: {{ c.pctW }}; transition: width 1.1s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </sc-if>
+
+        <!-- GRID layout -->
+        <sc-if value="{{ layoutGrid }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+            <div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 24px 4px 12px">
+                <div style="font-size: 16px; font-weight: 800">{{ sec.title }}</div>
+                <div style="font-size: 12px; color: var(--sub, #B5A493)">{{ sec.hint }}</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+                <sc-for list="{{ sec.cards }}" as="c" hint-placeholder-count="4">
+                  <div onClick="{{ c.open }}" style="border-radius: 22px; background: var(--card, #2D251F); padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 10px" style-active="transform: scale(0.97)">
+                    <div style="display: flex; align-items: center; justify-content: space-between">
+                      <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 24px; color: var(--text, #F6EDE3)">{{ c.emoji }}</span></div>
+                      <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 8px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 6px">ANNUAL</div></sc-if>
+                    </div>
+                    <div>
+                      <div style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ c.name }}</div>
+                      <div style="font-size: 15px; font-weight: 800; margin-top: 2px">{{ c.amtFmt }}</div>
+                      <div style="font-size: 11px; color: var(--sub, #B5A493)">{{ c.ofFmt }}</div>
+                    </div>
+                    <div style="height: 6px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); overflow: hidden">
+                      <div style="height: 100%; border-radius: 99px; background: {{ c.bar }}; width: {{ c.pctW }}; transition: width 1.1s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </sc-if>
+
+        <!-- COMPACT layout -->
+        <sc-if value="{{ layoutCompact }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+            <div>
+              <div style="display: flex; align-items: baseline; gap: 8px; padding: 24px 4px 10px">
+                <div style="font-size: 16px; font-weight: 800">{{ sec.title }}</div>
+                <div style="font-size: 12px; color: var(--sub, #B5A493)">{{ sec.hint }}</div>
+              </div>
+              <div style="border-radius: 22px; background: var(--card, #2D251F); padding: 4px 16px">
+                <sc-for list="{{ sec.cards }}" as="c" hint-placeholder-count="4">
+                  <div onClick="{{ c.open }}" style="padding: 13px 0; cursor: pointer; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 22px; color: var(--text, #F6EDE3)">{{ c.emoji }}</div>
+                      <div style="font-size: 14px; font-weight: 700; flex: 1">{{ c.name }}</div>
+                      <sc-if value="{{ c.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 8px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287)">ANNUAL</div></sc-if>
+                      <div style="font-size: 13px; font-weight: 800">{{ c.amtFmt }}</div>
+                      <div style="font-size: 11px; color: var(--sub, #B5A493)">{{ c.ofFmt }}</div>
+                    </div>
+                    <div style="height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); overflow: hidden; margin-top: 9px">
+                      <div style="height: 100%; border-radius: 99px; background: {{ c.bar }}; width: {{ c.pctW }}; transition: width 1.1s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </sc-if>
+        <button onClick="{{ openNewCat }}" style="width: 100%; height: 54px; margin-top: 14px; border: 1.5px dashed rgba(201,98,135,0.5); border-radius: 999px; background: none; color: var(--accent, #C96287); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">+ New category</button>
+      </div>
+    </sc-if>
+
+    <!-- ─── REPORTS TAB ─── -->
+    <sc-if value="{{ tabReports }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Reports" style="flex: 1; overflow-y: auto; padding: 12px 18px 110px; animation: fadeIn 0.3s ease">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 8px 4px 16px">
+          <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.4px">Reports</div>
+          <div style="font-size: 16px; font-weight: 800">{{ histLabel }}</div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px">
+          <div style="font-size: 15px; font-weight: 800">Month by Month Comparison</div>
+          <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Tap a month to view it below</div>
+          <div style="display: flex; align-items: flex-end; gap: 12px; height: 130px; margin-top: 18px">
+            <sc-for list="{{ trendCols }}" as="t" hint-placeholder-count="5">
+              <div onClick="{{ t.openMonth }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; cursor: pointer; border-radius: 12px" style-active="transform: scale(0.95)" style-hover="background: rgba(246,237,227,0.04)">
+                <div style="font-size: 10px; font-weight: 700; color: var(--sub, #B5A493)">{{ t.amt }}</div>
+                <div style="width: 100%; max-width: 40px; border-radius: 10px 10px 4px 4px; background: var(--track, rgba(246,237,227,0.12)); height: {{ t.budgetH }}; transition: height 1s cubic-bezier(0.25, 0.8, 0.3, 1); display: flex; flex-direction: column; justify-content: {{ t.fillSide }}; overflow: hidden">
+                  <div style="width: 100%; background: {{ t.fillColor }}; height: {{ t.fillH }}; transition: height 1s cubic-bezier(0.25, 0.8, 0.3, 1); border-radius: {{ t.fillRadius }}"></div>
+                </div>
+                <div style="font-size: 11px; font-weight: 700; color: {{ t.labelColor }}">{{ t.m }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 18px 20px; margin-top: 12px; display: flex; align-items: baseline; gap: 8px">
+          <div style="font-size: 24px; font-weight: 900; letter-spacing: -0.5px">{{ histTotal }}</div>
+          <div style="font-size: 13px; color: var(--sub, #B5A493)">of {{ histLimit }} spent</div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 4px 16px; margin-top: 12px">
+          <sc-for list="{{ histCards }}" as="c" hint-placeholder-count="5">
+            <div onClick="{{ c.open }}" style="padding: 13px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07)); cursor: pointer" style-active="opacity: 0.7">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 22px; color: var(--text, #F6EDE3)">{{ c.emoji }}</div>
+                <div style="font-size: 14px; font-weight: 700; flex: 1">{{ c.name }}</div>
+                <div style="font-size: 13px; font-weight: 800">{{ c.amtFmt }}</div>
+                <div style="font-size: 11px; color: var(--sub, #B5A493)">{{ c.ofFmt }}</div>
+              </div>
+              <div style="height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); overflow: hidden; margin-top: 9px">
+                <div style="height: 100%; border-radius: 99px; background: {{ c.bar }}; width: {{ c.pctW }}; transition: width 0.7s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px">
+          <div style="display: flex; align-items: baseline; gap: 8px">
+            <div style="font-size: 15px; font-weight: 800">Annual Budgets</div>
+            <div style="font-size: 11px; color: var(--sub, #B5A493)">as at {{ histLabel }} · tick = point in year</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px">
+            <sc-for list="{{ annualReport }}" as="a" hint-placeholder-count="3">
+              <div onClick="{{ a.open }}" style="cursor: pointer" style-active="opacity: 0.7">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 20px; color: var(--text, #F6EDE3)">{{ a.emoji }}</div>
+                  <div style="font-size: 13px; font-weight: 700; flex: 1">{{ a.name }}</div>
+                  <div style="font-size: 12px; font-weight: 700; color: var(--sub, #B5A493)">{{ a.usedFmt }}</div>
+                </div>
+                <div style="height: 10px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); position: relative; margin-top: 6px">
+                  <div style="height: 100%; border-radius: 99px; background: {{ a.color }}; width: {{ a.w }}; transition: width 1.1s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+                  <div style="position: absolute; left: {{ yearTick }}; top: -3px; width: 2px; height: 16px; border-radius: 2px; background: var(--sub, #B5A493)"></div>
+                </div>
+                <div style="font-size: 11px; font-weight: 600; color: {{ a.paceColor }}; margin-top: 5px">{{ a.pace }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── SETTINGS TAB ─── -->
+    <sc-if value="{{ tabSettings }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Settings" style="flex: 1; overflow-y: auto; padding: 12px 18px 110px; animation: fadeIn 0.3s ease">
+        <div style="padding: 8px 4px 16px">
+          <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.4px">Settings</div>
+          <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">The Al-Marri Home</div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px">
+          <div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493)">MEMBERS</div>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px">
+            <div onClick="{{ openProfile }}" style="display: flex; align-items: center; gap: 12px; cursor: pointer"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitial }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">You · edit ›</div></div>
+            <div style="display: flex; align-items: center; gap: 12px"><div style="width: 40px; height: 40px; border-radius: 50%; background: #7FA8A0; color: #0F2B26; font-weight: 800; display: flex; align-items: center; justify-content: center">O</div><div style="flex: 1; font-size: 15px; font-weight: 700">Omar</div><div style="font-size: 12px; color: var(--sub, #B5A493)">Member</div></div>
+          </div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px">
+          <div style="flex: 1">
+            <div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493)">INVITE CODE</div>
+            <div style="font-size: 22px; font-weight: 900; letter-spacing: 1px; color: var(--accent, #C96287); margin-top: 4px">SUNNY-42</div>
+          </div>
+          <button onClick="{{ shareInvite }}" style="height: 44px; padding: 0 20px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer" style-active="transform: scale(0.96)">Share ↗</button>
+        </div>
+        <div onClick="{{ toggleTheme }}" style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer">
+          <div style="flex: 1">
+            <div style="font-size: 15px; font-weight: 700">{{ themeLabel }}</div>
+            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Tap to switch</div>
+          </div>
+          <div style="width: 52px; height: 30px; border-radius: 999px; background: {{ switchBg }}; padding: 3px; display: flex; justify-content: {{ switchSide }}; transition: background 0.3s">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #FFF6EE; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></div>
+          </div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px">
+          <div style="font-size: 15px; font-weight: 700">Currency</div>
+          <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Shown on every amount, for everyone</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px">
+            <sc-for list="{{ currencyOpts }}" as="o" hint-placeholder-count="5">
+              <button onClick="{{ o.pick }}" style="height: 38px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; border: 1.5px solid {{ o.border }}; background: {{ o.bg }}; color: {{ o.color }}" style-active="transform: scale(0.95)">{{ o.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px">
+          <div style="font-size: 15px; font-weight: 700">Dashboard layout</div>
+          <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">How your categories are shown on Home</div>
+          <div style="display: flex; border-radius: 15px; background: var(--el, #3A2F27); padding: 4px; gap: 4px; margin-top: 14px">
+            <sc-for list="{{ layoutOpts }}" as="o" hint-placeholder-count="3">
+              <button onClick="{{ o.pick }}" style="flex: 1; height: 40px; border: none; border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ o.bg }}; color: {{ o.color }}" style-active="transform: scale(0.97)">{{ o.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <button onClick="{{ signOut }}" style="width: 100%; height: 52px; margin-top: 12px; border: none; border-radius: 999px; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer">Sign out</button>
+      </div>
+    </sc-if>
+
+    <!-- ─── FAB ─── -->
+    <sc-if value="{{ tabHome }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ openSheet }}" style="position: absolute; right: 18px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); height: 56px; padding: 0 22px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 28px rgba(201,98,135,0.4); display: flex; align-items: center; gap: 8px; z-index: 20" style-active="transform: scale(0.96)"><span style="font-size: 22px; font-weight: 700; line-height: 0">+</span> Add expense</button>
+    </sc-if>
+
+    <!-- ─── TAB BAR ─── -->
+    <div style="height: 56px; flex: none; display: flex; align-items: stretch; background: var(--card, #2D251F); border-top: 1px solid var(--line, rgba(246,237,227,0.07)); z-index: 15">
+      <button onClick="{{ goHome }}" style="flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: 'DM Sans', sans-serif; color: {{ tabHomeColor }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11 L12 4.5 L20 11 V19.5 H4 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>
+        <span style="font-size: 10px; font-weight: 700">Home</span>
+      </button>
+      <button onClick="{{ goReports }}" style="flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: 'DM Sans', sans-serif; color: {{ tabReportsColor }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="12" width="4" height="8" rx="1.5"></rect><rect x="10" y="7" width="4" height="13" rx="1.5"></rect><rect x="16" y="10" width="4" height="10" rx="1.5"></rect></svg>
+        <span style="font-size: 10px; font-weight: 700">Reports</span>
+      </button>
+      <button onClick="{{ goSettings }}" style="flex: 1; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-family: 'DM Sans', sans-serif; color: {{ tabSettingsColor }}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="2"></circle><rect x="10" y="6" width="10" height="2" rx="1"></rect><circle cx="16" cy="13" r="2"></circle><rect x="4" y="12" width="8" height="2" rx="1"></rect><circle cx="9" cy="19" r="2"></circle><rect x="13" y="18" width="7" height="2" rx="1"></rect></svg>
+        <span style="font-size: 10px; font-weight: 700">Settings</span>
+      </button>
+    </div>
+    <!-- system nav-bar inset (3-button nav / no auto-hide) -->
+    <div style="height: calc(6px + env(safe-area-inset-bottom, 0px)); flex: none; background: var(--card, #2D251F); z-index: 15"></div>
+
+    <!-- ─── CATEGORY DETAIL OVERLAY ─── -->
+    <sc-if value="{{ showCat }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Category detail" style="position: absolute; inset: 0; z-index: 30; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 18px 40px">
+          <button onClick="{{ backHome }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
+          <div style="display: flex; align-items: center; gap: 14px; padding: 10px 4px">
+            <div style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 34px; color: var(--text, #F6EDE3)">{{ det.emoji }}</span></div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.3px">{{ det.name }}</div>
+                <sc-if value="{{ det.isAnnual }}" hint-placeholder-val="{{ false }}"><div style="font-size: 9px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 7px">ANNUAL</div></sc-if>
+              </div>
+              <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px">{{ det.periodLabel }}</div>
+            </div>
+          </div>
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 8px">
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <div style="font-size: 30px; font-weight: 900; letter-spacing: -0.7px">{{ det.amtFmt }}</div>
+              <div style="font-size: 14px; color: var(--sub, #B5A493)">{{ det.ofFmt }}</div>
+            </div>
+            <div style="height: 10px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.12)); overflow: hidden; margin-top: 14px">
+              <div style="height: 100%; border-radius: 99px; background: {{ det.bar }}; width: {{ det.pctW }}; transition: width 1.1s cubic-bezier(0.25, 0.8, 0.3, 1)"></div>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; margin-top: 10px; color: {{ det.subColor }}">{{ det.sub }}</div>
+          </div>
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 16px 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px">
+            <div style="flex: 1">
+              <div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493)">{{ det.limitLabel }}</div>
+              <div style="display: flex; align-items: center; gap: 2px; margin-top: 2px">
+                <div style="font-size: 18px; font-weight: 800">{{ curSym }}</div>
+                <input value="{{ det.limitVal }}" onChange="{{ limitChange }}" inputMode="numeric" style="width: 100px; border: none; background: none; color: var(--text, #F6EDE3); font-size: 18px; font-weight: 800; font-family: 'DM Sans', sans-serif; outline: none; padding: 0; border-bottom: 1.5px dashed var(--track, rgba(246,237,227,0.2))">
+              </div>
+            </div>
+            <button onClick="{{ decLimit }}" style="width: 42px; height: 42px; border: none; border-radius: 50%; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-size: 20px; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif" style-active="transform: scale(0.92)">−</button>
+            <button onClick="{{ incLimit }}" style="width: 42px; height: 42px; border: none; border-radius: 50%; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-size: 20px; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif" style-active="transform: scale(0.92)">+</button>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; padding: 22px 4px 10px">
+            <div style="font-size: 16px; font-weight: 800">Recent</div>
+          </div>
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 4px 18px">
+            <sc-for list="{{ det.txns }}" as="t" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: {{ t.whoBg }}; color: {{ t.whoColor }}; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ t.whoInitial }}</div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ t.note }}</div>
+                  <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">{{ t.meta }}</div>
+                </div>
+                <div style="font-size: 15px; font-weight: 800">{{ t.amtFmt }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <button onClick="{{ addToThisCat }}" style="width: 100%; height: 54px; margin-top: 16px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">{{ det.addLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── PROFILE OVERLAY ─── -->
+    <sc-if value="{{ profOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Profile" style="position: absolute; inset: 0; z-index: 35; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 18px 40px">
+          <button onClick="{{ closeProfile }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0 20px">
+            <div style="width: 84px; height: 84px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 34px; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: background 0.3s">{{ profInitial }}</div>
+            <div style="display: flex; gap: 10px">
+              <sc-for list="{{ profSwatches }}" as="sw" hint-placeholder-count="6">
+                <button onClick="{{ sw.pick }}" style="width: 30px; height: 30px; border-radius: 50%; background: {{ sw.c }}; border: 2.5px solid {{ sw.ring }}; cursor: pointer; padding: 0" style-active="transform: scale(0.9)"></button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; display: flex; flex-direction: column; gap: 14px">
+            <div>
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">NAME</div>
+              <input value="{{ profNameVal }}" onChange="{{ profNameChange }}" placeholder="Your name" style="width: 100%; margin-top: 6px; height: 46px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 14px; font-size: 15px; font-weight: 700; outline: none">
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">EMAIL</div>
+              <input value="{{ profEmail }}" onChange="{{ profEmailChange }}" placeholder="you@example.com" style="width: 100%; margin-top: 6px; height: 46px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 14px; font-size: 15px; font-weight: 600; outline: none">
+              <div style="font-size: 11px; color: var(--sub, #B5A493); margin-top: 6px">Used for sign-in and the monthly recap</div>
+            </div>
+          </div>
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 8px 20px; margin-top: 12px">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493); padding: 12px 0 2px">REMINDERS</div>
+            <sc-for list="{{ prefRows }}" as="p" hint-placeholder-count="3">
+              <div onClick="{{ p.toggle }}" style="display: flex; align-items: center; gap: 12px; padding: 14px 0; cursor: pointer; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                <div style="flex: 1">
+                  <div style="font-size: 15px; font-weight: 700">{{ p.title }}</div>
+                  <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">{{ p.sub }}</div>
+                </div>
+                <div style="width: 52px; height: 30px; border-radius: 999px; background: {{ p.bg }}; padding: 3px; display: flex; justify-content: {{ p.side }}; transition: background 0.3s; flex: none">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: #FFF6EE; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <button onClick="{{ closeProfile }}" style="width: 100%; height: 54px; margin-top: 16px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Done</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── ADD EXPENSE SHEET ─── -->
+    <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Add expense" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end">
+        <div onClick="{{ closeSheet }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 12px">
+          <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
+          <div style="display: flex; align-items: center">
+            <div style="font-size: 17px; font-weight: 800; flex: 1">Add expense</div>
+            <button onClick="{{ closeSheet }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
+          </div>
+          <div style="text-align: center; padding: 4px 0">
+            <div style="font-size: 42px; font-weight: 900; letter-spacing: -1px; color: {{ amountColor }}">{{ amountFmt }}</div>
+            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Today · paid by {{ payer }}</div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; justify-content: center">
+            <sc-for list="{{ chips }}" as="ch" hint-placeholder-count="8">
+              <button onClick="{{ ch.pick }}" style="height: 36px; padding: 0 13px; border-radius: 999px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1.5px solid {{ ch.border }}; background: {{ ch.bg }}; color: {{ ch.color }}" style-active="transform: scale(0.95)"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 16px">{{ ch.emoji }}</span>{{ ch.name }}</button>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <input value="{{ note }}" onChange="{{ noteChange }}" placeholder="Add a note (optional)" style="flex: 1; height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 600; outline: none">
+            <div style="display: flex; border-radius: 14px; background: var(--el, #3A2F27); padding: 4px; gap: 4px">
+              <button onClick="{{ paySara }}" style="height: 36px; padding: 0 12px; border: none; border-radius: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ saraBg }}; color: {{ saraColor }}">{{ profFirst }}</button>
+              <button onClick="{{ payOmar }}" style="height: 36px; padding: 0 12px; border: none; border-radius: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ omarBg }}; color: {{ omarColor }}">Omar</button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px">
+            <sc-for list="{{ padKeys }}" as="k" hint-placeholder-count="12">
+              <button onClick="{{ k.tap }}" style="height: 52px; border: none; border-radius: 16px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer" style-active="background: rgba(201,98,135,0.25); transform: scale(0.96)">{{ k.label }}</button>
+            </sc-for>
+          </div>
+          <button onClick="{{ addNow }}" style="height: 56px; border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; background: {{ confirmBg }}; color: {{ confirmColor }}; transition: background 0.25s" style-active="transform: scale(0.98)">{{ confirmLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── MONTH TRANSACTIONS SHEET ─── -->
+    <sc-if value="{{ histSheetOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Month transactions" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end">
+        <div onClick="{{ closeHistSheet }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 12px; max-height: 75%">
+          <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex: none"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 26px; color: var(--text, #F6EDE3)">{{ histSheet.emoji }}</span></div>
+            <div style="flex: 1">
+              <div style="font-size: 17px; font-weight: 800">{{ histSheet.name }}</div>
+              <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">{{ histSheet.monthLabel }} · {{ histSheet.totalFmt }}</div>
+            </div>
+            <button onClick="{{ closeHistSheet }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
+          </div>
+          <div style="overflow-y: auto; margin: 0 -4px; padding: 0 4px">
+            <sc-for list="{{ histSheet.txns }}" as="t" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: {{ t.whoBg }}; color: {{ t.whoColor }}; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ t.whoInitial }}</div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ t.note }}</div>
+                  <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">{{ t.meta }}</div>
+                </div>
+                <div style="font-size: 15px; font-weight: 800">{{ t.amtFmt }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── MONDAY NOTIFICATION ─── -->
+    <sc-if value="{{ notifShown }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Weekly notification" style="position: absolute; top: 8px; left: 10px; right: 10px; z-index: 50; animation: notifDown 0.45s cubic-bezier(0.2, 0.8, 0.3, 1)">
+        <div onClick="{{ openWeekly }}" style="background: var(--el, #3A2F27); border: 1px solid var(--line, rgba(246,237,227,0.1)); border-radius: 22px; padding: 14px 16px; cursor: pointer; box-shadow: 0 16px 40px rgba(0,0,0,0.45); display: flex; gap: 12px; align-items: flex-start" style-active="transform: scale(0.985)">
+          <div style="width: 34px; height: 34px; border-radius: 11px; background: var(--accent, #C96287); display: flex; align-items: center; justify-content: center; flex: none"><span style="font-size: 15px; font-weight: 900; letter-spacing: -1px; color: #FFF3F0">ob<span style="color: #2B0E1A">.</span></span></div>
+          <div style="flex: 1; min-width: 0">
+            <div style="font-size: 11px; font-weight: 700; color: var(--sub, #B5A493)">ourbudget. · Mon 8:00</div>
+            <div style="font-size: 14px; font-weight: 800; margin-top: 2px">Your Monday check-in ☀️</div>
+            <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px; line-height: 1.4">{{ notifBody }}</div>
+          </div>
+          <button onClick="{{ dismissNotif }}" style="border: none; background: none; color: var(--sub, #B5A493); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 2px 4px; flex: none">✕</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── WEEKLY CHECK-IN SHEET ─── -->
+    <sc-if value="{{ weeklyOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Weekly check-in" style="position: absolute; inset: 0; z-index: 45; display: flex; flex-direction: column; justify-content: flex-end">
+        <div onClick="{{ closeWeekly }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 14px">
+          <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
+          <div style="display: flex; align-items: center">
+            <div style="flex: 1">
+              <div style="font-size: 19px; font-weight: 800">Your Monday check-in ☀️</div>
+              <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px">Week of Jul 6 · The Al-Marri Home</div>
+            </div>
+            <button onClick="{{ closeWeekly }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{ weeklyRows }}" as="w" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; background: var(--el, #3A2F27); border-radius: 18px; padding: 13px 16px">
+                <div style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 24px; flex: none; color: var(--text, #F6EDE3)">{{ w.emoji }}</div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-size: 14px; font-weight: 800">{{ w.title }}</div>
+                  <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px; line-height: 1.4">{{ w.line }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <button onClick="{{ closeWeeklyNice }}" style="height: 56px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Looks good 👍</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── NEW CATEGORY SHEET ─── -->
+    <sc-if value="{{ ncOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="New category" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end">
+        <div onClick="{{ closeNewCat }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 14px">
+          <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
+          <div style="display: flex; align-items: center">
+            <div style="font-size: 17px; font-weight: 800; flex: 1">New category</div>
+            <button onClick="{{ closeNewCat }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px">
+            <sc-for list="{{ ncEmojis }}" as="e" hint-placeholder-count="12">
+              <button onClick="{{ e.pick }}" title="{{ e.label }}" style="height: 56px; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 4px; overflow: hidden; border: 1.5px solid {{ e.border }}; background: {{ e.bg }}" style-active="transform: scale(0.94)">
+                <span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 21px; line-height: 1; color: var(--text, #F6EDE3)">{{ e.emoji }}</span>
+                <span style="font-size: 9px; font-weight: 700; color: {{ e.labelColor }}; font-family: 'DM Sans', sans-serif; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ e.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <input value="{{ ncName }}" onChange="{{ ncNameChange }}" placeholder="Category name (e.g. Travel)" style="height: 48px; border-radius: 15px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 15px; font-weight: 700; outline: none">
+          <div style="display: flex; border-radius: 15px; background: var(--el, #3A2F27); padding: 4px; gap: 4px">
+            <button onClick="{{ ncMonthly }}" style="flex: 1; height: 40px; border: none; border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ ncMonBg }}; color: {{ ncMonColor }}">Monthly · resets</button>
+            <button onClick="{{ ncAnnual }}" style="flex: 1; height: 40px; border: none; border-radius: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ ncAnnBg }}; color: {{ ncAnnColor }}">Annual · builds up</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; border-radius: 15px; background: var(--el, #3A2F27); padding: 10px 16px">
+            <div style="flex: 1">
+              <div style="font-size: 11px; font-weight: 700; color: var(--sub, #B5A493)">{{ ncLimitLabel }}</div>
+              <div style="display: flex; align-items: center; gap: 2px; margin-top: 1px">
+                <div style="font-size: 19px; font-weight: 800">{{ curSym }}</div>
+                <input value="{{ ncLimitVal }}" onChange="{{ ncLimitChange }}" inputMode="numeric" style="width: 90px; border: none; background: none; color: var(--text, #F6EDE3); font-size: 19px; font-weight: 800; font-family: 'DM Sans', sans-serif; outline: none; padding: 0; border-bottom: 1.5px dashed var(--track, rgba(246,237,227,0.2))">
+              </div>
+            </div>
+            <button onClick="{{ ncDec }}" style="width: 40px; height: 40px; border: none; border-radius: 50%; background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 19px; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif" style-active="transform: scale(0.92)">−</button>
+            <button onClick="{{ ncInc }}" style="width: 40px; height: 40px; border: none; border-radius: 50%; background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 19px; font-weight: 800; cursor: pointer; font-family: 'DM Sans', sans-serif" style-active="transform: scale(0.92)">+</button>
+          </div>
+          <button onClick="{{ ncCreate }}" style="height: 56px; border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; background: {{ ncBg }}; color: {{ ncColor }}; transition: background 0.25s" style-active="transform: scale(0.98)">{{ ncLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── TOAST ─── -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; left: 0; right: 0; bottom: 160px; display: flex; justify-content: center; z-index: 60; pointer-events: none">
+        <div style="background: var(--el, #3A2F27); color: var(--text, #F6EDE3); border: 1px solid rgba(201,98,135,0.35); border-radius: 999px; padding: 12px 22px; font-size: 14px; font-weight: 700; box-shadow: 0 12px 32px rgba(0,0,0,0.4); animation: toastPop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1)">{{ toast }}</div>
+      </div>
+    </sc-if>
+
+  </sc-if>
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 520, &quot;height&quot;: 1000 },
+  &quot;theme&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dark&quot;, &quot;light&quot;], &quot;default&quot;: &quot;dark&quot;, &quot;tsType&quot;: &quot;'dark' | 'light'&quot;, &quot;section&quot;: &quot;Appearance&quot; },
+  &quot;accent&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;options&quot;: [&quot;#E2795B&quot;, &quot;#D96C57&quot;, &quot;#C77B4F&quot;, &quot;#C96287&quot;], &quot;default&quot;: &quot;#C96287&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Appearance&quot; },
+  &quot;currency&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;AED&quot;, &quot;USD&quot;, &quot;GBP&quot;, &quot;EUR&quot;, &quot;ZAR&quot;], &quot;default&quot;: &quot;AED&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;App&quot; },
+  &quot;dashboardLayout&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;cozy-cards&quot;, &quot;grid&quot;, &quot;compact&quot;], &quot;default&quot;: &quot;cozy-cards&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Dashboard&quot; },
+  &quot;startAt&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;onboarding&quot;, &quot;dashboard&quot;], &quot;default&quot;: &quot;onboarding&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot; }
+}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.MCATS = [
+      { id: 'groceries', emoji: 'grocery', name: 'Groceries', color: '#7FA86F', limit: 2500 },
+      { id: 'dining', emoji: 'restaurant', name: 'Dining out', color: '#E08B6F', limit: 1200 },
+      { id: 'fuel', emoji: 'local_taxi', name: 'Transport', color: '#E3B063', limit: 600 },
+      { id: 'kids', emoji: 'toys', name: 'Kids', color: '#D492A6', limit: 900 },
+      { id: 'rent', emoji: 'home', name: 'Housing', color: '#9C8FC7', limit: 6000 },
+      { id: 'other', emoji: 'auto_awesome', name: 'Everything else', color: '#B0A08C', limit: 800 },
+    ];
+    this.ACATS = [
+      { id: 'maint', emoji: 'handyman', name: 'Household maintenance', color: '#8FB5B0', limit: 12000, ytd: 4300, ytdBy: [4300, 3850, 2650, 2300, 0] },
+      { id: 'car', emoji: 'directions_car', name: 'Car service', color: '#8AA3C4', limit: 4000, ytd: 1850, ytdBy: [1850, 1850, 1850, 600, 600] },
+      { id: 'gifts', emoji: 'redeem', name: 'Gifts', color: '#D97A8F', limit: 6000, ytd: 2100, ytdBy: [2100, 2100, 1300, 1300, 1300] },
+    ];
+    this.MONTHS = [
+      { label: 'July 2026', short: 'Jul', spent: { groceries: 1720, dining: 1340, fuel: 385, kids: 610, rent: 6000, other: 240 } },
+      { label: 'June 2026', short: 'Jun', spent: { groceries: 2380, dining: 1150, fuel: 540, kids: 880, rent: 6000, other: 410 } },
+      { label: 'May 2026', short: 'May', spent: { groceries: 2850, dining: 1480, fuel: 790, kids: 1010, rent: 6000, other: 620 } },
+      { label: 'April 2026', short: 'Apr', spent: { groceries: 2450, dining: 1080, fuel: 520, kids: 830, rent: 6000, other: 350 } },
+      { label: 'March 2026', short: 'Mar', spent: { groceries: 2950, dining: 1390, fuel: 720, kids: 1120, rent: 6000, other: 680 } },
+    ];
+    this.TXNS = {
+      groceries: [
+        { note: 'Carrefour', amt: 320, who: 'Sara', when: 'Jul 10' },
+        { note: 'Spinneys', amt: 264, who: 'Omar', when: 'Jul 5' },
+        { note: 'Union Coop', amt: 188, who: 'Sara', when: 'Jul 3' },
+        { note: 'Carrefour', amt: 412, who: 'Omar', when: 'Jul 1' },
+      ],
+      dining: [
+        { note: 'Reform Social', amt: 210, who: 'Sara', when: 'Jul 9' },
+        { note: 'Karak House', amt: 46, who: 'Omar', when: 'Jul 5' },
+        { note: 'Zuma — anniversary', amt: 684, who: 'Omar', when: 'Jul 3' },
+        { note: 'Common Grounds', amt: 400, who: 'Sara', when: 'Jul 1' },
+      ],
+      fuel: [
+        { note: 'Shell fuel', amt: 180, who: 'Omar', when: 'Jul 9' },
+        { note: 'ENOC', amt: 130, who: 'Sara', when: 'Jul 4' },
+        { note: 'Careem to DIFC', amt: 45, who: 'Sara', when: 'Jul 3' },
+        { note: 'Nol top-up', amt: 30, who: 'Omar', when: 'Jul 1' },
+      ],
+      kids: [
+        { note: 'Swim class', amt: 150, who: 'Sara', when: 'Jul 6' },
+        { note: 'School supplies', amt: 230, who: 'Omar', when: 'Jul 4' },
+        { note: 'Toy store', amt: 230, who: 'Sara', when: 'Jul 2' },
+      ],
+      rent: [{ note: 'July rent', amt: 6000, who: 'Omar', when: 'Jul 1' }],
+      other: [
+        { note: 'Pharmacy', amt: 85, who: 'Sara', when: 'Jul 4' },
+        { note: 'Mall parking', amt: 90, who: 'Sara', when: 'Jul 5' },
+        { note: 'Dry cleaning', amt: 65, who: 'Omar', when: 'Jul 2' },
+      ],
+      maint: [
+        { note: 'Plumber', amt: 450, who: 'Omar', when: 'Jul 7' },
+        { note: 'AC service', amt: 1200, who: 'Sara', when: 'Jun 14' },
+        { note: 'Handyman — shelves', amt: 350, who: 'Omar', when: 'May 30' },
+        { note: 'Paint touch-up', amt: 2300, who: 'Sara', when: 'Apr 12' },
+      ],
+      car: [
+        { note: 'Minor service', amt: 1250, who: 'Omar', when: 'May 22' },
+        { note: 'Tyre repair', amt: 600, who: 'Omar', when: 'Mar 8' },
+      ],
+      gifts: [
+        { note: "Mum's birthday", amt: 800, who: 'Sara', when: 'Jun 2' },
+        { note: 'Eid gifts', amt: 1300, who: 'Sara', when: 'Mar 30' },
+      ],
+    };
+  }
+
+  state = {
+    phase: null, tab: 'home', mounted: false, catId: null,
+    sheet: false, sheetCat: null, amount: '', note: '', payer: 'Sara',
+    monthIdx: 0, theme: null, toast: null, extra: {}, extraTx: {}, limitOv: {},
+    customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
+    notif: false, weekly: false,
+    profOpen: false, profName: 'Sara', profEmail: 'sara.almarri@gmail.com', profColor: '#D98BA4',
+    prefWeekly: true, prefOver: true, prefMonthly: false,
+  };
+
+  scheduleNotif() {
+    clearTimeout(this._nt);
+    this._nt = setTimeout(() => this.setState({ notif: true }), 1400);
+  }
+
+  componentDidMount() {
+    setTimeout(() => this.setState({ mounted: true }), 120);
+    if ((this.props.startAt ?? 'onboarding') === 'dashboard') this.scheduleNotif();
+  }
+
+  cur() { return this.state.currency ?? this.props.currency ?? 'AED'; }
+  sym() { return { AED: 'Đ', USD: '$', GBP: '£', EUR: '€', ZAR: 'R' }[this.cur()] || this.cur(); }
+  fmt(n) { return this.sym() + '\u2009' + n.toFixed(2).replace('.', ','); }
+  fmtN(n) { return String(Math.round(n)); }
+
+  limitOf(c) { return c.limit + (this.state.limitOv[c.id] || 0); }
+  spentOf(c, monthIdx) {
+    if (c.ytd !== undefined) {
+      const base = c.ytdBy ? (c.ytdBy[monthIdx] ?? c.ytd) : c.ytd;
+      return base + (monthIdx === 0 ? (this.state.extra[c.id] || 0) : 0);
+    }
+    const base = this.MONTHS[monthIdx].spent[c.id] || 0;
+    return monthIdx === 0 ? base + (this.state.extra[c.id] || 0) : base;
+  }
+
+  status(spent, limit, annual) {
+    const pct = spent / limit;
+    const left = limit - spent;
+    const period = '';
+    if (pct > 1) return { bar: 'linear-gradient(90deg, #CE4B3A, #B7301F)', sub: this.fmt(spent - limit) + ' over — it happens 💛', sub1: this.fmt(spent - limit) + ' over', sub2: 'it happens 💛', subColor: '#DE4B37', pct };
+    if (pct >= 0.85) return { bar: '#86B478', sub: 'Nearly there — ' + this.fmt(left) + ' left' + (period ? ' ' + period : ''), sub1: this.fmt(left) + ' left' + (period ? ' ' + period : ''), sub2: 'nearly there 🌿', subColor: '#8FBF7E', pct };
+    return { bar: '#86B478', sub: this.fmt(left) + ' left' + (period ? ' ' + period : ''), sub1: this.fmt(left) + ' left' + (period ? ' ' + period : ''), sub2: '', subColor: '#8FBF7E', pct };
+  }
+
+  card(c, monthIdx) {
+    const annual = c.ytd !== undefined;
+    const limit = this.limitOf(c);
+    const spent = this.spentOf(c, monthIdx);
+    const st = this.status(spent, limit, annual);
+    return {
+      id: c.id, emoji: c.emoji, name: c.name, isAnnual: annual,
+      tileBg: c.color + '30',
+      iconColor: c.color,
+      amtFmt: this.fmt(spent),
+      ofFmt: 'of ' + this.fmt(limit),
+      pctW: (this.state.mounted ? Math.min(100, Math.round(st.pct * 100)) : 0) + '%',
+      bar: st.bar, sub: st.sub, sub1: st.sub1, sub2: st.sub2, subColor: st.subColor,
+      open: () => this.setState({ catId: c.id }),
+    };
+  }
+
+  txnsFor(c, monthIdx) {
+    if (monthIdx === 0 || c.ytd !== undefined) {
+      return [...(this.state.extraTx[c.id] || []), ...(this.TXNS[c.id] || [])];
+    }
+    const spent = this.spentOf(c, monthIdx);
+    if (!spent) return [];
+    const mShort = this.MONTHS[monthIdx].short;
+    if (c.id === 'rent') return [{ note: 'Monthly rent', amt: spent, who: 'Omar', when: mShort + ' 1' }];
+    const pool = {
+      groceries: ['Carrefour', 'Spinneys', 'Union Coop', 'Lulu'],
+      dining: ['Karak House', 'Common Grounds', 'Cafeteria', 'Brunch'],
+      fuel: ['Shell fuel', 'ENOC', 'Careem', 'Nol top-up'],
+      kids: ['Swim class', 'School supplies', 'Toy store', 'Playdate'],
+    }[c.id] || [c.name];
+    const weights = [0.38, 0.27, 0.21, 0.14];
+    const days = [3, 9, 16, 24];
+    const txns = [];
+    let rest = spent;
+    for (let i = 0; i < 4; i++) {
+      const amt = i === 3 ? rest : Math.round(spent * weights[i]);
+      rest -= amt;
+      txns.push({ note: pool[i % pool.length], amt, who: i % 2 ? 'Omar' : 'Sara', when: mShort + ' ' + days[i] });
+    }
+    return txns.reverse();
+  }
+
+  toastNow(msg) {
+    clearTimeout(this._tt);
+    this.setState({ toast: msg });
+    this._tt = setTimeout(() => this.setState({ toast: null }), 2400);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const theme = s.theme ?? this.props.theme ?? 'dark';
+    const isDark = theme === 'dark';
+    const accent = this.props.accent ?? '#C96287';
+    const layout = s.layout ?? this.props.dashboardLayout ?? 'cozy-cards';
+    const phase = s.phase ?? ((this.props.startAt ?? 'onboarding') === 'dashboard' ? 'app' : 'welcome');
+
+    const lightVars = '--bg:#F7F0E6;--card:#FFFDF9;--el:#F0E5D6;--text:#37291F;--sub:#8A7663;--line:rgba(55,41,31,0.08);--track:rgba(55,41,31,0.10);';
+    const themeVarsCss = (isDark ? '' : lightVars) + '--accent:' + accent + ';';
+
+    // ── overall (current month) ──
+    const allM = [...this.MCATS, ...s.customCats.filter(c => c.ytd === undefined)];
+    const allA = [...this.ACATS, ...s.customCats.filter(c => c.ytd !== undefined)];
+    const totalSpent = allM.reduce((a, c) => a + this.spentOf(c, 0), 0);
+    const totalLimit = allM.reduce((a, c) => a + this.limitOf(c), 0);
+    const ringP = Math.min(100, Math.round((totalSpent / totalLimit) * 100));
+    const left = totalLimit - totalSpent;
+
+    const sections = [
+      { title: 'This Month', hint: 'Resets Monthly', cards: allM.map(c => this.card(c, 0)) },
+      { title: 'Annual Budgets', hint: 'Resets Annually', cards: allA.map(c => this.card(c, 0)) },
+    ];
+
+    // ── detail ──
+    const detCatDef = [...allM, ...allA].find(c => c.id === s.catId);
+    let det = null;
+    if (detCatDef) {
+      const base = this.card(detCatDef, 0);
+      const annual = detCatDef.ytd !== undefined;
+      det = {
+        ...base,
+        periodLabel: annual ? 'Annual budget · Jan – Dec 2026' : 'Monthly budget · July 2026',
+        ofFmt: 'of ' + this.fmt(this.limitOf(detCatDef)),
+        limitLabel: annual ? 'ANNUAL LIMIT' : 'MONTHLY LIMIT',
+        limitFmt: this.fmt(this.limitOf(detCatDef)),
+        limitVal: this.fmtN(this.limitOf(detCatDef)),
+        addLabel: '+ Add to ' + detCatDef.name,
+        txns: [...(s.extraTx[detCatDef.id] || []), ...(this.TXNS[detCatDef.id] || [])].map(t => ({
+          note: t.note, amtFmt: this.fmt(t.amt),
+          whoInitial: t.who === 'Sara' ? (s.profName.trim()[0] || 'S').toUpperCase() : t.who[0],
+          whoBg: t.who === 'Sara' ? s.profColor : '#7FA8A0',
+          whoColor: t.who === 'Sara' ? '#3A1220' : '#0F2B26',
+          meta: (t.who === 'Sara' ? (s.profName.trim() || 'Sara') : t.who) + ' · ' + t.when,
+        })),
+      };
+    }
+
+    // ── reports ──
+    const repM = s.monthIdx === 0 ? allM : this.MCATS;
+    const maxSpent = Math.max(...repM.map(c => this.spentOf(c, s.monthIdx)));
+    const reportBars = repM.map(c => ({ ...c, spent: this.spentOf(c, s.monthIdx) }))
+      .sort((a, b) => b.spent - a.spent)
+      .map(c => ({ emoji: c.emoji, name: c.name, amtFmt: this.fmt(c.spent), color: c.color, w: (s.mounted ? Math.round((c.spent / maxSpent) * 100) : 0) + '%' }));
+
+    const totals = this.MONTHS.map((m, i) => (i === 0 ? allM : this.MCATS).reduce((a, c) => a + this.spentOf(c, i), 0)).reverse();
+    const labels = this.MONTHS.map(m => m.short).reverse();
+    const budgetT = this.MCATS.reduce((a, c) => a + this.limitOf(c), 0);
+    const maxT = Math.max(...totals, budgetT);
+    const trendCols = totals.map((t, i) => {
+      const monthIdx = totals.length - 1 - i; // reverse back to MONTHS index
+      const over = t > budgetT;
+      return {
+        m: labels[i],
+        amt: (t / 1000).toFixed(1).replace('.', ',') + 'k',
+        budgetH: (s.mounted ? Math.round((Math.max(t, budgetT) / maxT) * 100) : 4) + '%',
+        fillH: (s.mounted ? (over ? Math.round(((t - budgetT) / t) * 100) : Math.min(100, Math.round((t / budgetT) * 100))) : 0) + '%',
+        fillSide: over ? 'flex-start' : 'flex-end',
+        fillRadius: over ? '0' : '4px 4px 0 0',
+        fillColor: over ? '#C8402E' : '#86B478',
+        labelColor: monthIdx === s.monthIdx ? 'var(--accent, #C96287)' : 'var(--sub, #B5A493)',
+        openMonth: () => this.setState({ monthIdx }),
+      };
+    });
+
+    const yearPct = [51, 50, 42, 33, 25][s.monthIdx] ?? 51;
+    const annualReport = allA.map(c => {
+      const spent = this.spentOf(c, s.monthIdx);
+      const pct = Math.round((spent / this.limitOf(c)) * 100);
+      const ahead = pct > yearPct;
+      return {
+        emoji: c.emoji, name: c.name, color: pct > 100 ? 'linear-gradient(90deg, #CE4B3A, #B7301F)' : '#86B478',
+        open: () => this.setState({ histCat: c.id }),
+        usedFmt: this.fmt(spent) + ' of ' + this.fmt(this.limitOf(c)),
+        w: (s.mounted ? Math.min(100, pct) : 0) + '%',
+        pace: ahead ? pct + '% used · a little ahead of the year 💛' : pct + '% used · comfortably on pace 🌿',
+        paceColor: ahead ? '#DE4B37' : '#8FBF7E',
+      };
+    });
+
+    // ── history ──
+    const hm = this.MONTHS[s.monthIdx];
+    const histBase = s.monthIdx === 0 ? allM : this.MCATS;
+    const histCards = histBase.map(c => ({
+      ...this.card(c, s.monthIdx),
+      open: () => this.setState({ histCat: c.id }),
+    }));
+
+    // ── month transactions sheet ──
+    const histCatDef = s.histCat ? [...allM, ...allA].find(c => c.id === s.histCat) : null;
+    let histSheet = null;
+    if (histCatDef) {
+      const txns = this.txnsFor(histCatDef, s.monthIdx);
+      histSheet = {
+        emoji: histCatDef.emoji, name: histCatDef.name,
+        tileBg: histCatDef.color + '30',
+        iconColor: histCatDef.color,
+        monthLabel: histCatDef.ytd !== undefined ? 'Year to date' : hm.label,
+        totalFmt: this.fmt(txns.reduce((a, t) => a + t.amt, 0)),
+        txns: txns.map(t => ({
+          note: t.note, amtFmt: this.fmt(t.amt),
+          whoInitial: t.who[0],
+          whoBg: t.who === 'Sara' ? s.profColor : '#7FA8A0',
+          whoColor: t.who === 'Sara' ? '#3A1220' : '#0F2B26',
+          meta: t.who + ' · ' + t.when,
+        })),
+      };
+    }
+    const histSpent = histBase.reduce((a, c) => a + this.spentOf(c, s.monthIdx), 0);
+
+    // ── sheet ──
+    const allCats = [...allM, ...allA];
+    const amtNum = parseFloat(s.amount) || 0;
+    const selCat = allCats.find(c => c.id === s.sheetCat);
+    const canAdd = amtNum > 0 && !!selCat;
+    const chips = allCats.map(c => {
+      const sel = c.id === s.sheetCat;
+      return {
+        emoji: c.emoji, name: c.name,
+        border: sel ? accent : 'var(--line, rgba(246,237,227,0.12))',
+        bg: sel ? 'rgba(201,98,135,0.18)' : 'transparent',
+        color: sel ? accent : 'var(--text, #F6EDE3)',
+        pick: () => this.setState({ sheetCat: c.id }),
+      };
+    });
+    const padKeys = ['1','2','3','4','5','6','7','8','9',',','0','⌫'].map(k => ({
+      label: k,
+      tap: () => {
+        let a = this.state.amount;
+        if (k === '⌫') a = a.slice(0, -1);
+        else if (k === ',') { if (!a.includes('.')) a = (a || '0') + '.'; }
+        else if (a.replace('.', '').length < 6) a = a === '0' ? k : a + k;
+        this.setState({ amount: a });
+      },
+    }));
+
+    const addNow = () => {
+      if (!canAdd) { this.toastNow('Pick a category and amount first 🙂'); return; }
+      const tx = { note: s.note.trim() || selCat.name, amt: amtNum, who: s.payer, when: 'Jul 10' };
+      this.setState(st => ({
+        extra: { ...st.extra, [selCat.id]: (st.extra[selCat.id] || 0) + amtNum },
+        extraTx: { ...st.extraTx, [selCat.id]: [tx, ...(st.extraTx[selCat.id] || [])] },
+        sheet: false, amount: '', note: '',
+      }));
+      this.toastNow('Added ' + this.fmt(amtNum) + ' to ' + selCat.name + ' 🎉');
+    };
+
+    const tabColor = t => (s.tab === t && !s.catId ? 'var(--accent, #C96287)' : 'var(--sub, #B5A493)');
+
+    return {
+      // shell
+      isDark, themeVarsCss,
+      // phases
+      isWelcome: phase === 'welcome', isFork: phase === 'fork', isInvite: phase === 'invite', isJoin: phase === 'join',
+      inApp: phase === 'app',
+      goFork: () => this.setState({ phase: 'fork' }),
+      goInvite: () => this.setState({ phase: 'invite' }),
+      goJoin: () => this.setState({ phase: 'join' }),
+      toDash: () => { this.setState({ phase: 'app', tab: 'home' }); this.scheduleNotif(); },
+      joinCode: s.joinCode || '',
+      joinChange: e => this.setState({ joinCode: e.target.value.toUpperCase() }),
+      shareInvite: () => this.toastNow('Invite link copied 📋'),
+      signOut: () => this.setState({ phase: 'welcome', tab: 'home', catId: null }),
+      // tabs
+      tabHome: s.tab === 'home', tabReports: s.tab === 'reports', tabSettings: s.tab === 'settings',
+      goHome: () => this.setState({ tab: 'home', catId: null }),
+      goReports: () => this.setState({ tab: 'reports', catId: null }),
+      goSettings: () => this.setState({ tab: 'settings', catId: null }),
+      tabHomeColor: tabColor('home'), tabReportsColor: tabColor('reports'),
+      tabSettingsColor: tabColor('settings'),
+      // home
+      ringPct: (s.mounted ? ringP : 0) + '%',
+      ringColor: totalSpent > totalLimit ? '#C8402E' : '#86B478',
+      ringLabel: ringP + '%',
+      totalSpentFmt: this.fmt(totalSpent),
+      totalLimitFmt: this.fmt(totalLimit),
+      totalLimitN: this.fmtN(totalLimit),
+      summaryLine1: left >= 0 ? this.fmt(left) + ' left' : this.fmt(-left) + ' over',
+      summaryLine2: left >= 0 ? 'you\u2019ve got this 🌿' : 'deep breath 💛',
+      summaryColor: left >= 0 ? '#8FBF7E' : '#DE4B37',
+      sections,
+      layoutCards: layout === 'cozy-cards', layoutGrid: layout === 'grid', layoutCompact: layout === 'compact',
+      // detail
+      showCat: !!det, det: det || {},
+      backHome: () => this.setState({ catId: null }),
+      incLimit: () => this.bumpLimit(detCatDef, 1),
+      decLimit: () => this.bumpLimit(detCatDef, -1),
+      curSym: this.sym(),
+      limitChange: e => {
+        if (!detCatDef) return;
+        const val = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0;
+        this.setState(st => ({ limitOv: { ...st.limitOv, [detCatDef.id]: val - detCatDef.limit } }));
+      },
+      addToThisCat: () => this.setState({ sheet: true, sheetCat: s.catId, amount: '', note: '' }),
+      // reports
+      reportBars, trendCols, annualReport,
+      yearTick: yearPct + '%',
+      // history
+      histLabel: hm.label,
+      histTotal: this.fmt(histSpent),
+      histLimit: this.fmt(totalLimit),
+      histCards,
+      histSheetOpen: !!histSheet, histSheet: histSheet || {},
+      closeHistSheet: () => this.setState({ histCat: null }),
+      isPast: s.monthIdx > 0,
+      prevMonth: () => this.setState(st => ({ monthIdx: Math.min(this.MONTHS.length - 1, st.monthIdx + 1) })),
+      nextMonth: () => this.setState(st => ({ monthIdx: Math.max(0, st.monthIdx - 1) })),
+      nextColor: s.monthIdx === 0 ? 'var(--track, rgba(246,237,227,0.2))' : 'var(--text, #F6EDE3)',
+      // settings
+      toggleTheme: () => this.setState({ theme: isDark ? 'light' : 'dark' }),
+      themeLabel: isDark ? 'Cozy dark mode 🌙' : 'Warm light mode ☀️',
+      currencyOpts: [
+        { c: 'AED', s: 'Đ' },
+        { c: 'USD', s: '$' },
+        { c: 'GBP', s: '£' },
+        { c: 'EUR', s: '€' },
+        { c: 'ZAR', s: 'R' },
+      ].map(({ c, s: sy }) => ({
+        label: sy + ' ' + c,
+        border: this.cur() === c ? accent : 'var(--line, rgba(246,237,227,0.12))',
+        bg: this.cur() === c ? 'rgba(201,98,135,0.18)' : 'transparent',
+        color: this.cur() === c ? accent : 'var(--text, #F6EDE3)',
+        pick: () => this.setState({ currency: c }),
+      })),
+      layoutOpts: [
+        { id: 'cozy-cards', label: 'Cozy cards' },
+        { id: 'grid', label: 'Grid' },
+        { id: 'compact', label: 'Compact' },
+      ].map(o => ({
+        label: o.label,
+        bg: layout === o.id ? accent : 'transparent',
+        color: layout === o.id ? '#2B0E1A' : 'var(--sub, #B5A493)',
+        pick: () => this.setState({ layout: o.id }),
+      })),
+      switchBg: isDark ? accent : 'var(--track, rgba(55,41,31,0.15))',
+      switchSide: isDark ? 'flex-end' : 'flex-start',
+      // sheet
+      sheetOpen: s.sheet,
+      openSheet: () => this.setState({ sheet: true, sheetCat: null, amount: '', note: '' }),
+      closeSheet: () => this.setState({ sheet: false }),
+      amountFmt: this.sym() + '\u2009' + (s.amount ? s.amount.replace('.', ',') : '0'),
+      amountColor: amtNum > 0 ? 'var(--text, #F6EDE3)' : 'var(--sub, #B5A493)',
+      chips, padKeys,
+      note: s.note,
+      noteChange: e => this.setState({ note: e.target.value }),
+      payer: s.payer,
+      paySara: () => this.setState({ payer: 'Sara' }),
+      payOmar: () => this.setState({ payer: 'Omar' }),
+      saraBg: s.payer === 'Sara' ? s.profColor : 'transparent',
+      saraColor: s.payer === 'Sara' ? '#3A1220' : 'var(--sub, #B5A493)',
+      omarBg: s.payer === 'Omar' ? '#7FA8A0' : 'transparent',
+      omarColor: s.payer === 'Omar' ? '#0F2B26' : 'var(--sub, #B5A493)',
+      confirmBg: canAdd ? accent : 'var(--el, #3A2F27)',
+      confirmColor: canAdd ? '#2B0E1A' : 'var(--sub, #B5A493)',
+      confirmLabel: canAdd ? 'Add ' + this.fmt(amtNum) + ' to ' + selCat.name : 'Add expense',
+      addNow,
+      // weekly check-in
+      notifShown: s.notif && s.prefWeekly && s.tab === 'home' && !s.catId && !s.sheet && !s.weekly && !s.ncOpen,
+      // profile
+      profOpen: s.profOpen,
+      openProfile: () => this.setState({ profOpen: true }),
+      closeProfile: () => this.setState({ profOpen: false }),
+      profName: s.profName.trim() || 'Sara',
+      profFirst: (s.profName.trim() || 'Sara').split(' ')[0],
+      profInitial: (s.profName.trim()[0] || 'S').toUpperCase(),
+      profColor: s.profColor,
+      profNameVal: s.profName,
+      profNameChange: e => this.setState({ profName: e.target.value }),
+      profEmail: s.profEmail,
+      profEmailChange: e => this.setState({ profEmail: e.target.value }),
+      profSwatches: ['#D98BA4', '#7FA8A0', '#E3B063', '#9C8FC7', '#86B478', '#C96287'].map(c => ({
+        c,
+        ring: c === s.profColor ? '#F6EDE3' : 'transparent',
+        pick: () => this.setState({ profColor: c }),
+      })),
+      prefRows: [
+        { key: 'prefWeekly', title: 'Weekly check-in', sub: 'Monday mornings at 8:00' },
+        { key: 'prefOver', title: 'Over-budget nudges', sub: 'A gentle heads-up when a category tips over' },
+        { key: 'prefMonthly', title: 'Monthly recap email', sub: 'A summary on the 1st of each month' },
+      ].map(p => ({
+        title: p.title, sub: p.sub,
+        bg: s[p.key] ? accent : 'var(--track, rgba(246,237,227,0.15))',
+        side: s[p.key] ? 'flex-end' : 'flex-start',
+        toggle: () => this.setState(st => ({ [p.key]: !st[p.key] })),
+      })),
+      notifBody: this.fmt(left) + ' left overall. Dining out is ' + this.fmt(140) + ' over — tap for your week.',
+      dismissNotif: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ notif: false }); },
+      openWeekly: () => this.setState({ weekly: true, notif: false }),
+      weeklyOpen: s.weekly,
+      closeWeekly: () => this.setState({ weekly: false }),
+      closeWeeklyNice: () => { this.setState({ weekly: false }); this.toastNow('Have a lovely week 🌿'); },
+      weeklyRows: [
+        { emoji: 'payments', title: 'Spent last week', line: this.fmt(2140) + ' across 14 expenses — a typical week' },
+        { emoji: 'grocery', title: 'Biggest: Groceries', line: this.fmt(780) + ' — right on your usual pace' },
+        { emoji: 'restaurant', title: 'Watch: Dining out', line: this.fmt(140) + ' over — maybe a cook-at-home week? 💛' },
+        { emoji: 'eco', title: 'Cruising', line: 'Transport, Kids and Housing are all on track' },
+      ],
+      // new category
+      ncOpen: s.ncOpen,
+      openNewCat: () => this.setState({ ncOpen: true, ncName: 'Travel', ncAuto: true, ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000 }),
+      closeNewCat: () => this.setState({ ncOpen: false }),
+      ncEmojis: [
+        { e: 'flight', n: 'Travel' },
+        { e: 'lightbulb', n: 'Utilities' },
+        { e: 'wifi', n: 'Phone & internet' },
+        { e: 'medical_services', n: 'Health' },
+        { e: 'checkroom', n: 'Clothes' },
+        { e: 'spa', n: 'Personal care' },
+        { e: 'movie', n: 'Entertainment' },
+        { e: 'school', n: 'Education' },
+        { e: 'pets', n: 'Pets' },
+        { e: 'chair', n: 'Furniture' },
+        { e: 'volunteer_activism', n: 'Charity' },
+        { e: 'fitness_center', n: 'Fitness' },
+      ].map(o => ({
+        emoji: o.e,
+        label: o.n,
+        labelColor: o.e === s.ncEmoji ? accent : 'var(--sub, #B5A493)',
+        border: o.e === s.ncEmoji ? accent : 'var(--line, rgba(246,237,227,0.12))',
+        bg: o.e === s.ncEmoji ? 'rgba(201,98,135,0.18)' : 'transparent',
+        pick: () => this.setState(st => ({
+          ncEmoji: o.e,
+          ncName: (st.ncAuto || !st.ncName.trim()) ? o.n : st.ncName,
+          ncAuto: st.ncAuto || !st.ncName.trim(),
+        })),
+      })),
+      ncName: s.ncName,
+      ncNameChange: e => this.setState({ ncName: e.target.value, ncAuto: e.target.value.trim() === '' }),
+      ncMonthly: () => this.setState({ ncType: 'monthly', ncLimit: 1000 }),
+      ncAnnual: () => this.setState({ ncType: 'annual', ncLimit: 5000 }),
+      ncMonBg: s.ncType === 'monthly' ? accent : 'transparent',
+      ncMonColor: s.ncType === 'monthly' ? '#2B0E1A' : 'var(--sub, #B5A493)',
+      ncAnnBg: s.ncType === 'annual' ? accent : 'transparent',
+      ncAnnColor: s.ncType === 'annual' ? '#2B0E1A' : 'var(--sub, #B5A493)',
+      ncLimitLabel: s.ncType === 'annual' ? 'ANNUAL LIMIT' : 'MONTHLY LIMIT',
+      ncLimitFmt: this.fmt(s.ncLimit),
+      ncLimitVal: this.fmtN(s.ncLimit),
+      ncLimitChange: e => this.setState({ ncLimit: parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0 }),
+      ncDec: () => this.setState(st => ({ ncLimit: Math.max(100, st.ncLimit - 100) })),
+      ncInc: () => this.setState(st => ({ ncLimit: st.ncLimit + 100 })),
+      ncBg: s.ncName.trim() ? accent : 'var(--el, #3A2F27)',
+      ncColor: s.ncName.trim() ? '#2B0E1A' : 'var(--sub, #B5A493)',
+      ncLabel: s.ncName.trim() ? 'Create ' + s.ncName.trim() : 'Create category',
+      ncCreate: () => {
+        const name = s.ncName.trim();
+        if (!name) { this.toastNow('Give it a name first 🙂'); return; }
+        const palette = ['#7FA86F', '#E08B6F', '#E3B063', '#D492A6', '#9C8FC7', '#8FB5B0', '#8AA3C4', '#D97A8F'];
+        const cat = { id: 'c' + Date.now(), emoji: s.ncEmoji, name, color: palette[s.customCats.length % palette.length], limit: s.ncLimit };
+        if (s.ncType === 'annual') cat.ytd = 0;
+        this.setState(st => ({ customCats: [...st.customCats, cat], ncOpen: false }));
+        this.toastNow(name + ' added 🎉');
+      },
+      // toast
+      toast: s.toast,
+    };
+  }
+
+  bumpLimit(c, dir) {
+    if (!c) return;
+    const step = 100;
+    this.setState(st => {
+      const cur = c.limit + (st.limitOv[c.id] || 0);
+      const next = Math.max(step, cur + dir * step);
+      return { limitOv: { ...st.limitOv, [c.id]: next - c.limit } };
+    });
+  }
+}
+</script>
+</body>
+</html>

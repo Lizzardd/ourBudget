@@ -1,0 +1,8 @@
+# pnpm 11 settings. Build/lifecycle scripts are blocked by default (supply-chain
+# guard); only packages set true here may run them. esbuild ships a native binary
+# that Convex/Metro bundling needs and is a trusted, widely-audited package.
+allowBuilds:
+  # Optional macOS/Solaris dtrace profiling dep pulled in by eas-cli's logger;
+  # not needed (and doesn't build) on Linux — keep its build script blocked.
+  dtrace-provider: false
+  esbuild: true
