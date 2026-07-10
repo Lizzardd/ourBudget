@@ -656,53 +656,54 @@ class Component extends DCLogic {
     super(props);
     this.MCATS = [
       { id: 'groceries', emoji: 'grocery', name: 'Groceries', color: '#7FA86F', limit: 2500 },
-      { id: 'dining', emoji: 'restaurant', name: 'Dining out', color: '#E08B6F', limit: 1200 },
-      { id: 'fuel', emoji: 'local_taxi', name: 'Transport', color: '#E3B063', limit: 600 },
-      { id: 'kids', emoji: 'toys', name: 'Kids', color: '#D492A6', limit: 900 },
-      { id: 'rent', emoji: 'home', name: 'Housing', color: '#9C8FC7', limit: 6000 },
-      { id: 'other', emoji: 'auto_awesome', name: 'Everything else', color: '#B0A08C', limit: 800 },
+      { id: 'housing', emoji: 'home', name: 'Housing', color: '#9C8FC7', limit: 6000 },
+      { id: 'transport', emoji: 'local_taxi', name: 'Transport', color: '#E3B063', limit: 700 },
+      { id: 'utilities', emoji: 'lightbulb', name: 'Utilities', color: '#8FB5B0', limit: 900 },
+      { id: 'entertainment', emoji: 'movie', name: 'Entertainment', color: '#E08B6F', limit: 800 },
+      { id: 'subscriptions', emoji: 'subscriptions', name: 'Subscriptions', color: '#8AA3C4', limit: 300 },
     ];
     this.ACATS = [
-      { id: 'maint', emoji: 'handyman', name: 'Household maintenance', color: '#8FB5B0', limit: 12000, ytd: 4300, ytdBy: [4300, 3850, 2650, 2300, 0] },
-      { id: 'car', emoji: 'directions_car', name: 'Car service', color: '#8AA3C4', limit: 4000, ytd: 1850, ytdBy: [1850, 1850, 1850, 600, 600] },
-      { id: 'gifts', emoji: 'redeem', name: 'Gifts', color: '#D97A8F', limit: 6000, ytd: 2100, ytdBy: [2100, 2100, 1300, 1300, 1300] },
+      { id: 'maint', emoji: 'handyman', name: 'Maintenance', color: '#8FB5B0', limit: 12000, ytd: 4300, ytdBy: [4300, 3850, 2650, 2300, 0] },
+      { id: 'travel', emoji: 'flight', name: 'Travel', color: '#8AA3C4', limit: 20000, ytd: 8600, ytdBy: [8600, 8600, 8600, 8600, 3400] },
+      { id: 'health', emoji: 'fitness_center', name: 'Health & Fitness', color: '#D97A8F', limit: 6000, ytd: 2650, ytdBy: [2650, 2650, 2200, 1900, 1200] },
     ];
     this.MONTHS = [
-      { label: 'July 2026', short: 'Jul', spent: { groceries: 1720, dining: 1340, fuel: 385, kids: 610, rent: 6000, other: 240 } },
-      { label: 'June 2026', short: 'Jun', spent: { groceries: 2380, dining: 1150, fuel: 540, kids: 880, rent: 6000, other: 410 } },
-      { label: 'May 2026', short: 'May', spent: { groceries: 2850, dining: 1480, fuel: 790, kids: 1010, rent: 6000, other: 620 } },
-      { label: 'April 2026', short: 'Apr', spent: { groceries: 2450, dining: 1080, fuel: 520, kids: 830, rent: 6000, other: 350 } },
-      { label: 'March 2026', short: 'Mar', spent: { groceries: 2950, dining: 1390, fuel: 720, kids: 1120, rent: 6000, other: 680 } },
+      { label: 'July 2026', short: 'Jul', spent: { groceries: 1720, housing: 6000, transport: 385, utilities: 780, entertainment: 940, subscriptions: 300 } },
+      { label: 'June 2026', short: 'Jun', spent: { groceries: 2380, housing: 6000, transport: 540, utilities: 860, entertainment: 620, subscriptions: 300 } },
+      { label: 'May 2026', short: 'May', spent: { groceries: 2850, housing: 6000, transport: 790, utilities: 1120, entertainment: 980, subscriptions: 420 } },
+      { label: 'April 2026', short: 'Apr', spent: { groceries: 2450, housing: 6000, transport: 520, utilities: 820, entertainment: 560, subscriptions: 300 } },
+      { label: 'March 2026', short: 'Mar', spent: { groceries: 2950, housing: 6000, transport: 720, utilities: 1180, entertainment: 900, subscriptions: 450 } },
     ];
     this.TXNS = {
       groceries: [
-        { note: 'Carrefour', amt: 320, who: 'Sara', when: 'Jul 10' },
-        { note: 'Spinneys', amt: 264, who: 'Omar', when: 'Jul 5' },
-        { note: 'Union Coop', amt: 188, who: 'Sara', when: 'Jul 3' },
-        { note: 'Carrefour', amt: 412, who: 'Omar', when: 'Jul 1' },
+        { note: 'Carrefour', amt: 520, who: 'Sara', when: 'Jul 10' },
+        { note: 'Spinneys', amt: 448, who: 'Omar', when: 'Jul 5' },
+        { note: 'Union Coop', amt: 340, who: 'Sara', when: 'Jul 3' },
+        { note: 'Lulu', amt: 412, who: 'Omar', when: 'Jul 1' },
       ],
-      dining: [
-        { note: 'Reform Social', amt: 210, who: 'Sara', when: 'Jul 9' },
-        { note: 'Karak House', amt: 46, who: 'Omar', when: 'Jul 5' },
-        { note: 'Zuma — anniversary', amt: 684, who: 'Omar', when: 'Jul 3' },
-        { note: 'Common Grounds', amt: 400, who: 'Sara', when: 'Jul 1' },
+      housing: [{ note: 'July rent', amt: 6000, who: 'Omar', when: 'Jul 1' }],
+      transport: [
+        { note: 'ENOC fuel', amt: 130, who: 'Omar', when: 'Jul 9' },
+        { note: 'Careem to DIFC', amt: 120, who: 'Sara', when: 'Jul 4' },
+        { note: 'Salik top-up', amt: 100, who: 'Sara', when: 'Jul 3' },
+        { note: 'Nol top-up', amt: 35, who: 'Omar', when: 'Jul 1' },
       ],
-      fuel: [
-        { note: 'Shell fuel', amt: 180, who: 'Omar', when: 'Jul 9' },
-        { note: 'ENOC', amt: 130, who: 'Sara', when: 'Jul 4' },
-        { note: 'Careem to DIFC', amt: 45, who: 'Sara', when: 'Jul 3' },
-        { note: 'Nol top-up', amt: 30, who: 'Omar', when: 'Jul 1' },
+      utilities: [
+        { note: 'DEWA', amt: 520, who: 'Omar', when: 'Jul 6' },
+        { note: 'Etisalat', amt: 260, who: 'Sara', when: 'Jul 2' },
       ],
-      kids: [
-        { note: 'Swim class', amt: 150, who: 'Sara', when: 'Jul 6' },
-        { note: 'School supplies', amt: 230, who: 'Omar', when: 'Jul 4' },
-        { note: 'Toy store', amt: 230, who: 'Sara', when: 'Jul 2' },
+      entertainment: [
+        { note: 'Global Village', amt: 460, who: 'Sara', when: 'Jul 8' },
+        { note: 'VOX Cinema', amt: 180, who: 'Omar', when: 'Jul 5' },
+        { note: 'Arcade — kids', amt: 160, who: 'Sara', when: 'Jul 3' },
+        { note: 'Bowling', amt: 140, who: 'Omar', when: 'Jul 1' },
       ],
-      rent: [{ note: 'July rent', amt: 6000, who: 'Omar', when: 'Jul 1' }],
-      other: [
-        { note: 'Pharmacy', amt: 85, who: 'Sara', when: 'Jul 4' },
-        { note: 'Mall parking', amt: 90, who: 'Sara', when: 'Jul 5' },
-        { note: 'Dry cleaning', amt: 65, who: 'Omar', when: 'Jul 2' },
+      subscriptions: [
+        { note: 'OSN+', amt: 184, who: 'Omar', when: 'Jul 4' },
+        { note: 'Netflix', amt: 56, who: 'Sara', when: 'Jul 2' },
+        { note: 'Spotify', amt: 32, who: 'Sara', when: 'Jul 2' },
+        { note: 'Amazon Prime', amt: 16, who: 'Omar', when: 'Jul 1' },
+        { note: 'iCloud', amt: 12, who: 'Sara', when: 'Jul 1' },
       ],
       maint: [
         { note: 'Plumber', amt: 450, who: 'Omar', when: 'Jul 7' },
@@ -710,13 +711,15 @@ class Component extends DCLogic {
         { note: 'Handyman — shelves', amt: 350, who: 'Omar', when: 'May 30' },
         { note: 'Paint touch-up', amt: 2300, who: 'Sara', when: 'Apr 12' },
       ],
-      car: [
-        { note: 'Minor service', amt: 1250, who: 'Omar', when: 'May 22' },
-        { note: 'Tyre repair', amt: 600, who: 'Omar', when: 'Mar 8' },
+      travel: [
+        { note: 'Flights — Cape Town', amt: 5200, who: 'Omar', when: 'Apr 18' },
+        { note: 'Hotel deposit', amt: 2400, who: 'Sara', when: 'Apr 2' },
+        { note: 'Visa fees', amt: 1000, who: 'Omar', when: 'Mar 20' },
       ],
-      gifts: [
-        { note: "Mum's birthday", amt: 800, who: 'Sara', when: 'Jun 2' },
-        { note: 'Eid gifts', amt: 1300, who: 'Sara', when: 'Mar 30' },
+      health: [
+        { note: 'Gym — quarterly', amt: 1800, who: 'Omar', when: 'May 3' },
+        { note: 'Personal trainer', amt: 600, who: 'Sara', when: 'Apr 10' },
+        { note: 'Vitamins', amt: 250, who: 'Sara', when: 'Feb 15' },
       ],
     };
   }
@@ -733,6 +736,7 @@ class Component extends DCLogic {
 
   scheduleNotif() {
     clearTimeout(this._nt);
+    if (new Date().getDay() !== 1) return; // Monday only
     this._nt = setTimeout(() => this.setState({ notif: true }), 1400);
   }
 
@@ -789,12 +793,13 @@ class Component extends DCLogic {
     const spent = this.spentOf(c, monthIdx);
     if (!spent) return [];
     const mShort = this.MONTHS[monthIdx].short;
-    if (c.id === 'rent') return [{ note: 'Monthly rent', amt: spent, who: 'Omar', when: mShort + ' 1' }];
+    if (c.id === 'housing') return [{ note: 'Monthly rent', amt: spent, who: 'Omar', when: mShort + ' 1' }];
     const pool = {
       groceries: ['Carrefour', 'Spinneys', 'Union Coop', 'Lulu'],
-      dining: ['Karak House', 'Common Grounds', 'Cafeteria', 'Brunch'],
-      fuel: ['Shell fuel', 'ENOC', 'Careem', 'Nol top-up'],
-      kids: ['Swim class', 'School supplies', 'Toy store', 'Playdate'],
+      transport: ['ENOC fuel', 'Careem', 'Salik top-up', 'Nol top-up'],
+      utilities: ['DEWA', 'Etisalat', 'du', 'Gas'],
+      entertainment: ['VOX Cinema', 'Global Village', 'Bowling', 'Arcade'],
+      subscriptions: ['OSN+', 'Netflix', 'Spotify', 'iCloud'],
     }[c.id] || [c.name];
     const weights = [0.38, 0.27, 0.21, 0.14];
     const days = [3, 9, 16, 24];
@@ -873,14 +878,16 @@ class Component extends DCLogic {
       };
     }
 
-    // ── reports ──
-    const repM = s.monthIdx === 0 ? allM : this.MCATS;
+    // ── reports ── (include archived cats so archiving never hides history)
+    const fullM = [...this.MCATS, ...s.customCats.filter(c => c.ytd === undefined)];
+    const fullA = [...this.ACATS, ...s.customCats.filter(c => c.ytd !== undefined)];
+    const repM = fullM.filter(c => s.monthIdx === 0 ? (!isArch(c) || this.spentOf(c, 0) > 0) : this.spentOf(c, s.monthIdx) > 0);
     const maxSpent = Math.max(...repM.map(c => this.spentOf(c, s.monthIdx)));
     const reportBars = repM.map(c => ({ ...c, spent: this.spentOf(c, s.monthIdx) }))
       .sort((a, b) => b.spent - a.spent)
       .map(c => ({ emoji: c.emoji, name: c.name, amtFmt: this.fmt(c.spent), color: c.color, w: (s.mounted ? Math.round((c.spent / maxSpent) * 100) : 0) + '%' }));
 
-    const totals = this.MONTHS.map((m, i) => (i === 0 ? allM : this.MCATS).reduce((a, c) => a + this.spentOf(c, i), 0)).reverse();
+    const totals = this.MONTHS.map((m, i) => fullM.reduce((a, c) => a + this.spentOf(c, i), 0)).reverse();
     const labels = this.MONTHS.map(m => m.short).reverse();
     const budgetT = this.MCATS.reduce((a, c) => a + this.limitOf(c), 0);
     const maxT = Math.max(...totals, budgetT);
@@ -901,7 +908,7 @@ class Component extends DCLogic {
     });
 
     const yearPct = [51, 50, 42, 33, 25][s.monthIdx] ?? 51;
-    const annualReport = allA.map(c => {
+    const annualReport = fullA.filter(c => !isArch(c) || this.spentOf(c, s.monthIdx) > 0).map(c => {
       const spent = this.spentOf(c, s.monthIdx);
       const pct = Math.round((spent / this.limitOf(c)) * 100);
       const ahead = pct > yearPct;
@@ -917,7 +924,7 @@ class Component extends DCLogic {
 
     // ── history ──
     const hm = this.MONTHS[s.monthIdx];
-    const histBase = s.monthIdx === 0 ? allM : this.MCATS;
+    const histBase = repM;
     const histCards = histBase.map(c => ({
       ...this.card(c, s.monthIdx),
       open: () => this.setState({ histCat: c.id }),
@@ -1135,7 +1142,7 @@ class Component extends DCLogic {
         side: s[p.key] ? 'flex-end' : 'flex-start',
         toggle: () => this.setState(st => ({ [p.key]: !st[p.key] })),
       })),
-      notifBody: this.fmt(left) + ' left overall. Dining out is ' + this.fmt(140) + ' over — tap for your week.',
+      notifBody: this.fmt(left) + ' left overall. Entertainment is ' + this.fmt(140) + ' over — tap for your week.',
       dismissNotif: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ notif: false }); },
       openWeekly: () => this.setState({ weekly: true, notif: false }),
       weeklyOpen: s.weekly,
@@ -1144,37 +1151,41 @@ class Component extends DCLogic {
       weeklyRows: [
         { emoji: 'payments', title: 'Spent last week', line: this.fmt(2140) + ' across 14 expenses — a typical week' },
         { emoji: 'grocery', title: 'Biggest: Groceries', line: this.fmt(780) + ' — right on your usual pace' },
-        { emoji: 'restaurant', title: 'Watch: Dining out', line: this.fmt(140) + ' over — maybe a cook-at-home week? 💛' },
-        { emoji: 'eco', title: 'Cruising', line: 'Transport, Kids and Housing are all on track' },
+        { emoji: 'movie', title: 'Watch: Entertainment', line: this.fmt(140) + ' over — maybe a movie-at-home week? 💛' },
+        { emoji: 'eco', title: 'Cruising', line: 'Transport, Utilities and Housing are all on track' },
       ],
-      // new category
+      // new category — hide suggestions for categories that already exist (active)
       ncOpen: s.ncOpen,
       openNewCat: () => this.setState({ ncOpen: true, ncName: 'Travel', ncAuto: true, ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000 }),
       closeNewCat: () => this.setState({ ncOpen: false }),
       ncEmojis: [
-        { e: 'flight', n: 'Travel' },
-        { e: 'lightbulb', n: 'Utilities' },
-        { e: 'wifi', n: 'Phone & internet' },
-        { e: 'medical_services', n: 'Health' },
-        { e: 'checkroom', n: 'Clothes' },
-        { e: 'spa', n: 'Personal care' },
+        { e: 'grocery', n: 'Groceries' },
         { e: 'movie', n: 'Entertainment' },
+        { e: 'local_taxi', n: 'Transport' },
+        { e: 'lightbulb', n: 'Utilities' },
         { e: 'school', n: 'Education' },
+        { e: 'subscriptions', n: 'Subscriptions' },
+        { e: 'flight', n: 'Travel' },
+        { e: 'handyman', n: 'Maintenance' },
+        { e: 'fitness_center', n: 'Health & Fitness' },
+        { e: 'sports_esports', n: 'Hobbies' },
         { e: 'pets', n: 'Pets' },
-        { e: 'chair', n: 'Furniture' },
-        { e: 'volunteer_activism', n: 'Charity' },
-        { e: 'fitness_center', n: 'Fitness' },
+        { e: 'home', n: 'Housing' },
+        { e: 'bolt', n: 'Ad Hoc' },
+        { e: 'add_circle', n: 'Custom', custom: true },
       ].map(o => ({
         emoji: o.e,
-        label: o.n,
+        label: o.custom ? 'Custom' : o.n,
         labelColor: o.e === s.ncEmoji ? accent : 'var(--sub, #B5A493)',
         border: o.e === s.ncEmoji ? accent : 'var(--line, rgba(246,237,227,0.12))',
         bg: o.e === s.ncEmoji ? 'rgba(201,98,135,0.18)' : 'transparent',
-        pick: () => this.setState(st => ({
-          ncEmoji: o.e,
-          ncName: (st.ncAuto || !st.ncName.trim()) ? o.n : st.ncName,
-          ncAuto: st.ncAuto || !st.ncName.trim(),
-        })),
+        pick: () => this.setState(st => (o.custom
+          ? { ncEmoji: o.e, ncName: '', ncAuto: false }
+          : {
+              ncEmoji: o.e,
+              ncName: (st.ncAuto || !st.ncName.trim()) ? o.n : st.ncName,
+              ncAuto: st.ncAuto || !st.ncName.trim(),
+            })),
       })),
       ncName: s.ncName,
       ncNameChange: e => this.setState({ ncName: e.target.value, ncAuto: e.target.value.trim() === '' }),

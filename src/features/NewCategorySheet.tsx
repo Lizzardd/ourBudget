@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import {
@@ -8,12 +8,13 @@ import {
 	incLimitMinor,
 	NEW_CATEGORY_EMOJIS,
 	pickPreset,
+	visibleEmojiPresets,
 	type NewCategoryPeriod,
 } from '../budget/newCategory';
 import { glyph } from '../budget/money';
 import { Chip } from '../components/Chip';
 import { Sheet } from '../components/Sheet';
-import { useCreateCategory } from '../hooks/useCategories';
+import { useCategories, useCreateCategory } from '../hooks/useCategories';
 import { useHousehold } from '../hooks/useHousehold';
 import { useToast } from '../lib/toast';
 import { fontFamily } from '../theme/fonts';
@@ -24,7 +25,9 @@ export interface NewCategorySheetProps {
 	onClose: () => void;
 }
 
-const INITIAL_EMOJI = NEW_CATEGORY_EMOJIS[0];
+// The prototype's `openNewCat` hardcodes the initial selection to
+// Travel/flight regardless of where "Travel" sits in `ncEmojis`.
+const INITIAL_EMOJI = NEW_CATEGORY_EMOJIS.find((preset) => preset.emoji === 'flight')!;
 
 /**
  * The "+ New category" flow: emoji/name preset grid, a free-text name
@@ -37,7 +40,15 @@ export function NewCategorySheet({ open, onClose }: NewCategorySheetProps) {
 	const { t, accent } = useTheme();
 	const { householdId, currency } = useHousehold();
 	const createCategory = useCreateCategory();
+	const { categories } = useCategories();
 	const { toast } = useToast();
+
+	// Hide preset suggestions that duplicate a category the household
+	// already has (case-insensitive name match); "Custom" is never hidden.
+	const presets = useMemo(
+		() => visibleEmojiPresets(categories.map((category) => category.name)),
+		[categories]
+	);
 
 	const [emoji, setEmoji] = useState(INITIAL_EMOJI.emoji);
 	const [name, setName] = useState(INITIAL_EMOJI.label);
@@ -150,7 +161,7 @@ export function NewCategorySheet({ open, onClose }: NewCategorySheetProps) {
 				style={styles.chipsScroll}
 				contentContainerStyle={styles.chipsRow}
 			>
-				{NEW_CATEGORY_EMOJIS.map((preset) => (
+				{presets.map((preset) => (
 					<Chip
 						key={preset.emoji}
 						label={preset.label}

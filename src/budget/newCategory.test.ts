@@ -8,10 +8,24 @@ import {
 	NEW_CATEGORY_EMOJIS,
 	pickPreset,
 	stepLimitMinor,
+	visibleEmojiPresets,
 } from './newCategory';
 
-test('has 12 emoji presets', () => {
-	expect(NEW_CATEGORY_EMOJIS).toHaveLength(12);
+test('has 14 emoji presets, ending in Ad Hoc then Custom', () => {
+	expect(NEW_CATEGORY_EMOJIS).toHaveLength(14);
+	expect(NEW_CATEGORY_EMOJIS[12]).toEqual({ emoji: 'bolt', label: 'Ad Hoc' });
+	expect(NEW_CATEGORY_EMOJIS[13]).toEqual({ emoji: 'add_circle', label: 'Custom', custom: true });
+});
+
+test('the curated categories lead the list, in order', () => {
+	expect(NEW_CATEGORY_EMOJIS.slice(0, 6)).toEqual([
+		{ emoji: 'grocery', label: 'Groceries' },
+		{ emoji: 'movie', label: 'Entertainment' },
+		{ emoji: 'local_taxi', label: 'Transport' },
+		{ emoji: 'lightbulb', label: 'Utilities' },
+		{ emoji: 'school', label: 'Education' },
+		{ emoji: 'subscriptions', label: 'Subscriptions' },
+	]);
 });
 
 test('default limits are 1000/5000 major units in minor units', () => {
@@ -61,4 +75,37 @@ test('clearing the name field back to empty re-enables auto-fill', () => {
 
 	const afterPick = pickPreset(cleared, { emoji: 'lightbulb', label: 'Utilities' });
 	expect(afterPick).toEqual({ name: 'Utilities', auto: true });
+});
+
+test('picking the Custom preset clears the name and disables auto-fill', () => {
+	const custom = { emoji: 'add_circle', label: 'Custom', custom: true as const };
+
+	const fromAuto = pickPreset({ name: 'Health', auto: true }, custom);
+	expect(fromAuto).toEqual({ name: '', auto: false });
+
+	const fromTyped = pickPreset({ name: 'Ski trip', auto: false }, custom);
+	expect(fromTyped).toEqual({ name: '', auto: false });
+});
+
+test('visibleEmojiPresets hides presets matching an existing category name, case-insensitively', () => {
+	const visible = visibleEmojiPresets(['groceries', 'Travel', 'HOUSING']);
+	const labels = visible.map((p) => p.label);
+
+	expect(labels).not.toContain('Groceries');
+	expect(labels).not.toContain('Travel');
+	expect(labels).not.toContain('Housing');
+	expect(labels).toContain('Entertainment');
+	expect(labels).toContain('Ad Hoc');
+});
+
+test('visibleEmojiPresets never hides Custom', () => {
+	const allNames = NEW_CATEGORY_EMOJIS.map((p) => p.label);
+	const visible = visibleEmojiPresets(allNames);
+
+	expect(visible).toHaveLength(1);
+	expect(visible[0]).toEqual({ emoji: 'add_circle', label: 'Custom', custom: true });
+});
+
+test('visibleEmojiPresets shows everything when there are no existing categories', () => {
+	expect(visibleEmojiPresets([])).toEqual(NEW_CATEGORY_EMOJIS);
 });

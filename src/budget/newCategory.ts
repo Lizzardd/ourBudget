@@ -2,27 +2,48 @@ export interface EmojiPreset {
 	/** Material Symbols Rounded ligature name (see src/components/Icon.tsx). */
 	emoji: string;
 	label: string;
+	/**
+	 * The "Custom" entry: picking it clears the name field and turns off
+	 * auto-fill instead of filling in `label`. Never hidden by
+	 * `visibleEmojiPresets`.
+	 */
+	custom?: boolean;
 }
 
 /**
- * The 12 icon/name presets from the prototype's `ncEmojis`, in display
- * order (4-column grid, 3 rows). `emoji` holds a Material Symbols Rounded
- * ligature name (e.g. "flight"), not an emoji character.
+ * The 14 icon/name presets from the prototype's `ncEmojis`, in display
+ * order. `emoji` holds a Material Symbols Rounded ligature name (e.g.
+ * "flight"), not an emoji character. The final entry is the "Custom"
+ * preset, which is always shown regardless of existing categories.
  */
 export const NEW_CATEGORY_EMOJIS: EmojiPreset[] = [
-	{ emoji: 'flight', label: 'Travel' },
-	{ emoji: 'lightbulb', label: 'Utilities' },
-	{ emoji: 'wifi', label: 'Phone & internet' },
-	{ emoji: 'medical_services', label: 'Health' },
-	{ emoji: 'checkroom', label: 'Clothes' },
-	{ emoji: 'spa', label: 'Personal care' },
+	{ emoji: 'grocery', label: 'Groceries' },
 	{ emoji: 'movie', label: 'Entertainment' },
+	{ emoji: 'local_taxi', label: 'Transport' },
+	{ emoji: 'lightbulb', label: 'Utilities' },
 	{ emoji: 'school', label: 'Education' },
+	{ emoji: 'subscriptions', label: 'Subscriptions' },
+	{ emoji: 'flight', label: 'Travel' },
+	{ emoji: 'handyman', label: 'Maintenance' },
+	{ emoji: 'fitness_center', label: 'Health & Fitness' },
+	{ emoji: 'sports_esports', label: 'Hobbies' },
 	{ emoji: 'pets', label: 'Pets' },
-	{ emoji: 'chair', label: 'Furniture' },
-	{ emoji: 'volunteer_activism', label: 'Charity' },
-	{ emoji: 'fitness_center', label: 'Fitness' },
+	{ emoji: 'home', label: 'Housing' },
+	{ emoji: 'bolt', label: 'Ad Hoc' },
+	{ emoji: 'add_circle', label: 'Custom', custom: true },
 ];
+
+/**
+ * Presets to actually render in the sheet: any preset whose label matches
+ * (case-insensitively) an active category's name is hidden, since the
+ * household already has that category. "Custom" is never hidden.
+ */
+export function visibleEmojiPresets(existingCategoryNames: readonly string[]): EmojiPreset[] {
+	const existing = new Set(existingCategoryNames.map((name) => name.trim().toLowerCase()));
+	return NEW_CATEGORY_EMOJIS.filter(
+		(preset) => preset.custom || !existing.has(preset.label.toLowerCase())
+	);
+}
 
 export type NewCategoryPeriod = 'monthly' | 'annual';
 
@@ -68,8 +89,15 @@ export interface NameAutoFillState {
  * yet) or the current name is blank — matching the prototype's
  * `st.ncAuto || !st.ncName.trim()` gate. Once the user has typed a name of
  * their own, further preset picks only change the emoji.
+ *
+ * Picking the "Custom" preset instead clears the name and turns off
+ * auto-fill, so the user's typing isn't overwritten by a later pick —
+ * matching the prototype's `o.custom ? { ncEmoji: o.e, ncName: '', ncAuto: false } : ...`.
  */
 export function pickPreset(state: NameAutoFillState, preset: EmojiPreset): NameAutoFillState {
+	if (preset.custom) {
+		return { name: '', auto: false };
+	}
 	const auto = state.auto || state.name.trim() === '';
 	return {
 		name: auto ? preset.label : state.name,
