@@ -2,7 +2,7 @@
   "expo": {
     "name": "Our Budget",
     "slug": "our-budget",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -15,6 +15,7 @@
     },
     "android": {
       "package": "app.ourbudget.mobile",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#C96287",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

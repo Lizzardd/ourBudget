@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..1000&amp;display=swap" rel="stylesheet">
@@ -30,11 +30,11 @@
 </helmet>
 <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 36px; background: radial-gradient(120% 100% at 50% 0%, #221A14, #14100C)">
 <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ isDark }}" hint-size="412px,892px">
-<div style="height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--bg, #221B16); color: var(--text, #F6EDE3); {{ themeVarsCss }}">
+<div style="height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--bg, #221B16); color: var(--text, #F6EDE3); padding-top: env(safe-area-inset-top, 0px); {{ themeVarsCss }}">
 
   <!-- ══════════ ONBOARDING: WELCOME ══════════ -->
   <sc-if value="{{ isWelcome }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Onboarding — Welcome" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 48px 28px 40px; animation: fadeIn 0.4s ease">
+    <div data-screen-label="Onboarding — Welcome" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 48px 28px calc(40px + env(safe-area-inset-bottom, 0px)); animation: fadeIn 0.4s ease">
       <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center">
         <div style="width: 84px; height: 84px; border-radius: 28px; background: var(--accent, #C96287); display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 32px rgba(201,98,135,0.35)"><span style="font-size: 38px; font-weight: 900; letter-spacing: -2px; color: #FFF3F0">ob<span style="color: #2B0E1A">.</span></span></div>
         <div style="font-size: 38px; font-weight: 900; letter-spacing: -1.2px; line-height: 1.1">ourbudget<span style="color: var(--accent, #C96287)">.</span></div>
@@ -52,7 +52,7 @@
 
   <!-- ══════════ ONBOARDING: FORK ══════════ -->
   <sc-if value="{{ isFork }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Onboarding — Create or Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+    <div data-screen-label="Onboarding — Create or Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
       <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Welcome, Sara 👋</div>
       <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">A household shares one pool of budgets. Start yours, or join one that's waiting for you.</div>
       <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 36px">
@@ -70,7 +70,7 @@
 
   <!-- ══════════ ONBOARDING: INVITE CODE ══════════ -->
   <sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Onboarding — Invite code" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+    <div data-screen-label="Onboarding — Invite code" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
       <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">The Al-Marri Home is ready 🎉</div>
       <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">Share this code so Omar can join. Everything you both add stays perfectly in sync.</div>
       <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
@@ -86,7 +86,7 @@
 
   <!-- ══════════ ONBOARDING: JOIN ══════════ -->
   <sc-if value="{{ isJoin }}" hint-placeholder-val="{{ false }}">
-    <div data-screen-label="Onboarding — Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px 40px; animation: slideIn 0.35s ease">
+    <div data-screen-label="Onboarding — Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
       <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Enter your invite code</div>
       <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px">It looks like SUNNY-42 — check your messages.</div>
       <input value="{{ joinCode }}" onChange="{{ joinChange }}" placeholder="SUNNY-42" style="margin-top: 32px; height: 64px; border-radius: 20px; border: 1.5px solid rgba(201,98,135,0.4); background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 26px; font-weight: 800; letter-spacing: 2px; text-align: center; outline: none">
@@ -373,7 +373,7 @@
     <!-- ─── CATEGORY DETAIL OVERLAY ─── -->
     <sc-if value="{{ showCat }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="Category detail" style="position: absolute; inset: 0; z-index: 30; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
-        <div style="flex: 1; overflow-y: auto; padding: 12px 18px 40px">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 18px calc(40px + env(safe-area-inset-bottom, 0px))">
           <button onClick="{{ backHome }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
           <div style="display: flex; align-items: center; gap: 14px; padding: 10px 4px">
             <div style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 34px; color: var(--text, #F6EDE3)">{{ det.emoji }}</span></div>
@@ -442,7 +442,7 @@
     <!-- ─── PROFILE OVERLAY ─── -->
     <sc-if value="{{ profOpen }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="Profile" style="position: absolute; inset: 0; z-index: 35; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
-        <div style="flex: 1; overflow-y: auto; padding: 12px 18px 40px">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 18px calc(40px + env(safe-area-inset-bottom, 0px))">
           <button onClick="{{ closeProfile }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
           <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0 20px">
             <div style="width: 84px; height: 84px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 34px; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: background 0.3s">{{ profInitial }}</div>
@@ -484,7 +484,7 @@
 
     <!-- ─── ADD EXPENSE SHEET ─── -->
     <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
-      <div data-screen-label="Add expense" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end">
+      <div data-screen-label="Add expense" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: {{ kbPad }}; transition: padding-bottom 0.2s ease">
         <div onClick="{{ closeSheet }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
         <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 12px">
           <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
@@ -594,9 +594,9 @@
 
     <!-- ─── NEW CATEGORY SHEET ─── -->
     <sc-if value="{{ ncOpen }}" hint-placeholder-val="{{ false }}">
-      <div data-screen-label="New category" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end">
+      <div data-screen-label="New category" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: {{ kbPad }}; transition: padding-bottom 0.2s ease">
         <div onClick="{{ closeNewCat }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
-        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 14px">
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 14px; max-height: 100%; overflow-y: auto">
           <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
           <div style="display: flex; align-items: center">
             <div style="font-size: 17px; font-weight: 800; flex: 1">New category</div>
@@ -743,6 +743,23 @@ class Component extends DCLogic {
   componentDidMount() {
     setTimeout(() => this.setState({ mounted: true }), 120);
     if ((this.props.startAt ?? 'onboarding') === 'dashboard') this.scheduleNotif();
+    const vv = window.visualViewport;
+    if (vv) {
+      this._vv = () => {
+        const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        this.setState({ kb: kb > 90 ? kb : 0 });
+      };
+      vv.addEventListener('resize', this._vv);
+      vv.addEventListener('scroll', this._vv);
+    }
+  }
+
+  componentWillUnmount() {
+    const vv = window.visualViewport;
+    if (vv && this._vv) {
+      vv.removeEventListener('resize', this._vv);
+      vv.removeEventListener('scroll', this._vv);
+    }
   }
 
   cur() { return this.state.currency ?? this.props.currency ?? 'AED'; }
@@ -1006,6 +1023,7 @@ class Component extends DCLogic {
       shareInvite: () => this.toastNow('Invite link copied 📋'),
       signOut: () => this.setState({ phase: 'welcome', tab: 'home', catId: null }),
       versionLabel: 'Version 0.1.0 (MVP)',
+      kbPad: s.kb ? s.kb + 'px' : '0px',
       // tabs
       tabHome: s.tab === 'home', tabReports: s.tab === 'reports', tabSettings: s.tab === 'settings',
       goHome: () => this.setState({ tab: 'home', catId: null }),

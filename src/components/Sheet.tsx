@@ -7,7 +7,9 @@ import {
 	StyleSheet,
 	View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useKeyboardInset } from '../hooks/useKeyboardInset';
 import { useTheme } from '../theme/useTheme';
 
 export interface SheetProps {
@@ -29,6 +31,8 @@ const DISMISS_THRESHOLD = 80;
  */
 export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 	const { t } = useTheme();
+	const insets = useSafeAreaInsets();
+	const keyboardInset = useKeyboardInset();
 	const [mounted, setMounted] = useState(open);
 	const translateY = useRef(new Animated.Value(CLOSED_OFFSET)).current;
 	const opacity = useRef(new Animated.Value(0)).current;
@@ -115,6 +119,11 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 					{
 						backgroundColor: t.card,
 						opacity,
+						// Lift above the on-screen keyboard on web; 0 on native,
+						// where Android's resize mode already does this (see
+						// useKeyboardInset). Keep the safe-area gap at the bottom.
+						bottom: keyboardInset,
+						paddingBottom: 28 + insets.bottom,
 						transform: [{ translateY: Animated.add(translateY, drag) }],
 						...(maxHeight ? { maxHeight } : null),
 					},
