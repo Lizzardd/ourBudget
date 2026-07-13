@@ -28,17 +28,18 @@ const INVITE_WORDS = [
 ];
 
 /**
- * `${word}-${4 digits}` gives a space of `INVITE_WORDS.length * 10000`
- * (200,000 with the list above) — large enough that random collisions are
- * rare, but `createHousehold` still checks uniqueness explicitly (see
- * below) rather than relying on the space size alone.
+ * `${word}${4 digits}` (e.g. `SUNNY4829`) gives a space of
+ * `INVITE_WORDS.length * 10000` (200,000 with the list above) — large enough
+ * that random collisions are rare, but `createHousehold` still checks
+ * uniqueness explicitly (see below) rather than relying on the space size
+ * alone.
  */
 function generateInviteCode(): string {
 	const word = INVITE_WORDS[Math.floor(Math.random() * INVITE_WORDS.length)];
 	const digits = Math.floor(Math.random() * 10000)
 		.toString()
 		.padStart(4, "0");
-	return `${word}-${digits}`;
+	return `${word}${digits}`;
 }
 
 const MAX_INVITE_CODE_ATTEMPTS = 10;
@@ -235,6 +236,7 @@ export const householdMembers = query({
 					displayName,
 					profileColor,
 					initial,
+					role: membership.role,
 					isMe: membership.userId === callerId,
 				};
 			}),
@@ -269,5 +271,127 @@ export const myHouseholds = query({
 		);
 
 		return households.filter((household): household is NonNullable<typeof household> => household !== null);
+	},
+});
+
+export const renameHousehold = mutation({
+	args: {
+		householdId: v.id("households"),
+		name: v.string(),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		// Renaming is a shared-household affordance: any member may do it.
+		await requireMembership(ctx, args.householdId);
+
+		const name = args.name.trim();
+		if (name === "") {
+			throw new Error("Household name cannot be empty");
+		}
+
+		await ctx.db.patch(args.householdId, { name });
+		return null;
+	},
+});
+
+export const removeMember = mutation({
+	args: {
+		householdId: v.id("households"),
+		userId: v.id("users"),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const { userId: callerId, role } = await requireMembership(ctx, args.householdId);
+		if (role !== "owner") {
+			throw new Error("Only the household owner can remove members");
+		}
+		// Removing yourself has different semantics (ownership handoff, cascade
+		// delete of the last member's household) — `leaveHousehold` owns that.
+		if (args.userId === callerId) {
+			throw new Error("Use leaveHousehold to remove yourself");
+		}
+
+		const membership = await ctx.db
+			.query("memberships")
+			.withIndex("by_household", (q) => q.eq("householdId", args.householdId))
+			.filter((q) => q.eq(q.field("userId"), args.userId))
+			.unique();
+		if (membership === null) {
+			throw new Error("That user is not a member of this household");
+		}
+
+		await ctx.db.delete(membership._id);
+		return null;
+	},
+});
+
+/**
+ * Hard-deletes a household and everything hanging off it: each category's
+ * transactions (via `by_category`, mirroring `deleteCategory`), then the
+ * categories, then the household row. Only called when the last member
+ * leaves, so there is nobody left who could ever read this data again.
+ */
+async function deleteHouseholdCascade(
+	ctx: MutationCtx,
+	householdId: Id<"households">,
+) {
+	const categories = await ctx.db
+		.query("categories")
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
+		.collect();
+
+	for (const category of categories) {
+		const transactions = await ctx.db
+			.query("transactions")
+			.withIndex("by_category", (q) => q.eq("categoryId", category._id))
+			.collect();
+
+		for (const transaction of transactions) {
+			await ctx.db.delete(transaction._id);
+		}
+
+		await ctx.db.delete(category._id);
+	}
+
+	await ctx.db.delete(householdId);
+}
+
+export const leaveHousehold = mutation({
+	args: {
+		householdId: v.id("households"),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const { userId, role } = await requireMembership(ctx, args.householdId);
+
+		const memberships = await ctx.db
+			.query("memberships")
+			.withIndex("by_household", (q) => q.eq("householdId", args.householdId))
+			.collect();
+
+		const own = memberships.find((membership) => membership.userId === userId);
+		if (own === undefined) {
+			throw new Error("Not a member of this household");
+		}
+		await ctx.db.delete(own._id);
+
+		const remaining = memberships.filter((membership) => membership._id !== own._id);
+
+		if (remaining.length === 0) {
+			// Last one out turns off the lights — nothing left to own the data.
+			await deleteHouseholdCascade(ctx, args.householdId);
+			return null;
+		}
+
+		if (role === "owner") {
+			// Never leave a household ownerless: hand off to whoever joined first.
+			const successor = remaining.reduce((earliest, membership) =>
+				membership._creationTime < earliest._creationTime ? membership : earliest,
+			);
+			await ctx.db.patch(successor._id, { role: "owner" });
+			await ctx.db.patch(args.householdId, { ownerId: successor.userId });
+		}
+
+		return null;
 	},
 });

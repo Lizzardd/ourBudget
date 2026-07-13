@@ -6,9 +6,11 @@ import { FadeIn } from '../../src/components/FadeIn';
 import { Loading } from '../../src/components/Loading';
 import { Toggle } from '../../src/components/Toggle';
 import { DeleteAccountOverlay } from '../../src/features/DeleteAccountOverlay';
+import { ManageHouseholdOverlay } from '../../src/features/ManageHouseholdOverlay';
 import { useNewCategorySheet } from '../../src/features/NewCategoryProvider';
 import { ProfileOverlay } from '../../src/features/ProfileOverlay';
 import { useHousehold } from '../../src/hooks/useHousehold';
+import { useHouseholdMembers } from '../../src/hooks/useHouseholdMembers';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSettings, useSetCurrency, useUpdateSettings } from '../../src/hooks/useSettings';
 import type { Currency } from '../../src/hooks/types';
@@ -56,13 +58,15 @@ const NOTIF_ROWS = [
  */
 export default function Settings() {
 	const { mode, t, accent, toggle } = useTheme();
-	const { householdId, currency, inviteCode } = useHousehold();
+	const { householdId, currency } = useHousehold();
+	const { members } = useHouseholdMembers();
 	const { settings, loading } = useSettings();
 	const updateSettings = useUpdateSettings();
 	const setCurrency = useSetCurrency();
 	const { signOut } = useAuth();
 	const { open: openNewCategory } = useNewCategorySheet();
 	const [profileOpen, setProfileOpen] = useState(false);
+	const [manageOpen, setManageOpen] = useState(false);
 	const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 	const [exporting, setExporting] = useState(false);
 	const convex = useConvex();
@@ -98,28 +102,6 @@ export default function Settings() {
 
 	const onPressProfile = () => {
 		setProfileOpen(true);
-	};
-
-	const handleShareInviteCode = async () => {
-		if (!inviteCode) {
-			return;
-		}
-		const message = `Join our household on Our Budget — use invite code ${inviteCode}`;
-		try {
-			if (Platform.OS === 'web') {
-				const copied = await navigator.clipboard
-					?.writeText(message)
-					.then(() => true, () => false);
-				if (copied) {
-					toast('Copied');
-				}
-				return;
-			}
-			await Share.share({ message });
-			toast('Invite code shared');
-		} catch {
-			// Share sheet dismissed or unavailable — no-op.
-		}
 	};
 
 	const onPressDeleteAccount = () => {
@@ -195,27 +177,41 @@ export default function Settings() {
 
 			{householdId ? (
 				<View style={[styles.card, { backgroundColor: t.card }]}>
-					<Text style={[styles.inviteEyebrow, { color: t.sub, fontFamily: fontFamily(700) }]}>
-						INVITE CODE
-					</Text>
-					<Text style={[styles.inviteCode, { color: accent, fontFamily: fontFamily(900) }]}>
-						{inviteCode ?? '…'}
-					</Text>
-					<Text style={[styles.rowSub, { color: t.sub }]}>
-						Share this code so someone can join your household.
-					</Text>
-					<Pressable
-						onPress={handleShareInviteCode}
-						disabled={!inviteCode}
-						accessibilityRole="button"
-						style={[styles.inviteShareBtn, { backgroundColor: t.el }]}
-					>
-						<Text style={[styles.inviteShareLabel, { color: t.text, fontFamily: fontFamily(800) }]}>
-							Share
+					<View style={styles.membersHeader}>
+						<Text style={[styles.sectionLabel, styles.rowText, { color: t.sub, fontFamily: fontFamily(700) }]}>
+							MEMBERS
 						</Text>
-					</Pressable>
+						<Pressable
+							onPress={() => setManageOpen(true)}
+							accessibilityRole="button"
+							style={[styles.manageBtn, { backgroundColor: t.el }]}
+						>
+							<Text style={[styles.manageLabel, { color: t.text, fontFamily: fontFamily(800) }]}>
+								Manage
+							</Text>
+						</Pressable>
+					</View>
+					<View style={styles.membersList}>
+						{(members ?? []).map((m) => (
+							<View key={m.userId} style={styles.memberRow}>
+								<View style={[styles.memberAvatar, { backgroundColor: m.profileColor }]}>
+									<Text style={[styles.memberInitial, { fontFamily: fontFamily(800) }]}>
+										{m.initial}
+									</Text>
+								</View>
+								<Text style={[styles.rowTitle, styles.rowText, { color: t.text, fontFamily: fontFamily(700) }]}>
+									{m.displayName}
+								</Text>
+								<Text style={[styles.rowHint, { color: m.isMe ? accent : t.sub }]}>
+									{m.isMe ? 'You' : m.role === 'owner' ? 'Owner' : 'Member'}
+								</Text>
+							</View>
+						))}
+					</View>
 				</View>
 			) : null}
+
+			<ManageHouseholdOverlay open={manageOpen} onClose={() => setManageOpen(false)} />
 
 			<Pressable
 				onPress={toggle}
@@ -437,24 +433,40 @@ const styles = StyleSheet.create({
 	sectionLabel: {
 		fontSize: 13,
 	},
-	inviteEyebrow: {
-		fontSize: 12,
-		letterSpacing: 2,
+	membersHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 12,
 	},
-	inviteCode: {
-		fontSize: 28,
-		letterSpacing: 2,
-		marginTop: 10,
-	},
-	inviteShareBtn: {
-		height: 46,
+	manageBtn: {
+		height: 34,
+		paddingHorizontal: 14,
 		borderRadius: 999,
 		alignItems: 'center',
 		justifyContent: 'center',
-		marginTop: 14,
 	},
-	inviteShareLabel: {
+	manageLabel: {
+		fontSize: 12,
+	},
+	membersList: {
+		marginTop: 2,
+	},
+	memberRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 12,
+		paddingTop: 14,
+	},
+	memberAvatar: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	memberInitial: {
 		fontSize: 15,
+		color: '#3A1220',
 	},
 	profileRow: {
 		flexDirection: 'row',

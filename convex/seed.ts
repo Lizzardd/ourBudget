@@ -218,7 +218,7 @@ export const seedDemo = internalMutation({
 
 		const householdId = await ctx.db.insert("households", {
 			name: HOUSEHOLD_NAME,
-			inviteCode: "MEADOW-01",
+			inviteCode: "MEADOW0001",
 			currency: "AED",
 			ownerId: saraId,
 			createdAt: nowMs,

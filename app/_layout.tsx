@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useOtaUpdates } from '../src/hooks/useOtaUpdates';
 import { ToastProvider } from '../src/lib/toast';
 import { dmSansFonts, materialSymbolsFonts } from '../src/theme/fonts';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
@@ -32,6 +33,8 @@ const secureStorage = {
 
 export default function RootLayout() {
 	const [fontsLoaded, fontError] = useFonts({ ...dmSansFonts, ...materialSymbolsFonts });
+
+	useOtaUpdates();
 
 	useEffect(() => {
 		if (fontsLoaded || fontError) {

@@ -36,7 +36,9 @@ test('createHousehold makes caller owner, starts blank (no categories), and a se
 	expect(household?.ownerId).toBe(userId);
 	expect(household?.name).toBe('Our Home');
 	expect(household?.currency).toBe('AED');
-	expect(household?.inviteCode).toMatch(/^[A-Z]+-\d{4}$/);
+	// Invite codes have NO separator — word immediately followed by 4 digits.
+	expect(household?.inviteCode).toMatch(/^[A-Z]+\d{4}$/);
+	expect(household?.inviteCode).not.toContain('-');
 
 	const memberships = await t.run(async (ctx) =>
 		ctx.db
@@ -243,7 +245,7 @@ test('createHousehold retries when a candidate invite code is already taken', as
 	// first attempt, then succeed on the second — proving the retry loop in
 	// `generateUniqueInviteCode` actually re-queries `by_invite` rather than
 	// trusting the random draw blindly.
-	const takenCode = 'SUNNY-0000';
+	const takenCode = 'SUNNY0000';
 	const dummyOwner = await t.run(async (ctx) => ctx.db.insert('users', { name: 'Dummy' }));
 	await t.run(async (ctx) =>
 		ctx.db.insert('households', {
@@ -268,4 +270,215 @@ test('createHousehold retries when a candidate invite code is already taken', as
 
 	const household = await t.run(async (ctx) => ctx.db.get(householdId));
 	expect(household?.inviteCode).not.toBe(takenCode);
+});
+
+test('renameHousehold updates the name for any member', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	const { asUser: joiner } = await seedUser(t, 'Joiner');
+	await joiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	// A plain member — not just the owner — may rename.
+	await joiner.mutation(api.households.renameHousehold, {
+		householdId,
+		name: '  The Nest  ',
+	});
+
+	const renamed = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(renamed?.name).toBe('The Nest');
+});
+
+test('renameHousehold rejects an empty name', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+
+	await expect(
+		owner.mutation(api.households.renameHousehold, { householdId, name: '   ' }),
+	).rejects.toThrow('Household name cannot be empty');
+
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(household?.name).toBe('Our Home');
+});
+
+test('removeMember lets the owner remove another member', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	const { userId: joinerId, asUser: joiner } = await seedUser(t, 'Joiner');
+	await joiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	await owner.mutation(api.households.removeMember, { householdId, userId: joinerId });
+
+	const memberships = await t.run(async (ctx) =>
+		ctx.db
+			.query('memberships')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(memberships).toHaveLength(1);
+	expect(memberships.some((m) => m.userId === joinerId)).toBe(false);
+});
+
+test('removeMember throws when the caller is not the owner', async () => {
+	const t = makeCtx();
+	const { userId: ownerId, asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	const { asUser: joiner } = await seedUser(t, 'Joiner');
+	await joiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	await expect(
+		joiner.mutation(api.households.removeMember, { householdId, userId: ownerId }),
+	).rejects.toThrow('Only the household owner can remove members');
+});
+
+test('removeMember throws when the owner targets themselves', async () => {
+	const t = makeCtx();
+	const { userId: ownerId, asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+
+	await expect(
+		owner.mutation(api.households.removeMember, { householdId, userId: ownerId }),
+	).rejects.toThrow('Use leaveHousehold to remove yourself');
+});
+
+test('leaveHousehold removes a plain member and leaves the household intact', async () => {
+	const t = makeCtx();
+	const { userId: ownerId, asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	const { userId: joinerId, asUser: joiner } = await seedUser(t, 'Joiner');
+	await joiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	await joiner.mutation(api.households.leaveHousehold, { householdId });
+
+	const memberships = await t.run(async (ctx) =>
+		ctx.db
+			.query('memberships')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(memberships).toHaveLength(1);
+	expect(memberships[0].userId).toBe(ownerId);
+	expect(memberships.some((m) => m.userId === joinerId)).toBe(false);
+
+	const stillThere = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(stillThere?.ownerId).toBe(ownerId);
+});
+
+test('leaveHousehold promotes the earliest-joined remaining member when the owner leaves', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	const { userId: firstJoinerId, asUser: firstJoiner } = await seedUser(t, 'First');
+	await firstJoiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+	const { userId: secondJoinerId, asUser: secondJoiner } = await seedUser(t, 'Second');
+	await secondJoiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	await owner.mutation(api.households.leaveHousehold, { householdId });
+
+	const memberships = await t.run(async (ctx) =>
+		ctx.db
+			.query('memberships')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(memberships).toHaveLength(2);
+
+	const first = memberships.find((m) => m.userId === firstJoinerId);
+	const second = memberships.find((m) => m.userId === secondJoinerId);
+	expect(first?.role).toBe('owner');
+	expect(second?.role).toBe('member');
+
+	const updated = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(updated?.ownerId).toBe(firstJoinerId);
+});
+
+test('leaveHousehold by the last member deletes the household, its categories and transactions', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+
+	const categoryId = await owner.mutation(api.categories.createCategory, {
+		householdId,
+		name: 'Groceries',
+		emoji: '🥑',
+		period: 'monthly',
+		limit: 1200,
+	});
+	await t.run(async (ctx) =>
+		ctx.db.insert('transactions', {
+			householdId,
+			categoryId,
+			amount: 84,
+			note: 'Market run',
+			spentAt: Date.now(),
+			payerName: 'Owner',
+			source: 'manual',
+			createdAt: Date.now(),
+		}),
+	);
+
+	await owner.mutation(api.households.leaveHousehold, { householdId });
+
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(household).toBeNull();
+
+	const categories = await t.run(async (ctx) =>
+		ctx.db
+			.query('categories')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(categories).toHaveLength(0);
+
+	const transactions = await t.run(async (ctx) =>
+		ctx.db
+			.query('transactions')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(transactions).toHaveLength(0);
+
+	const memberships = await t.run(async (ctx) =>
+		ctx.db
+			.query('memberships')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(memberships).toHaveLength(0);
 });

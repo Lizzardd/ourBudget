@@ -7,6 +7,7 @@ export interface HouseholdMember {
 	displayName: string;
 	profileColor: string;
 	initial: string;
+	role: 'owner' | 'member';
 	isMe: boolean;
 }
 

@@ -76,7 +76,7 @@
       <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
         <div style="border-radius: 28px; background: var(--card, #2D251F); padding: 32px 40px; text-align: center; border: 1px dashed rgba(201,98,135,0.5)">
           <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--sub, #B5A493)">INVITE CODE</div>
-          <div style="font-size: 40px; font-weight: 900; letter-spacing: 2px; color: var(--accent, #C96287); margin-top: 8px">SUNNY-42</div>
+          <div style="font-size: 40px; font-weight: 900; letter-spacing: 2px; color: var(--accent, #C96287); margin-top: 8px">SUNNY4829</div>
         </div>
         <button onClick="{{ shareInvite }}" style="height: 52px; padding: 0 32px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer" style-active="transform: scale(0.97)">Share invite ↗</button>
       </div>
@@ -88,8 +88,8 @@
   <sc-if value="{{ isJoin }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Onboarding — Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
       <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Enter your invite code</div>
-      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px">It looks like SUNNY-42 — check your messages.</div>
-      <input value="{{ joinCode }}" onChange="{{ joinChange }}" placeholder="SUNNY-42" style="margin-top: 32px; height: 64px; border-radius: 20px; border: 1.5px solid rgba(201,98,135,0.4); background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 26px; font-weight: 800; letter-spacing: 2px; text-align: center; outline: none">
+      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px">It looks like SUNNY4829 — check your messages.</div>
+      <input value="{{ joinCode }}" onChange="{{ joinChange }}" placeholder="SUNNY4829" style="margin-top: 32px; height: 64px; border-radius: 20px; border: 1.5px solid rgba(201,98,135,0.4); background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 26px; font-weight: 800; letter-spacing: 2px; text-align: center; outline: none">
       <div style="flex: 1"></div>
       <button onClick="{{ toDash }}" style="height: 58px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Join The Al-Marri Home</button>
       <button onClick="{{ goFork }}" style="height: 44px; border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px">Back</button>
@@ -108,10 +108,12 @@
             <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">July 2026</div>
           </div>
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
-            <div style="font-size: 13px; font-weight: 800; letter-spacing: -0.2px">The Al-Marri Home</div>
+            <div style="font-size: 13px; font-weight: 800; letter-spacing: -0.2px">{{ householdName }}</div>
             <div style="display: flex">
               <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16)">{{ profInitial }}</div>
-              <div style="width: 28px; height: 28px; border-radius: 50%; background: #7FA8A0; color: #0F2B26; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16); margin-left: -8px">O</div>
+              <sc-for list="{{ manageMembers }}" as="m" hint-placeholder-count="1">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ m.color }}; color: {{ m.textColor }}; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16); margin-left: -8px">{{ m.initial }}</div>
+              </sc-for>
             </div>
           </div>
         </div>
@@ -299,21 +301,16 @@
       <div data-screen-label="Settings" style="flex: 1; overflow-y: auto; padding: 12px 18px 110px; animation: fadeIn 0.3s ease">
         <div style="padding: 8px 4px 16px">
           <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.4px">Settings</div>
-          <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">The Al-Marri Home</div>
+          <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 1px">{{ householdName }}</div>
         </div>
         <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px">
-          <div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493)">MEMBERS</div>
+          <div style="display: flex; align-items: center"><div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493); flex: 1">MEMBERS</div><button onClick="{{ openManage }}" style="border: none; background: none; color: var(--accent, #C96287); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer" style-active="opacity: 0.6">Manage ›</button></div>
           <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px">
             <div onClick="{{ openProfile }}" style="display: flex; align-items: center; gap: 12px; cursor: pointer"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitial }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">You · edit ›</div></div>
-            <div style="display: flex; align-items: center; gap: 12px"><div style="width: 40px; height: 40px; border-radius: 50%; background: #7FA8A0; color: #0F2B26; font-weight: 800; display: flex; align-items: center; justify-content: center">O</div><div style="flex: 1; font-size: 15px; font-weight: 700">Omar</div><div style="font-size: 12px; color: var(--sub, #B5A493)">Member</div></div>
+            <sc-for list="{{ manageMembers }}" as="m" hint-placeholder-count="1">
+              <div style="display: flex; align-items: center; gap: 12px"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ m.color }}; color: {{ m.textColor }}; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ m.initial }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ m.name }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">{{ m.role }}</div></div>
+            </sc-for>
           </div>
-        </div>
-        <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px">
-          <div style="flex: 1">
-            <div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493)">INVITE CODE</div>
-            <div style="font-size: 22px; font-weight: 900; letter-spacing: 1px; color: var(--accent, #C96287); margin-top: 4px">SUNNY-42</div>
-          </div>
-          <button onClick="{{ shareInvite }}" style="height: 44px; padding: 0 20px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer" style-active="transform: scale(0.96)">Share ↗</button>
         </div>
         <div onClick="{{ toggleTheme }}" style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer">
           <div style="flex: 1">
@@ -435,6 +432,63 @@
           <sc-if value="{{ det.canConfirmShow }}" hint-placeholder-val="{{ true }}">
             <button onClick="{{ askDelete }}" style="width: 100%; height: 48px; margin-top: 10px; border: none; border-radius: 999px; background: none; color: {{ det.deleteColor }}; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px" style-active="opacity: 0.6"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px">{{ det.deleteIcon }}</span>{{ det.deleteLabel }}</button>
           </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ─── MANAGE HOUSEHOLD OVERLAY ─── -->
+    <sc-if value="{{ manageOpen }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Manage household" style="position: absolute; inset: 0; z-index: 36; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 18px calc(40px + env(safe-area-inset-bottom, 0px))">
+          <button onClick="{{ closeManage }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
+          <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.4px; padding: 6px 4px 18px">Manage household</div>
+
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">HOUSEHOLD NAME</div>
+            <input value="{{ householdName }}" onChange="{{ householdNameChange }}" placeholder="Household name" style="width: 100%; margin-top: 8px; height: 48px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 14px; font-size: 16px; font-weight: 700; outline: none">
+          </div>
+
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">MEMBERS</div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 2px">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitial }}</div>
+              <div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--accent, #C96287)">You · Owner</div>
+            </div>
+            <sc-for list="{{ manageMembers }}" as="m" hint-placeholder-count="1">
+              <div style="border-top: 1px solid var(--line, rgba(246,237,227,0.07)); padding: 12px 0 2px">
+                <div style="display: flex; align-items: center; gap: 12px">
+                  <div style="width: 40px; height: 40px; border-radius: 50%; background: {{ m.color }}; color: {{ m.textColor }}; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ m.initial }}</div>
+                  <div style="flex: 1"><div style="font-size: 15px; font-weight: 700">{{ m.name }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">{{ m.role }}</div></div>
+                  <sc-if value="{{ m.confirming }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; gap: 6px">
+                      <button onClick="{{ m.cancelRemove }}" style="height: 34px; padding: 0 12px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer">Keep</button>
+                      <button onClick="{{ m.doRemove }}" style="height: 34px; padding: 0 12px; border: none; border-radius: 999px; background: #C8402E; color: #FFF3F0; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer">Remove</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ m.showRemoveBtn }}" hint-placeholder-val="{{ true }}">
+                    <button onClick="{{ m.askRemove }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 34px; height: 34px; border-radius: 50%; font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center" style-active="transform: scale(0.9)">person_remove</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ hasMembers }}" hint-placeholder-val="{{ true }}">
+              <div style="border-top: 1px solid var(--line, rgba(246,237,227,0.07)); margin-top: 6px"></div>
+            </sc-if>
+            <sc-if value="{{ hasMembers }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 13px; color: var(--sub, #B5A493); padding: 14px 0 2px; text-align: center">Just you for now — invite someone below 💛</div>
+            </sc-if>
+          </div>
+
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px; display: flex; align-items: center; gap: 12px">
+            <div style="flex: 1">
+              <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">INVITE CODE</div>
+              <div style="font-size: 22px; font-weight: 900; letter-spacing: 1px; color: var(--accent, #C96287); margin-top: 4px">SUNNY4829</div>
+            </div>
+            <button onClick="{{ shareInvite }}" style="height: 44px; padding: 0 20px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer" style-active="transform: scale(0.96)">Share ↗</button>
+          </div>
+
+          <button onClick="{{ leaveHousehold }}" style="width: 100%; height: 52px; margin-top: 20px; border: 1.5px solid rgba(200,64,46,0.5); border-radius: 999px; background: none; color: #DE4B37; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Leave household</button>
         </div>
       </div>
     </sc-if>
@@ -572,7 +626,7 @@
           <div style="display: flex; align-items: center">
             <div style="flex: 1">
               <div style="font-size: 19px; font-weight: 800">Your Monday check-in ☀️</div>
-              <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px">Week of Jul 6 · The Al-Marri Home</div>
+              <div style="font-size: 13px; color: var(--sub, #B5A493); margin-top: 2px">Week of Jul 6 · {{ householdName }}</div>
             </div>
             <button onClick="{{ closeWeekly }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
           </div>
@@ -732,6 +786,8 @@ class Component extends DCLogic {
     notif: false, weekly: false, confirmDelete: false, archived: [],
     profOpen: false, profName: 'Sara', profEmail: 'sara.almarri@gmail.com', profColor: '#D98BA4',
     prefWeekly: true, prefOver: true, prefMonthly: false,
+    householdName: 'The Al-Marri Home', manageOpen: false, confirmRemove: null,
+    members: [{ id: 'omar', name: 'Omar', color: '#7FA8A0', textColor: '#0F2B26', role: 'Member' }],
   };
 
   scheduleNotif() {
@@ -1019,10 +1075,30 @@ class Component extends DCLogic {
       goJoin: () => this.setState({ phase: 'join' }),
       toDash: () => { this.setState({ phase: 'app', tab: 'home' }); this.scheduleNotif(); },
       joinCode: s.joinCode || '',
-      joinChange: e => this.setState({ joinCode: e.target.value.toUpperCase() }),
+      joinChange: e => this.setState({ joinCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }),
       shareInvite: () => this.toastNow('Invite link copied 📋'),
       signOut: () => this.setState({ phase: 'welcome', tab: 'home', catId: null }),
       versionLabel: 'Version 0.1.0 (MVP)',
+      // household
+      householdName: s.householdName,
+      openManage: () => this.setState({ manageOpen: true, confirmRemove: null }),
+      closeManage: () => this.setState({ manageOpen: false, confirmRemove: null }),
+      manageOpen: s.manageOpen,
+      householdNameChange: e => this.setState({ householdName: e.target.value }),
+      manageMembers: s.members.map(m => ({
+        name: m.name, initial: m.name[0].toUpperCase(), color: m.color, textColor: m.textColor, role: m.role,
+        confirming: s.confirmRemove === m.id,
+        showRemoveBtn: s.confirmRemove !== m.id,
+        askRemove: () => this.setState({ confirmRemove: m.id }),
+        cancelRemove: () => this.setState({ confirmRemove: null }),
+        doRemove: () => {
+          this.setState(st => ({ members: st.members.filter(x => x.id !== m.id), confirmRemove: null }));
+          this.toastNow(m.name + ' removed from household');
+        },
+      })),
+      firstMember: s.members[0] || null,
+      hasMembers: s.members.length > 0,
+      leaveHousehold: () => this.setState({ manageOpen: false, phase: 'welcome', tab: 'home', catId: null }),
       kbPad: s.kb ? s.kb + 'px' : '0px',
       // tabs
       tabHome: s.tab === 'home', tabReports: s.tab === 'reports', tabSettings: s.tab === 'settings',
