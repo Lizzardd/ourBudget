@@ -59,7 +59,7 @@ const NOTIF_ROWS = [
  */
 export default function Settings() {
 	const { mode, t, accent, toggle } = useTheme();
-	const { householdId, currency } = useHousehold();
+	const { householdId, currency, name: householdName } = useHousehold();
 	const { members } = useHouseholdMembers();
 	const { settings, loading } = useSettings();
 	const updateSettings = useUpdateSettings();
@@ -177,6 +177,9 @@ export default function Settings() {
 				<Text style={[styles.title, { color: t.text, fontFamily: fontFamily(800) }]}>
 					Settings
 				</Text>
+				{householdName ? (
+					<Text style={[styles.headerSub, { color: t.sub }]}>{householdName}</Text>
+				) : null}
 			</View>
 
 			{householdId ? (
@@ -188,10 +191,10 @@ export default function Settings() {
 						<Pressable
 							onPress={() => setManageOpen(true)}
 							accessibilityRole="button"
-							style={[styles.manageBtn, { backgroundColor: t.el }]}
+							style={({ pressed }) => [pressed ? styles.pressed : null]}
 						>
-							<Text style={[styles.manageLabel, { color: t.text, fontFamily: fontFamily(800) }]}>
-								Manage
+							<Text style={[styles.manageLabel, { color: accent, fontFamily: fontFamily(800) }]}>
+								Manage ›
 							</Text>
 						</Pressable>
 					</View>
@@ -426,8 +429,8 @@ export default function Settings() {
 				accessibilityRole="button"
 				style={styles.signOut}
 			>
-				<Text style={[styles.signOutLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
-					Sign out
+				<Text style={[styles.signOutLabel, { color: accent, fontFamily: fontFamily(800) }]}>
+					Sign Out
 				</Text>
 			</Pressable>
 			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
@@ -458,6 +461,13 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 22,
 		letterSpacing: -0.4,
+	},
+	headerSub: {
+		fontSize: 13,
+		marginTop: 1,
+	},
+	pressed: {
+		opacity: 0.6,
 	},
 	card: {
 		borderRadius: 24,
@@ -499,15 +509,8 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		gap: 12,
 	},
-	manageBtn: {
-		height: 34,
-		paddingHorizontal: 14,
-		borderRadius: 999,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
 	manageLabel: {
-		fontSize: 12,
+		fontSize: 13,
 	},
 	membersList: {
 		marginTop: 2,

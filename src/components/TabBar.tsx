@@ -14,7 +14,7 @@ const TABS: ReadonlyArray<{ key: TabKey; label: string }> = [
 	{ key: 'settings', label: 'Settings' },
 ];
 
-const TAB_ROW_HEIGHT = 56;
+const TAB_ROW_HEIGHT = 48;
 
 function TabIcon({ tab, color }: { tab: TabKey; color: string }) {
 	switch (tab) {

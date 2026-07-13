@@ -2,6 +2,7 @@ import * as Updates from 'expo-updates';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Icon } from '../components/Icon';
 import { useToast } from '../lib/toast';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
@@ -71,7 +72,7 @@ export function CheckForUpdatesRow() {
 			{busy ? (
 				<ActivityIndicator size="small" color={accent} />
 			) : (
-				<Text style={[styles.hint, { color: t.sub }]}>↻</Text>
+				<Icon name="refresh" size={22} color={accent} />
 			)}
 		</Pressable>
 	);
@@ -93,8 +94,5 @@ const styles = StyleSheet.create({
 	sub: {
 		fontSize: 12,
 		marginTop: 2,
-	},
-	hint: {
-		fontSize: 20,
 	},
 });

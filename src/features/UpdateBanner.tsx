@@ -1,6 +1,6 @@
 import * as Updates from 'expo-updates';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fontFamily } from '../theme/fonts';
@@ -22,12 +22,34 @@ import { useTheme } from '../theme/useTheme';
 export function UpdateBanner() {
 	const { t, accent } = useTheme();
 	const insets = useSafeAreaInsets();
-	const { isUpdatePending } = Updates.useUpdates();
+	const { isUpdatePending, isDownloading } = Updates.useUpdates();
 	const [restarting, setRestarting] = useState(false);
 	const [dismissed, setDismissed] = useState(false);
 
-	if (!isUpdatePending || dismissed) {
+	// Only offer the restart once the bundle is fully downloaded AND staged.
+	// Reloading into a half-downloaded update launches a bundle whose assets
+	// are missing, which strands the app on the splash screen — so `Restart`
+	// must never be reachable while the download is still in flight.
+	const ready = isUpdatePending && !isDownloading;
+
+	if (dismissed || (!ready && !isDownloading)) {
 		return null;
+	}
+
+	if (isDownloading) {
+		return (
+			<View style={[styles.wrap, { bottom: insets.bottom + 90 }]} pointerEvents="box-none">
+				<View style={[styles.banner, { backgroundColor: t.card }]}>
+					<View style={styles.copy}>
+						<Text style={[styles.title, { color: t.text, fontFamily: fontFamily(800) }]}>
+							Downloading update…
+						</Text>
+						<Text style={[styles.sub, { color: t.sub }]}>Keep the app open until it finishes</Text>
+					</View>
+					<ActivityIndicator size="small" color={accent} />
+				</View>
+			</View>
+		);
 	}
 
 	const restart = () => {

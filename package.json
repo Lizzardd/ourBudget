@@ -52,8 +52,8 @@
     "web:build": "expo export -p web",
     "build:android": "eas build -p android --profile preview",
     "build:android:prod": "eas build -p android --profile production",
-    "update:android": "eas update --channel preview",
-    "update:android:prod": "eas update --channel production"
+    "update:android": "EXPO_PUBLIC_CONVEX_URL=https://shiny-scorpion-150.convex.cloud EXPO_PUBLIC_CONVEX_SITE_URL=https://shiny-scorpion-150.convex.site eas update --channel preview",
+    "update:android:prod": "EXPO_PUBLIC_CONVEX_URL=https://shiny-scorpion-150.convex.cloud EXPO_PUBLIC_CONVEX_SITE_URL=https://shiny-scorpion-150.convex.site eas update --channel production"
   },
   "scriptsInfo": {
     "start": "Expo dev server with the interactive platform picker",

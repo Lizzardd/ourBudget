@@ -1,5 +1,6 @@
 import * as Updates from 'expo-updates';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
 
@@ -22,6 +23,26 @@ export function OtaDiagnostics() {
 	const { t, accent } = useTheme();
 	const { isUpdateAvailable, isUpdatePending, isChecking, isDownloading, checkError, downloadError } =
 		Updates.useUpdates();
+	const [logs, setLogs] = useState<string[] | null>(null);
+
+	/**
+	 * The native update logs are the only place a launch failure is recorded.
+	 * When a downloaded bundle crashes on startup, expo-updates rolls back to
+	 * the embedded one before any JS of ours runs — so nothing in the React
+	 * tree ever sees the error. These entries are what say why.
+	 */
+	const loadLogs = async () => {
+		try {
+			const entries = await Updates.readLogEntriesAsync(3600_000);
+			setLogs(
+				entries.length === 0
+					? ['(no update log entries in the last hour)']
+					: entries.slice(-12).map((e) => `${e.code ?? 'log'}: ${e.message}`)
+			);
+		} catch (err) {
+			setLogs([`could not read logs: ${err instanceof Error ? err.message : String(err)}`]);
+		}
+	};
 
 	const rows: [string, string][] = [
 		['enabled', String(Updates.isEnabled)],
@@ -50,6 +71,15 @@ export function OtaDiagnostics() {
 			{downloadError ? (
 				<Text style={[styles.error, { color: accent }]}>download: {downloadError.message}</Text>
 			) : null}
+
+			<Pressable onPress={loadLogs} accessibilityRole="button" style={styles.logsBtn}>
+				<Text style={[styles.logsBtnLabel, { color: accent }]}>Show update logs ›</Text>
+			</Pressable>
+			{logs?.map((line, i) => (
+				<Text key={i} style={[styles.log, { color: t.sub }]} selectable>
+					{line}
+				</Text>
+			))}
 		</View>
 	);
 }
@@ -81,5 +111,17 @@ const styles = StyleSheet.create({
 	error: {
 		fontSize: 11,
 		marginTop: 8,
+	},
+	logsBtn: {
+		paddingTop: 12,
+	},
+	logsBtnLabel: {
+		fontSize: 12,
+		fontWeight: '800',
+	},
+	log: {
+		fontSize: 10,
+		lineHeight: 14,
+		marginTop: 6,
 	},
 });
