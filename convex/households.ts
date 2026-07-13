@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 const INVITE_WORDS = [
 	"SUNNY",
@@ -40,6 +40,18 @@ function generateInviteCode(): string {
 		.toString()
 		.padStart(4, "0");
 	return `${word}${digits}`;
+}
+
+/**
+ * Canonical form of an invite code: uppercase, alphanumerics only. Codes used
+ * to be minted hyphenated (`SUNNY-0790`) before the format changed to
+ * `SUNNY0790`, so both spellings are still in circulation — in old databases,
+ * in old chat threads, and in people's heads. Normalizing on the way in means
+ * a member can paste or type either one (plus stray spaces or lowercase) and
+ * still land on the same household.
+ */
+export function normalizeInviteCode(code: string): string {
+	return code.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
 const MAX_INVITE_CODE_ATTEMPTS = 10;
@@ -166,9 +178,13 @@ export const joinHousehold = mutation({
 			throw new Error("Not authenticated");
 		}
 
+		// The `by_invite` index is an exact-match lookup, so the typed code has to
+		// be canonicalized first — otherwise "sunny-0790" could never resolve to
+		// the stored "SUNNY0790".
+		const code = normalizeInviteCode(args.code);
 		const household = await ctx.db
 			.query("households")
-			.withIndex("by_invite", (q) => q.eq("inviteCode", args.code))
+			.withIndex("by_invite", (q) => q.eq("inviteCode", code))
 			.unique();
 		if (household === null) {
 			throw new Error("No household found for that code");
@@ -200,6 +216,51 @@ export const joinHousehold = mutation({
 		}
 
 		return household._id;
+	},
+});
+
+/**
+ * One-off backfill for households minted before invite codes dropped their
+ * hyphen: rewrites every stored `inviteCode` to its `normalizeInviteCode`
+ * form so the `by_invite` lookup in `joinHousehold` (which now normalizes its
+ * input) can find them. Idempotent — already-normalized rows are skipped, so
+ * a second run patches nothing and returns 0.
+ *
+ * Stripping punctuation can in principle land a legacy code on top of a code
+ * some other household already holds (e.g. `SUNNY-0790` and `SUNNY0790` both
+ * exist). Two households sharing a code would make `joinHousehold`'s
+ * `.unique()` throw for BOTH, so on collision the legacy household is issued a
+ * fresh unique code instead — it loses its old code, but stays joinable.
+ *
+ * Run once with `npx convex run households:normalizeExistingInviteCodes`.
+ */
+export const normalizeExistingInviteCodes = internalMutation({
+	args: {},
+	returns: v.number(),
+	handler: async (ctx) => {
+		const households = await ctx.db.query("households").collect();
+
+		let patched = 0;
+		for (const household of households) {
+			const normalized = normalizeInviteCode(household.inviteCode);
+			if (normalized === household.inviteCode) {
+				continue;
+			}
+
+			const clash = await ctx.db
+				.query("households")
+				.withIndex("by_invite", (q) => q.eq("inviteCode", normalized))
+				.unique();
+			const inviteCode =
+				clash === null || clash._id === household._id
+					? normalized
+					: await generateUniqueInviteCode(ctx);
+
+			await ctx.db.patch(household._id, { inviteCode });
+			patched++;
+		}
+
+		return patched;
 	},
 });
 

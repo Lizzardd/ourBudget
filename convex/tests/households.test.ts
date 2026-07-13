@@ -1,7 +1,7 @@
 // @vitest-environment edge-runtime
 import { convexTest } from 'convex-test';
 import { expect, test, vi } from 'vitest';
-import { api } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import schema from '../schema';
 
 // `import.meta.glob` is a Vite/Vitest build-time API; the ambient `vite/client`
@@ -132,6 +132,114 @@ test('joinHousehold throws for an invalid code', async () => {
 	await expect(
 		asUser.mutation(api.households.joinHousehold, { code: 'NOPE-99' }),
 	).rejects.toThrow('No household found for that code');
+});
+
+test('normalizeInviteCode strips hyphens, spaces and lowercasing', async () => {
+	const { normalizeInviteCode } = await import('../households');
+
+	expect(normalizeInviteCode('SUNNY-0790')).toBe('SUNNY0790');
+	expect(normalizeInviteCode('sunny0790')).toBe('SUNNY0790');
+	expect(normalizeInviteCode('  sunny - 0790 ')).toBe('SUNNY0790');
+	// Already canonical codes pass through untouched.
+	expect(normalizeInviteCode('SUNNY0790')).toBe('SUNNY0790');
+});
+
+test('joinHousehold resolves a code typed with a hyphen when it is stored without one', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Shared House',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+	const stored = household!.inviteCode;
+	// Re-insert the separator the old format used, plus some human noise.
+	const typed = ` ${stored.slice(0, -4).toLowerCase()}-${stored.slice(-4)} `;
+
+	const { asUser: joiner } = await seedUser(t, 'Joiner');
+	const joinedHouseholdId = await joiner.mutation(api.households.joinHousehold, {
+		code: typed,
+	});
+	expect(joinedHouseholdId).toBe(householdId);
+});
+
+test('joinHousehold resolves a code typed without a hyphen when a legacy row stored one', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Legacy House',
+		currency: 'AED',
+	});
+	// Simulate a household minted before the format change.
+	await t.run(async (ctx) => ctx.db.patch(householdId, { inviteCode: 'SUNNY-0790' }));
+
+	const patched = await t.mutation(internal.households.normalizeExistingInviteCodes, {});
+	expect(patched).toBe(1);
+
+	const { asUser: joiner } = await seedUser(t, 'Joiner');
+	const joinedHouseholdId = await joiner.mutation(api.households.joinHousehold, {
+		code: 'SUNNY0790',
+	});
+	expect(joinedHouseholdId).toBe(householdId);
+});
+
+test('normalizeExistingInviteCodes rewrites legacy codes and is idempotent', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Legacy House',
+		currency: 'AED',
+	});
+	await t.run(async (ctx) => ctx.db.patch(householdId, { inviteCode: 'MAPLE-1234' }));
+
+	const patched = await t.mutation(internal.households.normalizeExistingInviteCodes, {});
+	expect(patched).toBe(1);
+
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(household?.inviteCode).toBe('MAPLE1234');
+
+	// Running it a second time must be a no-op — nothing left to normalize.
+	const patchedAgain = await t.mutation(internal.households.normalizeExistingInviteCodes, {});
+	expect(patchedAgain).toBe(0);
+
+	const unchanged = await t.run(async (ctx) => ctx.db.get(householdId));
+	expect(unchanged?.inviteCode).toBe('MAPLE1234');
+});
+
+test('normalizeExistingInviteCodes issues a fresh code when normalizing would collide', async () => {
+	const t = makeCtx();
+	const dummyOwner = await t.run(async (ctx) => ctx.db.insert('users', { name: 'Dummy' }));
+
+	// The legacy row normalizes onto a code another household already holds —
+	// letting both keep it would break `joinHousehold`'s `.unique()` for BOTH.
+	const legacyId = await t.run(async (ctx) =>
+		ctx.db.insert('households', {
+			name: 'Legacy',
+			inviteCode: 'CORAL-0001',
+			currency: 'AED',
+			ownerId: dummyOwner,
+			createdAt: Date.now(),
+		}),
+	);
+	const incumbentId = await t.run(async (ctx) =>
+		ctx.db.insert('households', {
+			name: 'Incumbent',
+			inviteCode: 'CORAL0001',
+			currency: 'AED',
+			ownerId: dummyOwner,
+			createdAt: Date.now(),
+		}),
+	);
+
+	const patched = await t.mutation(internal.households.normalizeExistingInviteCodes, {});
+	expect(patched).toBe(1);
+
+	const legacy = await t.run(async (ctx) => ctx.db.get(legacyId));
+	const incumbent = await t.run(async (ctx) => ctx.db.get(incumbentId));
+	// The incumbent keeps its code; the legacy row gets a fresh, canonical one.
+	expect(incumbent?.inviteCode).toBe('CORAL0001');
+	expect(legacy?.inviteCode).not.toBe('CORAL0001');
+	expect(legacy?.inviteCode).toMatch(/^[A-Z]+\d{4}$/);
 });
 
 test('requireMembership throws for a non-member', async () => {

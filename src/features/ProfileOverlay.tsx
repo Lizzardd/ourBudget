@@ -142,6 +142,19 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 					</View>
 				</View>
 
+				<View style={[styles.card, styles.remindersCard, { backgroundColor: t.card }]}>
+					<Text style={[styles.fieldLabel, styles.remindersLabel, { color: t.sub, fontFamily: fontFamily(800) }]}>
+						REMINDERS
+					</Text>
+					<Text style={[styles.remindersBody, { color: t.sub }]}>
+						Manage weekly check-ins, over-budget nudges and the monthly recap in{' '}
+						<Text style={[styles.remindersStrong, { color: t.text, fontFamily: fontFamily(700) }]}>
+							Settings → Notifications
+						</Text>
+						.
+					</Text>
+				</View>
+
 				<Pressable
 					onPress={handleDone}
 					accessibilityRole="button"
@@ -201,9 +214,26 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		padding: 20,
 	},
+	remindersCard: {
+		paddingVertical: 8,
+		marginTop: 12,
+	},
 	fieldLabel: {
 		fontSize: 11,
 		letterSpacing: 1,
+	},
+	remindersLabel: {
+		paddingTop: 12,
+		paddingBottom: 2,
+	},
+	remindersBody: {
+		fontSize: 13,
+		lineHeight: 20,
+		paddingTop: 4,
+		paddingBottom: 14,
+	},
+	remindersStrong: {
+		fontSize: 13,
 	},
 	input: {
 		width: '100%',

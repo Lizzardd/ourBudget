@@ -1,23 +1,35 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as Updates from 'expo-updates';
 
+/** What the launch-time update check did — surfaced in Settings. */
+export interface OtaStatus {
+	phase: 'idle' | 'checking' | 'none-available' | 'downloading' | 'downloaded' | 'error';
+	/** Populated when the check or download threw, rather than being swallowed. */
+	error: string | null;
+}
+
 /**
- * Applies a pending EAS Update at launch.
+ * Downloads a newer EAS Update at launch, ready for the next start.
  *
- * expo-updates' automatic behaviour only downloads in the background and
- * defers activation to the *next* launch — so a user who closes the app
- * before the download finishes never gets the update, and even a completed
- * download needs a second cold start. That is too fragile to rely on.
+ * Deliberately does NOT call `Updates.reloadAsync()`. Reloading as soon as an
+ * update is pending looks appealing — the update lands a launch sooner — but
+ * it is a trap: if the staged update does not become the running bundle (it is
+ * older than the embedded one, or the launcher rejects it), `isUpdatePending`
+ * is still true on the next boot, so it reloads again, and again. That is an
+ * infinite restart loop which strands the app on the splash screen with no way
+ * out but a reinstall. It is not worth saving one launch.
  *
- * Instead we drive the lifecycle explicitly: check, fetch, and reload into
- * the new bundle within this launch. Reloading is only ever done at startup
- * (never mid-session), so nothing the user is doing gets thrown away.
+ * So we only ever fetch. expo-updates activates a staged update on the next
+ * cold start, which cannot loop: if it launches, we are on it; if it does not,
+ * we simply keep running the current bundle.
  *
- * No-ops in development and wherever updates are disabled (Expo Go), and
- * swallows failures — an unreachable update server must never stop the app
- * from starting on the bundle it already has.
+ * Failures are reported rather than swallowed — an unreachable update server
+ * must not stop the app starting on the bundle it has, but discarding the
+ * reason makes a stuck update impossible to diagnose.
  */
-export function useOtaUpdates(): void {
+export function useOtaUpdates(): OtaStatus {
+	const [status, setStatus] = useState<OtaStatus>({ phase: 'idle', error: null });
+
 	useEffect(() => {
 		if (__DEV__ || !Updates.isEnabled) {
 			return;
@@ -25,22 +37,34 @@ export function useOtaUpdates(): void {
 		let cancelled = false;
 		void (async () => {
 			try {
+				setStatus({ phase: 'checking', error: null });
 				const check = await Updates.checkForUpdateAsync();
-				if (cancelled || !check.isAvailable) {
-					return;
-				}
-				await Updates.fetchUpdateAsync();
 				if (cancelled) {
 					return;
 				}
-				await Updates.reloadAsync();
-			} catch {
-				// Offline, or the update server is unreachable: keep running the
-				// bundle we already have.
+				if (!check.isAvailable) {
+					setStatus({ phase: 'none-available', error: null });
+					return;
+				}
+				setStatus({ phase: 'downloading', error: null });
+				await Updates.fetchUpdateAsync();
+				if (!cancelled) {
+					// Staged. expo-updates will launch it on the next cold start.
+					setStatus({ phase: 'downloaded', error: null });
+				}
+			} catch (err) {
+				if (!cancelled) {
+					setStatus({
+						phase: 'error',
+						error: `update: ${err instanceof Error ? err.message : String(err)}`,
+					});
+				}
 			}
 		})();
 		return () => {
 			cancelled = true;
 		};
 	}, []);
+
+	return status;
 }

@@ -8,10 +8,12 @@ import { fontFamily } from '../../src/theme/fonts';
 import { useTheme } from '../../src/theme/useTheme';
 
 /**
- * "Join with a code" branch of the fork. Codes are uppercased as the user
- * types (matching the prototype's `joinChange` handler). Join failures
- * surface inline rather than failing silently, since a mistyped or
- * expired code is an expected, recoverable error.
+ * "Join with a code" branch of the fork. Codes are uppercased and stripped of
+ * anything non-alphanumeric as the user types (matching the prototype's
+ * `joinChange` handler), so a pasted `sunny-0790` from the old hyphenated
+ * format still lands on `SUNNY0790`. Join failures surface inline rather than
+ * failing silently, since a mistyped or expired code is an expected,
+ * recoverable error.
  */
 export default function Join() {
 	const { t, accent } = useTheme();
@@ -51,15 +53,15 @@ export default function Join() {
 				Enter your invite code
 			</Text>
 			<Text style={[styles.body, { color: t.sub }]}>
-				It looks like SUNNY-42 — check your messages.
+				It looks like SUNNY0790 — check your messages.
 			</Text>
 			<TextInput
 				value={code}
 				onChangeText={(next) => {
 					setError(null);
-					setCode(next.toUpperCase());
+					setCode(next.toUpperCase().replace(/[^A-Z0-9]/g, ''));
 				}}
-				placeholder="SUNNY-42"
+				placeholder="SUNNY0790"
 				placeholderTextColor={t.sub}
 				autoCapitalize="characters"
 				autoCorrect={false}

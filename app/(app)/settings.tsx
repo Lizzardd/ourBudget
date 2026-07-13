@@ -3,11 +3,10 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, 
 import { useConvex } from 'convex/react';
 
 import { FadeIn } from '../../src/components/FadeIn';
+import { Icon } from '../../src/components/Icon';
 import { Loading } from '../../src/components/Loading';
 import { Toggle } from '../../src/components/Toggle';
-import { DeleteAccountOverlay } from '../../src/features/DeleteAccountOverlay';
 import { ManageHouseholdOverlay } from '../../src/features/ManageHouseholdOverlay';
-import { useNewCategorySheet } from '../../src/features/NewCategoryProvider';
 import { ProfileOverlay } from '../../src/features/ProfileOverlay';
 import { useHousehold } from '../../src/hooks/useHousehold';
 import { useHouseholdMembers } from '../../src/hooks/useHouseholdMembers';
@@ -16,6 +15,8 @@ import { useSettings, useSetCurrency, useUpdateSettings } from '../../src/hooks/
 import type { Currency } from '../../src/hooks/types';
 import { hexToRgba } from '../../src/lib/color';
 import { useToast } from '../../src/lib/toast';
+import { CheckForUpdatesRow } from '../../src/features/CheckForUpdatesRow';
+import { OtaDiagnostics } from '../../src/features/OtaDiagnostics';
 import { versionLabel } from '../../src/lib/version';
 import { fontFamily } from '../../src/theme/fonts';
 import { GLYPH } from '../../src/theme/tokens';
@@ -64,16 +65,20 @@ export default function Settings() {
 	const updateSettings = useUpdateSettings();
 	const setCurrency = useSetCurrency();
 	const { signOut } = useAuth();
-	const { open: openNewCategory } = useNewCategorySheet();
 	const [profileOpen, setProfileOpen] = useState(false);
 	const [manageOpen, setManageOpen] = useState(false);
-	const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const [exporting, setExporting] = useState(false);
 	const convex = useConvex();
 	const { toast } = useToast();
 
 	const isDark = mode === 'dark';
 	const themeLabel = isDark ? 'Cozy dark mode 🌙' : 'Warm light mode ☀️';
+
+	// The prototype lists you first inside MEMBERS — your row doubles as the
+	// Profile entry point ("You · edit ›"); everyone else shows their role.
+	const memberRows = [...(members ?? [])].sort((a, b) => Number(b.isMe) - Number(a.isMe));
 
 	const patchSettings = (patch: Parameters<typeof updateSettings>[0]['patch']) => {
 		if (!householdId) {
@@ -104,8 +109,25 @@ export default function Settings() {
 		setProfileOpen(true);
 	};
 
-	const onPressDeleteAccount = () => {
-		setDeleteAccountOpen(true);
+	/**
+	 * Two-step, in-card account deletion (the prototype dropped the separate
+	 * confirm screen): the row swaps in place for a confirm block, and only
+	 * the explicit "Delete" press calls `account.deleteMyAccount`. Sign-out
+	 * follows immediately — the root auth gate (`app/index.tsx`) then
+	 * redirects to onboarding once `<Unauthenticated>` takes over.
+	 */
+	const handleDeleteAccount = async () => {
+		if (deleting) {
+			return;
+		}
+		setDeleting(true);
+		try {
+			await convex.mutation(api.account.deleteMyAccount, {});
+			await signOut();
+		} catch {
+			setDeleting(false);
+			toast('Could not delete your account — try again');
+		}
 	};
 
 	const handleExportData = async () => {
@@ -157,24 +179,6 @@ export default function Settings() {
 				</Text>
 			</View>
 
-			<Pressable
-				onPress={onPressProfile}
-				accessibilityRole="button"
-				style={[styles.card, { backgroundColor: t.card }]}
-			>
-				<Text style={[styles.sectionLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
-					PROFILE
-				</Text>
-				<View style={styles.profileRow}>
-					<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
-						{settings.displayName || 'You'}
-					</Text>
-					<Text style={[styles.rowHint, { color: t.sub }]}>edit ›</Text>
-				</View>
-			</Pressable>
-
-			<ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
-
 			{householdId ? (
 				<View style={[styles.card, { backgroundColor: t.card }]}>
 					<View style={styles.membersHeader}>
@@ -192,8 +196,14 @@ export default function Settings() {
 						</Pressable>
 					</View>
 					<View style={styles.membersList}>
-						{(members ?? []).map((m) => (
-							<View key={m.userId} style={styles.memberRow}>
+						{memberRows.map((m) => (
+							<Pressable
+								key={m.userId}
+								onPress={m.isMe ? onPressProfile : undefined}
+								disabled={!m.isMe}
+								accessibilityRole={m.isMe ? 'button' : undefined}
+								style={styles.memberRow}
+							>
 								<View style={[styles.memberAvatar, { backgroundColor: m.profileColor }]}>
 									<Text style={[styles.memberInitial, { fontFamily: fontFamily(800) }]}>
 										{m.initial}
@@ -202,30 +212,72 @@ export default function Settings() {
 								<Text style={[styles.rowTitle, styles.rowText, { color: t.text, fontFamily: fontFamily(700) }]}>
 									{m.displayName}
 								</Text>
-								<Text style={[styles.rowHint, { color: m.isMe ? accent : t.sub }]}>
-									{m.isMe ? 'You' : m.role === 'owner' ? 'Owner' : 'Member'}
+								<Text style={[styles.rowHint, { color: t.sub }]}>
+									{m.isMe ? 'You · edit ›' : m.role === 'owner' ? 'Owner' : 'Member'}
 								</Text>
-							</View>
+							</Pressable>
 						))}
 					</View>
 				</View>
 			) : null}
 
+			<ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
+
 			<ManageHouseholdOverlay open={manageOpen} onClose={() => setManageOpen(false)} />
 
-			<Pressable
-				onPress={toggle}
-				accessibilityRole="button"
-				style={[styles.card, styles.rowCard, { backgroundColor: t.card }]}
-			>
-				<View style={styles.rowText}>
+			<View style={[styles.card, { backgroundColor: t.card }]}>
+				<Text style={[styles.eyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
+					APPEARANCE
+				</Text>
+				<Pressable
+					onPress={toggle}
+					accessibilityRole="button"
+					style={[styles.rowCard, styles.themeRow, { borderBottomColor: t.line }]}
+				>
+					<View style={styles.rowText}>
+						<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
+							{themeLabel}
+						</Text>
+						<Text style={[styles.rowSub, { color: t.sub }]}>Tap to switch</Text>
+					</View>
+					<Toggle value={isDark} onValueChange={toggle} />
+				</Pressable>
+
+				<View style={styles.layoutBlock}>
 					<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
-						{themeLabel}
+						Dashboard layout
 					</Text>
-					<Text style={[styles.rowSub, { color: t.sub }]}>Tap to switch</Text>
+					<Text style={[styles.rowSub, { color: t.sub }]}>
+						How your categories are shown on Home
+					</Text>
+					<View style={[styles.layoutWrap, { backgroundColor: t.el }]}>
+						{LAYOUT_OPTS.map((o) => {
+							const selected = o.id === settings.layout;
+							return (
+								<Pressable
+									key={o.id}
+									onPress={() => handlePickLayout(o.id)}
+									accessibilityRole="button"
+									accessibilityState={{ selected }}
+									style={[
+										styles.layoutOpt,
+										{ backgroundColor: selected ? accent : 'transparent' },
+									]}
+								>
+									<Text
+										style={[
+											styles.layoutLabel,
+											{ color: selected ? '#2B0E1A' : t.sub, fontFamily: fontFamily(800) },
+										]}
+									>
+										{o.label}
+									</Text>
+								</Pressable>
+							);
+						})}
+					</View>
 				</View>
-				<Toggle value={isDark} onValueChange={toggle} />
-			</Pressable>
+			</View>
 
 			<View style={[styles.card, { backgroundColor: t.card }]}>
 				<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
@@ -265,94 +317,38 @@ export default function Settings() {
 				</View>
 			</View>
 
-			<View style={[styles.card, { backgroundColor: t.card }]}>
-				<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
-					Dashboard layout
-				</Text>
-				<Text style={[styles.rowSub, { color: t.sub }]}>
-					How your categories are shown on Home
-				</Text>
-				<View style={[styles.layoutWrap, { backgroundColor: t.el }]}>
-					{LAYOUT_OPTS.map((o) => {
-						const selected = o.id === settings.layout;
-						return (
-							<Pressable
-								key={o.id}
-								onPress={() => handlePickLayout(o.id)}
-								accessibilityRole="button"
-								accessibilityState={{ selected }}
-								style={[
-									styles.layoutOpt,
-									{ backgroundColor: selected ? accent : 'transparent' },
-								]}
-							>
-								<Text
-									style={[
-										styles.layoutLabel,
-										{ color: selected ? '#2B0E1A' : t.sub, fontFamily: fontFamily(800) },
-									]}
-								>
-									{o.label}
-								</Text>
-							</Pressable>
-						);
-					})}
-				</View>
-			</View>
-
-			<Pressable
-				onPress={openNewCategory}
-				accessibilityRole="button"
-				style={[styles.card, styles.rowCard, { backgroundColor: t.card }]}
-			>
-				<View style={styles.rowText}>
-					<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
-						New category
-					</Text>
-					<Text style={[styles.rowSub, { color: t.sub }]}>Add a budget category</Text>
-				</View>
-				<Text style={[styles.rowHint, { color: t.sub }]}>+</Text>
-			</Pressable>
-
-			<View style={[styles.card, { backgroundColor: t.card }]}>
-				<Text style={[styles.sectionLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
+			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
+				<Text style={[styles.eyebrow, styles.listEyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
 					NOTIFICATIONS
 				</Text>
-				<View style={styles.notifList}>
-					{NOTIF_ROWS.map((row, i) => (
-						<View
-							key={row.key}
-							style={[
-								styles.notifRow,
-								i < NOTIF_ROWS.length - 1 ? { borderBottomColor: t.line, borderBottomWidth: 1 } : null,
-							]}
-						>
-							<View style={styles.rowText}>
-								<Text
-									style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}
-								>
-									{row.title}
-								</Text>
-								<Text style={[styles.rowSub, { color: t.sub }]}>{row.sub}</Text>
-							</View>
-							<Toggle
-								value={settings[row.key]}
-								onValueChange={(next) => patchSettings({ [row.key]: next })}
-							/>
+				{NOTIF_ROWS.map((row) => (
+					<View
+						key={row.key}
+						style={[styles.rowCard, styles.listRow, { borderBottomColor: t.line }]}
+					>
+						<View style={styles.rowText}>
+							<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
+								{row.title}
+							</Text>
+							<Text style={[styles.rowSub, { color: t.sub }]}>{row.sub}</Text>
 						</View>
-					))}
-				</View>
+						<Toggle
+							value={settings[row.key]}
+							onValueChange={(next) => patchSettings({ [row.key]: next })}
+						/>
+					</View>
+				))}
 			</View>
 
-			<View style={[styles.card, { backgroundColor: t.card }]}>
-				<Text style={[styles.sectionLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
+			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
+				<Text style={[styles.eyebrow, styles.listEyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
 					PRIVACY & DATA
 				</Text>
 				<Pressable
 					onPress={handleExportData}
 					disabled={exporting}
 					accessibilityRole="button"
-					style={[styles.rowCard, styles.exportRow]}
+					style={[styles.rowCard, styles.listRow, { borderBottomColor: t.line }]}
 				>
 					<View style={styles.rowText}>
 						<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
@@ -365,28 +361,65 @@ export default function Settings() {
 					{exporting ? (
 						<ActivityIndicator color={t.sub} />
 					) : (
-						<Text style={[styles.rowHint, { color: t.sub }]}>⭳</Text>
+						<Icon name="download" size={22} color={t.sub} />
 					)}
 				</Pressable>
 
-				<Pressable
-					onPress={onPressDeleteAccount}
-					accessibilityRole="button"
-					style={[styles.rowCard, styles.exportRow]}
-				>
-					<View style={styles.rowText}>
-						<Text style={[styles.rowTitle, { color: '#D14343', fontFamily: fontFamily(700) }]}>
-							Delete account
+				{confirmDelete ? (
+					<View style={styles.confirmBlock}>
+						<Text style={[styles.rowTitle, styles.confirmTitle, { fontFamily: fontFamily(700) }]}>
+							Delete your account?
 						</Text>
-						<Text style={[styles.rowSub, { color: t.sub }]}>
-							Permanently erase your account and personal data
+						<Text style={[styles.confirmBody, { color: t.sub }]}>
+							This permanently erases your account and personal data. Shared
+							household data stays with other members.
 						</Text>
+						<View style={styles.confirmActions}>
+							<Pressable
+								onPress={() => setConfirmDelete(false)}
+								disabled={deleting}
+								accessibilityRole="button"
+								style={[styles.confirmBtn, { backgroundColor: t.el }]}
+							>
+								<Text style={[styles.confirmBtnLabel, { color: t.text, fontFamily: fontFamily(800) }]}>
+									Keep account
+								</Text>
+							</Pressable>
+							<Pressable
+								onPress={handleDeleteAccount}
+								disabled={deleting}
+								accessibilityRole="button"
+								accessibilityState={{ disabled: deleting }}
+								style={[styles.confirmBtn, styles.confirmDangerBtn]}
+							>
+								{deleting ? (
+									<ActivityIndicator color="#FFF3F0" />
+								) : (
+									<Text style={[styles.confirmBtnLabel, styles.confirmDangerLabel, { fontFamily: fontFamily(800) }]}>
+										Delete
+									</Text>
+								)}
+							</Pressable>
+						</View>
 					</View>
-					<Text style={[styles.rowHint, { color: '#D14343' }]}>›</Text>
-				</Pressable>
+				) : (
+					<Pressable
+						onPress={() => setConfirmDelete(true)}
+						accessibilityRole="button"
+						style={[styles.rowCard, styles.deleteRow]}
+					>
+						<View style={styles.rowText}>
+							<Text style={[styles.rowTitle, styles.dangerText, { fontFamily: fontFamily(700) }]}>
+								Delete account
+							</Text>
+							<Text style={[styles.rowSub, { color: t.sub }]}>
+								Permanently erase your account and personal data
+							</Text>
+						</View>
+						<Icon name="chevron_right" size={22} color="#DE4B37" />
+					</Pressable>
+				)}
 			</View>
-
-			<DeleteAccountOverlay open={deleteAccountOpen} onClose={() => setDeleteAccountOpen(false)} />
 
 			<Pressable
 				onPress={() => signOut()}
@@ -397,7 +430,13 @@ export default function Settings() {
 					Sign out
 				</Text>
 			</Pressable>
-			<Text style={[styles.version, { color: t.sub }]}>ourbudget. · {versionLabel()}</Text>
+			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
+				<CheckForUpdatesRow />
+			</View>
+
+			<Text style={[styles.brand, { color: t.sub, fontFamily: fontFamily(800) }]}>ourbudget.</Text>
+			<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
+			<OtaDiagnostics />
 		</ScrollView>
 		</FadeIn>
 	);
@@ -430,8 +469,30 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		gap: 12,
 	},
+	listCard: {
+		paddingVertical: 8,
+	},
 	sectionLabel: {
 		fontSize: 13,
+	},
+	eyebrow: {
+		fontSize: 13,
+		letterSpacing: 1,
+	},
+	listEyebrow: {
+		paddingTop: 12,
+		paddingBottom: 2,
+	},
+	listRow: {
+		paddingVertical: 14,
+		borderBottomWidth: 1,
+	},
+	themeRow: {
+		paddingVertical: 16,
+		borderBottomWidth: 1,
+	},
+	layoutBlock: {
+		paddingTop: 16,
 	},
 	membersHeader: {
 		flexDirection: 'row',
@@ -467,12 +528,6 @@ const styles = StyleSheet.create({
 	memberInitial: {
 		fontSize: 15,
 		color: '#3A1220',
-	},
-	profileRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
-		marginTop: 14,
 	},
 	rowText: {
 		flex: 1,
@@ -521,17 +576,43 @@ const styles = StyleSheet.create({
 	layoutLabel: {
 		fontSize: 13,
 	},
-	notifList: {
-		marginTop: 2,
-	},
-	exportRow: {
-		marginTop: 14,
-	},
-	notifRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 12,
+	deleteRow: {
 		paddingVertical: 14,
+	},
+	dangerText: {
+		color: '#DE4B37',
+	},
+	confirmBlock: {
+		paddingVertical: 14,
+	},
+	confirmTitle: {
+		color: '#DE4B37',
+	},
+	confirmBody: {
+		fontSize: 12,
+		lineHeight: 18,
+		marginTop: 4,
+	},
+	confirmActions: {
+		flexDirection: 'row',
+		gap: 8,
+		marginTop: 12,
+	},
+	confirmBtn: {
+		flex: 1,
+		height: 44,
+		borderRadius: 999,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	confirmDangerBtn: {
+		backgroundColor: '#C8402E',
+	},
+	confirmBtnLabel: {
+		fontSize: 14,
+	},
+	confirmDangerLabel: {
+		color: '#FFF3F0',
 	},
 	signOut: {
 		width: '100%',
@@ -544,10 +625,16 @@ const styles = StyleSheet.create({
 	signOutLabel: {
 		fontSize: 14,
 	},
+	brand: {
+		textAlign: 'center',
+		fontSize: 13,
+		opacity: 0.7,
+		marginTop: 8,
+	},
 	version: {
 		textAlign: 'center',
 		fontSize: 11,
 		opacity: 0.7,
-		marginTop: 8,
+		marginTop: 2,
 	},
 });

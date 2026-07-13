@@ -51,3 +51,6 @@ update-check
 # generated native folders
 /ios
 /android
+
+# Metro file-map cache artifact
+metro-file-map-*
