@@ -91,6 +91,26 @@ good low-risk test of the OTA flow.
 
 ---
 
+## Deliberate deviations from the prototype
+
+### The amount uses the OS keypad, not the prototype's custom numpad
+The prototype specifies a custom numpad grid for the amount, and the designer
+recently *compacted* it rather than removing it — so it is a live choice, not an
+oversight. We removed it anyway, on the user's explicit instruction. Recorded so
+it is not "restored" by a future sync.
+
+**Why:** the sheet had two competing input mechanisms. The amount used an
+always-visible custom numpad, while "Where?" and "Add a note" are real text
+fields that summon the OS keyboard — so on a phone both fought for the same
+vertical space, which is what forced the keyboard-avoidance work in the first
+place. The prototype never feels this, because in a browser the text fields and
+`<input type="date">` all use the same native chrome. One keyboard per sheet.
+
+Worth raising with the designer rather than leaving the app and the design
+permanently disagreeing.
+
+---
+
 ## Notes
 
 - **The month is 0-based.** `monthRange` uses `Date.UTC(year, month, 1)`, so July

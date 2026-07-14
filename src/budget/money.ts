@@ -52,3 +52,27 @@ export function parseAmountToMinor(str: string): number {
 	}
 	return Math.round(parsed * 100);
 }
+
+/**
+ * Keeps the amount field to something that is actually money.
+ *
+ * The custom numpad could only ever emit valid keys. An OS keypad cannot: it
+ * happily produces "1.2.3", a leading ".", or "4.5678". So every keystroke is
+ * normalised here rather than trusted — digits only, at most one decimal point,
+ * at most two decimal places.
+ *
+ * A bare "." is allowed to survive as "0." so that typing ".5" works: the user
+ * is mid-way through a valid number, and rejecting the keystroke would make the
+ * field feel broken.
+ */
+export function sanitizeAmountInput(str: string): string {
+	const cleaned = str.replace(/[^0-9.]/g, '');
+	const [whole, ...rest] = cleaned.split('.');
+
+	if (rest.length === 0) {
+		return whole;
+	}
+	// Everything after the first "." is one fractional part; extra dots are dropped.
+	const fraction = rest.join('').slice(0, 2);
+	return `${whole === '' ? '0' : whole}.${fraction}`;
+}

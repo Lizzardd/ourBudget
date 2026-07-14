@@ -4,10 +4,9 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, V
 
 import type { Id } from '../../convex/_generated/dataModel';
 import { expenseDateLabel } from '../budget/detail';
-import { fmt, glyph, parseAmountToMinor } from '../budget/money';
+import { fmt, glyph, parseAmountToMinor, sanitizeAmountInput } from '../budget/money';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icon';
-import { Numpad } from '../components/Numpad';
 import { Sheet } from '../components/Sheet';
 import { useCategories } from '../hooks/useCategories';
 import { useHousehold } from '../hooks/useHousehold';
@@ -43,13 +42,13 @@ export interface AddExpenseSheetProps {
 /** Text color for a selected payer chip, over the member's profile color. */
 const PAYER_CHIP_TEXT = '#3A1220';
 
-/** Turns a minor-unit amount into the numpad's amount string ("4550" → "45.5"). */
+/** Turns a minor-unit amount into the amount field's string ("4550" → "45.5"). */
 function toAmountString(minor: number): string {
 	return String(minor / 100);
 }
 
 /**
- * The core quick-add flow: big amount display, custom numpad, category
+ * The core quick-add flow: big amount field, a date pill, category
  * chips, a "Where?" title, an optional memo, and a dynamic "Paid by" chip
  * row — fidelity source is `docs/design/BudgetApp-Prototype.dc.html`'s
  * `─── ADD EXPENSE SHEET ───` and its `renderVals()` sheet logic. Mounted
@@ -117,16 +116,9 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 
 	const cur = currency ?? 'AED';
 	const amountMinor = parseAmountToMinor(amount);
-	const amountMajor = amountMinor / 100;
 	const selectedCategory = categories.find((cat) => cat._id === categoryId);
 	const canAdd = amountMinor > 0 && !!selectedCategory && !!householdId;
 
-	const amountFmt = amount
-		? glyph(cur) +
-			(amount.endsWith('.')
-				? Math.trunc(amountMajor).toLocaleString('en-US') + '.'
-				: amountMajor.toLocaleString('en-US'))
-		: glyph(cur) + '0';
 	const amountColor = amountMinor > 0 ? t.text : t.sub;
 
 	const confirmLabel = isEditing
@@ -231,9 +223,29 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 			</View>
 
 			<View style={styles.amountBlock}>
-				<Text style={[styles.amount, { color: amountColor, fontFamily: fontFamily(900) }]}>
-					{amountFmt}
-				</Text>
+				{/*
+				  The amount is a real input, not the prototype's custom numpad — see
+				  the deviation note in TODO.md. Autofocused so the keypad is up the
+				  moment the sheet opens, which is the whole point: one keyboard for
+				  the sheet instead of a numpad competing with the OS keyboard that
+				  the Where?/note fields summon anyway.
+				*/}
+				<View style={styles.amountRow}>
+					<Text style={[styles.amount, { color: amountColor, fontFamily: fontFamily(900) }]}>
+						{glyph(cur)}
+					</Text>
+					<TextInput
+						value={amount}
+						onChangeText={(next) => setAmount(sanitizeAmountInput(next))}
+						keyboardType="decimal-pad"
+						inputMode="decimal"
+						autoFocus
+						placeholder="0"
+						placeholderTextColor={t.sub}
+						accessibilityLabel="Amount"
+						style={[styles.amount, styles.amountInput, { color: amountColor, fontFamily: fontFamily(900) }]}
+					/>
+				</View>
 				<View style={styles.dateRow}>
 					<Pressable
 						accessibilityRole="button"
@@ -331,7 +343,6 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 				</View>
 			</View>
 
-			<Numpad value={amount} onChange={setAmount} />
 
 			<TouchableOpacity
 				accessibilityRole="button"
@@ -387,9 +398,22 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		paddingVertical: 2,
 	},
+	amountRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
 	amount: {
 		fontSize: 34,
 		letterSpacing: -1,
+	},
+	amountInput: {
+		// A TextInput sizes itself to its content on Android unless told otherwise,
+		// which would jitter the centred row on every keystroke. A fixed minimum
+		// keeps the glyph still while the digits grow.
+		minWidth: 60,
+		paddingVertical: 0,
+		textAlign: 'left',
 	},
 	dateRow: {
 		flexDirection: 'row',
