@@ -91,14 +91,6 @@ good low-risk test of the OTA flow.
 
 ---
 
-## Deliberate deviations from the prototype
-
-None. (The two-line version footer was once a deviation — an explicit user
-request against an inline prototype. The prototype has since adopted it, and the
-app now matches its exact styling: brand at weight 900 with an accent full stop.)
-
----
-
 ## Notes
 
 - **The month is 0-based.** `monthRange` uses `Date.UTC(year, month, 1)`, so July
