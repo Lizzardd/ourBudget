@@ -78,7 +78,9 @@ export const addTransaction = mutation({
 			categoryId: args.categoryId,
 			amount: args.amount,
 			note: args.note,
-			memo: args.memo,
+			// "" and absent both mean "no memo", and both are stored as absent, so
+			// reads never have to tell the two apart.
+			memo: args.memo?.trim() || undefined,
 			spentAt: args.spentAt ?? Date.now(),
 			payerName: args.payerName,
 			paidBy: args.paidBy,
@@ -108,7 +110,21 @@ export const updateTransaction = mutation({
 		transactionId: v.id("transactions"),
 		amount: v.number(),
 		note: v.string(),
-		memo: v.optional(v.string()),
+		/**
+		 * Required, unlike on `addTransaction` — pass `""` to clear it.
+		 *
+		 * This is a full replace of the editable fields, and `memo` is patched
+		 * with whatever arrives. When it was optional, a caller who simply did
+		 * not mention `memo` silently erased it: `ctx.db.patch` removes a field
+		 * set to `undefined`. That is fine for the edit form, which always
+		 * submits its current field values, but it is a trap for any partial
+		 * update written later — the kind of bug that deletes user data quietly
+		 * and is only noticed much later.
+		 *
+		 * Making it required means the caller has to state its intent. There is
+		 * no way to omit it by accident, and `""` says "no memo" out loud.
+		 */
+		memo: v.string(),
 		payerName: v.string(),
 		paidBy: v.optional(v.id("users")),
 	},
@@ -140,10 +156,14 @@ export const updateTransaction = mutation({
 			await requirePayerIsMember(ctx, transaction.householdId, args.paidBy);
 		}
 
+		// An empty memo is stored as an absent field rather than "", so reads do
+		// not have to distinguish the two.
+		const memo = args.memo.trim();
+
 		await ctx.db.patch(args.transactionId, {
 			amount: args.amount,
 			note,
-			memo: args.memo,
+			memo: memo === "" ? undefined : memo,
 			payerName: args.payerName,
 			paidBy: args.paidBy,
 		});

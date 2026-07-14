@@ -81,18 +81,6 @@ ingests SMS. Dead schema surface — implement or drop the union member.
 It did its job and found the bug; it should come out now. Removing it is also a
 good low-risk test of the OTA flow.
 
-### `updateTransaction` patches `memo` unconditionally
-Passing `memo: undefined` **clears** an existing memo. Right for a form that
-always submits its current field values, a trap for any future partial-update
-caller. (`paidBy` had the same shape and it was a real bug — an edit erased the
-payer of anyone who had left the household. Fixed by only re-validating
-membership when the payer actually changes.)
-
-### `settings` has no `by_household` index
-The household-delete cascade has to `.filter()`-scan `settings`, which is only
-indexed `by_user_household`. Fine on a cold delete path; add the index if that
-table ever grows.
-
 ---
 
 ## P3 — Untested surfaces
@@ -105,9 +93,9 @@ table ever grows.
 
 ## Deliberate deviations from the prototype
 
-- The version string sits on its own line under `ourbudget.`; the prototype
-  still has it inline. This was an explicit user request — recorded so it is not
-  "fixed" back by mistake.
+None. (The two-line version footer was once a deviation — an explicit user
+request against an inline prototype. The prototype has since adopted it, and the
+app now matches its exact styling: brand at weight 900 with an accent full stop.)
 
 ---
 

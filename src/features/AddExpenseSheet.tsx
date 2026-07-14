@@ -134,7 +134,9 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 			return;
 		}
 		const title = payee.trim() || selectedCategory.name;
-		const memo = note.trim() || undefined;
+		// Always a string, never undefined: `updateTransaction` treats an absent
+		// memo as "no opinion" and would have to guess. "" says "clear it".
+		const memo = note.trim();
 		setSubmitting(true);
 		try {
 			if (editTxn) {

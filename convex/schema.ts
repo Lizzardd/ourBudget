@@ -88,7 +88,14 @@ export default defineSchema({
 		displayName: v.string(),
 		consentAt: v.optional(v.number()),
 		policyVersion: v.optional(v.string()),
-	}).index("by_user_household", ["userId", "householdId"]),
+	})
+		.index("by_user_household", ["userId", "householdId"])
+		// `by_user_household` cannot be range-scanned by household alone, so
+		// deleting a household had to `.filter()` over every settings row in the
+		// deployment. Fine while the table is tiny, but it is a full scan on a
+		// path that must not fail — an incomplete cascade orphans rows the
+		// Settings screen promises are erasable.
+		.index("by_household", ["householdId"]),
 
 	consents: defineTable({
 		userId: v.id("users"),

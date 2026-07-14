@@ -460,7 +460,7 @@ export async function deleteHouseholdCascade(
 
 	const settingsRows = await ctx.db
 		.query("settings")
-		.filter((q) => q.eq(q.field("householdId"), householdId))
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
 		.collect();
 	for (const settingsRow of settingsRows) {
 		await ctx.db.delete(settingsRow._id);

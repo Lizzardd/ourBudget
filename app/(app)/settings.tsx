@@ -437,8 +437,12 @@ export default function Settings() {
 				<CheckForUpdatesRow />
 			</View>
 
-			<Text style={[styles.brand, { color: t.sub, fontFamily: fontFamily(800) }]}>ourbudget.</Text>
-			<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
+			<View style={styles.footer}>
+				<Text style={[styles.brand, { color: t.sub, fontFamily: fontFamily(900) }]}>
+					ourbudget<Text style={{ color: accent }}>.</Text>
+				</Text>
+				<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
+			</View>
 			<OtaDiagnostics />
 		</ScrollView>
 		</FadeIn>
@@ -628,14 +632,15 @@ const styles = StyleSheet.create({
 	signOutLabel: {
 		fontSize: 14,
 	},
+	footer: {
+		alignItems: 'center',
+		marginTop: 12,
+	},
 	brand: {
-		textAlign: 'center',
 		fontSize: 13,
-		opacity: 0.7,
-		marginTop: 8,
+		letterSpacing: -0.4,
 	},
 	version: {
-		textAlign: 'center',
 		fontSize: 11,
 		opacity: 0.7,
 		marginTop: 2,

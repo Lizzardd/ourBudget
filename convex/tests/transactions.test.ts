@@ -671,6 +671,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			transactionId,
 			amount: 1000,
 			note: '   ',
+			memo: '',
 			payerName: 'Amira',
 		}),
 	).rejects.toThrow();
@@ -680,6 +681,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			transactionId,
 			amount: 0,
 			note: 'Carrefour',
+			memo: '',
 			payerName: 'Amira',
 		}),
 	).rejects.toThrow();
@@ -689,6 +691,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			transactionId,
 			amount: -100,
 			note: 'Carrefour',
+			memo: '',
 			payerName: 'Amira',
 		}),
 	).rejects.toThrow();
@@ -698,6 +701,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			transactionId,
 			amount: 10.5,
 			note: 'Carrefour',
+			memo: '',
 			payerName: 'Amira',
 		}),
 	).rejects.toThrow();
@@ -723,6 +727,7 @@ test('updateTransaction throws for non-member', async () => {
 			transactionId,
 			amount: 9999,
 			note: 'hijacked',
+			memo: '',
 			payerName: 'Stranger',
 		}),
 	).rejects.toThrow();
@@ -815,6 +820,7 @@ test('summary and monthTotals follow an edited then deleted amount', async () =>
 		transactionId,
 		amount: 1000,
 		note: 'Carrefour',
+		memo: '',
 		payerName: 'Amira',
 	});
 
@@ -916,6 +922,54 @@ test('addTransaction rejects a paidBy who is not a member of the household', asy
 	).rejects.toThrow(/member of this household/);
 });
 
+test('updateTransaction: memo is required, so "" clears it and a value survives an unrelated edit', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		memo: 'Birthday cake',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	const memoOf = async () => {
+		const rows = await asUser.query(api.transactions.listByCategory, {
+			categoryId: groceries._id,
+		});
+		return rows[0]?.memo;
+	};
+
+	expect(await memoOf()).toBe('Birthday cake');
+
+	// Editing only the amount must not disturb the memo. `memo` being required is
+	// what guarantees this: a caller cannot omit it and silently erase it, which
+	// is exactly what the old optional arg did (ctx.db.patch removes a field set
+	// to undefined).
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 2500,
+		note: 'Carrefour',
+		memo: 'Birthday cake',
+		payerName: 'Amira',
+	});
+	expect(await memoOf()).toBe('Birthday cake');
+
+	// "" is how you say "clear it" — out loud, rather than by omission.
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 2500,
+		note: 'Carrefour',
+		memo: '   ',
+		payerName: 'Amira',
+	});
+	expect(await memoOf()).toBeUndefined();
+});
+
 test('updateTransaction keeps an unchanged paidBy even after that payer leaves the household', async () => {
 	const t = makeCtx();
 	const { userId: amiraId, asUser } = await seedUser(t, 'Amira');
@@ -942,6 +996,7 @@ test('updateTransaction keeps an unchanged paidBy even after that payer leaves t
 		transactionId,
 		amount: 2500,
 		note: 'Carrefour',
+		memo: '',
 		payerName: 'Sam',
 		paidBy: samId,
 	});
@@ -971,6 +1026,7 @@ test('updateTransaction can re-attribute paidBy to another member, but not to a 
 		transactionId,
 		amount: 1000,
 		note: 'Carrefour',
+		memo: '',
 		payerName: 'Sam',
 		paidBy: samId,
 	});
@@ -983,6 +1039,7 @@ test('updateTransaction can re-attribute paidBy to another member, but not to a 
 			transactionId,
 			amount: 1000,
 			note: 'Carrefour',
+			memo: '',
 			payerName: 'Stranger',
 			paidBy: strangerId,
 		}),

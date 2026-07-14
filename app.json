@@ -2,7 +2,7 @@
   "expo": {
     "name": "Our Budget",
     "slug": "our-budget",
-    "version": "0.1.12",
+    "version": "0.1.13",
     "runtimeVersion": "1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
