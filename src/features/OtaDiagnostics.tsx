@@ -44,22 +44,50 @@ export function OtaDiagnostics() {
 	const MAX_LINE = 300;
 	const MAX_LINES = 60;
 
+	/** The line that actually says why a bundle refused to launch. */
+	const isFailure = (line: string) =>
+		/error|exception|fail|fatal|rollback|ErrorRecovery/i.test(line);
+
+	const toLines = (entries: Updates.UpdatesLogEntry[]): string[] =>
+		entries
+			.filter((e) => !e.message.startsWith('embeddedAssetFileMap'))
+			.map((e) => {
+				const line = `${e.code ?? 'log'}: ${e.message}`;
+				return line.length > MAX_LINE ? `${line.slice(0, MAX_LINE)}…` : line;
+			});
+
 	const readLogs = async (): Promise<string[]> => {
-		const entries = await Updates.readLogEntriesAsync(3600_000);
-		const useful = entries.filter((e) => !e.message.startsWith('embeddedAssetFileMap'));
-		if (useful.length === 0) {
+		const lines = toLines(await Updates.readLogEntriesAsync(3600_000));
+		if (lines.length === 0) {
 			return ['(no useful update log entries in the last hour)'];
 		}
-		return useful.slice(-MAX_LINES).map((e) => {
-			const line = `${e.code ?? 'log'}: ${e.message}`;
-			return line.length > MAX_LINE ? `${line.slice(0, MAX_LINE)}…` : line;
-		});
+		return lines.slice(-MAX_LINES);
+	};
+
+	/**
+	 * What the on-screen viewer shows: the failure lines first.
+	 *
+	 * A launch failure is recorded once, early, and is then buried under dozens
+	 * of state-change entries — so simply showing "the last N" reliably shows
+	 * everything EXCEPT the one line worth reading. Hoisting the failures to the
+	 * top means the answer is on screen without scrolling or sharing, which
+	 * matters because sharing is exactly what breaks when the log is huge.
+	 */
+	const readLogsForScreen = async (): Promise<string[]> => {
+		const lines = toLines(await Updates.readLogEntriesAsync(3600_000));
+		if (lines.length === 0) {
+			return ['(no useful update log entries in the last hour)'];
+		}
+		const failures = lines.filter(isFailure);
+		if (failures.length === 0) {
+			return ['(no failures logged)', ...lines.slice(-6)];
+		}
+		return [`⚠ ${failures.length} failure line(s):`, ...failures.slice(-6)];
 	};
 
 	const loadLogs = async () => {
 		try {
-			const lines = await readLogs();
-			setLogs(lines.slice(-12));
+			setLogs(await readLogsForScreen());
 		} catch (err) {
 			setLogs([`could not read logs: ${err instanceof Error ? err.message : String(err)}`]);
 		}
