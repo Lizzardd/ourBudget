@@ -590,9 +590,9 @@
             <div style="font-size: 17px; font-weight: 800; flex: 1">{{ sheetTitle }}</div>
             <button onClick="{{ closeSheet }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
           </div>
-          <div style="text-align: center; padding: 4px 0">
-            <div style="font-size: 42px; font-weight: 900; letter-spacing: -1px; color: {{ amountColor }}">{{ amountFmt }}</div>
-            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Today · paid by {{ payerName }}</div>
+          <div style="text-align: center; padding: 2px 0">
+            <div style="font-size: 34px; font-weight: 900; letter-spacing: -1px; color: {{ amountColor }}">{{ amountFmt }}</div>
+            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">Today · paid by {{ payerName }}</div>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 7px; justify-content: center">
             <sc-for list="{{ chips }}" as="ch" hint-placeholder-count="8">
@@ -609,12 +609,12 @@
               </sc-for>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px">
             <sc-for list="{{ padKeys }}" as="k" hint-placeholder-count="12">
-              <button onClick="{{ k.tap }}" style="height: 52px; border: none; border-radius: 16px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer" style-active="background: rgba(201,98,135,0.25); transform: scale(0.96)">{{ k.label }}</button>
+              <button onClick="{{ k.tap }}" style="height: 40px; border: none; border-radius: 12px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 19px; font-weight: 700; cursor: pointer" style-active="background: rgba(201,98,135,0.25); transform: scale(0.96)">{{ k.label }}</button>
             </sc-for>
           </div>
-          <button onClick="{{ addNow }}" style="height: 56px; border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; background: {{ confirmBg }}; color: {{ confirmColor }}; transition: background 0.25s" style-active="transform: scale(0.98)">{{ confirmLabel }}</button>
+          <button onClick="{{ addNow }}" style="height: 46px; border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; background: {{ confirmBg }}; color: {{ confirmColor }}; transition: background 0.25s" style-active="transform: scale(0.98)">{{ confirmLabel }}</button>
           <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
             <button onClick="{{ deleteTx }}" style="height: 48px; border: none; border-radius: 999px; background: none; color: #DE4B37; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px" style-active="opacity: 0.6"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px">delete</span>Delete expense</button>
           </sc-if>

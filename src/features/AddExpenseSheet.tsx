@@ -334,15 +334,15 @@ const styles = StyleSheet.create({
 	},
 	amountBlock: {
 		alignItems: 'center',
-		paddingVertical: 4,
+		paddingVertical: 2,
 	},
 	amount: {
-		fontSize: 42,
+		fontSize: 34,
 		letterSpacing: -1,
 	},
 	amountSub: {
 		fontSize: 12,
-		marginTop: 2,
+		marginTop: 1,
 	},
 	chipsScroll: {
 		maxHeight: 92,
@@ -393,13 +393,13 @@ const styles = StyleSheet.create({
 		fontFamily: fontFamily(800),
 	},
 	confirmButton: {
-		height: 56,
+		height: 46,
 		borderRadius: 999,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
 	confirmButtonText: {
-		fontSize: 16,
+		fontSize: 15,
 		fontFamily: fontFamily(800),
 	},
 	deleteButton: {

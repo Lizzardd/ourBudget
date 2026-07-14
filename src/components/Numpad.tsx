@@ -43,17 +43,17 @@ const styles = StyleSheet.create({
 	grid: {
 		flexDirection: 'row',
 		flexWrap: 'wrap',
-		gap: 6,
+		gap: 5,
 	},
 	key: {
 		flexBasis: '31.5%',
 		flexGrow: 1,
-		height: 52,
-		borderRadius: 16,
+		height: 40,
+		borderRadius: 12,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
 	label: {
-		fontSize: 22,
+		fontSize: 19,
 	},
 });
