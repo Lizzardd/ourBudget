@@ -124,31 +124,44 @@ export function toCategoryDetail(
 
 /** The bits of a household member needed to colour their avatar. */
 export interface PayerMember {
+	userId: string;
 	displayName: string;
 	profileColor: string;
 }
 
+/** A resolved payer: whose colours to paint, and which name to print. */
+export interface PayerAvatar {
+	bg: string;
+	color: string;
+	initial: string;
+	displayName: string;
+}
+
 /**
- * Payer avatar colours, resolved against the real household.
+ * Resolves a transaction's payer against the household's CURRENT members.
  *
- * This used to hardcode `payerName === 'Sara'` — the prototype's demo data
- * taken literally — which meant every actual member fell through to the same
- * teal and nobody's chosen profile colour ever showed. The prototype's
- * `whoStyle()` looks the payer up among the members, so we do too: a known
- * member gets their own colour, and anyone unrecognised (a member who has
- * since left, say) gets a neutral so the row still reads.
+ * `paidBy` (a user id) is the source of truth: matching it to a member yields
+ * their LIVE display name and profile colour, so renaming a member re-labels
+ * and re-colours all of their past expenses instead of orphaning them. When
+ * `paidBy` is absent (a legacy row written before it existed) or points at
+ * someone who has since left the household, we fall back to the row's stored
+ * `payerName` snapshot: matched against the members by name (case-insensitive,
+ * trimmed) for a colour, and otherwise a neutral so the row still reads.
  */
 export function payerAvatar(
 	payerName: string,
+	paidBy?: string,
 	members: readonly PayerMember[] = []
-): { bg: string; color: string; initial: string } {
-	const initial = (payerName.trim()[0] || '?').toUpperCase();
-	const match = members.find(
-		(m) => m.displayName.trim().toLowerCase() === payerName.trim().toLowerCase()
-	);
+): PayerAvatar {
+	const match =
+		(paidBy ? members.find((m) => m.userId === paidBy) : undefined) ??
+		members.find((m) => m.displayName.trim().toLowerCase() === payerName.trim().toLowerCase());
+	const name = match ? match.displayName : payerName;
+	const initial = (name.trim()[0] || '?').toUpperCase();
+
 	return match
-		? { bg: match.profileColor, color: '#3A1220', initial }
-		: { bg: '#7FA8A0', color: '#0F2B26', initial };
+		? { bg: match.profileColor, color: '#3A1220', initial, displayName: name }
+		: { bg: '#7FA8A0', color: '#0F2B26', initial, displayName: name };
 }
 
 /**
@@ -180,6 +193,7 @@ export interface DetailTransaction {
 	note: string;
 	memo?: string;
 	payerName: string;
+	paidBy?: string;
 	spentAt: number;
 }
 
@@ -187,7 +201,9 @@ export interface DetailTransaction {
  * Maps a transaction to its detail-row view-model: amount, note (the
  * "Where?" title), payer avatar, and the "<memo> · <Payer> · <when>" meta
  * line — the memo only leads when present, copy verbatim from the
- * prototype's `det.txns` mapper.
+ * prototype's `det.txns` mapper. The payer in the meta line is the one
+ * `payerAvatar` resolved, so a renamed member's old rows read with their
+ * current name rather than the stale `payerName` snapshot.
  */
 export function toTxnRow(
 	txn: DetailTransaction,
@@ -195,7 +211,7 @@ export function toTxnRow(
 	nowMs: number,
 	members: readonly PayerMember[] = []
 ): TxnRowVM {
-	const avatar = payerAvatar(txn.payerName, members);
+	const avatar = payerAvatar(txn.payerName, txn.paidBy, members);
 	const when = formatTxnDate(txn.spentAt, nowMs);
 	const memo = txn.memo?.trim();
 
@@ -206,7 +222,7 @@ export function toTxnRow(
 		whoInitial: avatar.initial,
 		whoBg: avatar.bg,
 		whoColor: avatar.color,
-		meta: (memo ? memo + ' · ' : '') + txn.payerName + ' · ' + when,
+		meta: (memo ? memo + ' · ' : '') + avatar.displayName + ' · ' + when,
 	};
 }
 

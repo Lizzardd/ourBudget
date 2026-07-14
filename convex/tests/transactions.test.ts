@@ -1,7 +1,8 @@
 // @vitest-environment edge-runtime
 import { convexTest } from 'convex-test';
 import { expect, test } from 'vitest';
-import { api } from '../_generated/api';
+import { api, internal } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 import { monthLabel, monthShort } from '../../src/budget/periods';
 
@@ -798,4 +799,191 @@ test('summary and monthTotals follow an edited then deleted amount', async () =>
 
 	const monthsAfterDelete = await asUser.query(api.transactions.monthTotals, { householdId, months: 1, now });
 	expect(monthsAfterDelete[0].total).toBe(7000);
+});
+
+/**
+ * Adds a second member to `householdId` by joining with its invite code, the
+ * same way a real household grows. Their per-household `settings.displayName`
+ * seeds from the user's name, which is what the payer resolution (and
+ * `backfillPaidBy`) matches against.
+ */
+async function seedSecondMember(
+	t: ReturnType<typeof makeCtx>,
+	asOwner: ReturnType<typeof t.withIdentity>,
+	householdId: Id<'households'>,
+	name: string,
+) {
+	const { userId, asUser } = await seedUser(t, name);
+	const households = await asOwner.query(api.households.myHouseholds, {});
+	const household = households.find((h) => h._id === householdId)!;
+	await asUser.mutation(api.households.joinHousehold, { code: household.inviteCode });
+	return { userId, asUser };
+}
+
+/**
+ * A legacy expense: written before `paidBy` existed, so `payerName` is the only
+ * record of who paid. Inserted straight into the db — `addTransaction` cannot
+ * produce this shape any more.
+ */
+async function insertLegacyTransaction(
+	t: ReturnType<typeof makeCtx>,
+	householdId: Id<'households'>,
+	categoryId: Id<'categories'>,
+	payerName: string,
+) {
+	return await t.run(async (ctx) => {
+		return await ctx.db.insert('transactions', {
+			householdId,
+			categoryId,
+			amount: 1000,
+			note: 'Carrefour',
+			spentAt: julyMs(3),
+			payerName,
+			source: 'manual',
+			createdAt: julyMs(3),
+		});
+	});
+}
+
+test('addTransaction stores paidBy, and listByCategory returns it', async () => {
+	const t = makeCtx();
+	const { userId, asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		paidBy: userId,
+		spentAt: julyMs(3),
+	});
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all[0]).toMatchObject({ payerName: 'Amira', paidBy: userId });
+});
+
+test('addTransaction rejects a paidBy who is not a member of the household', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { userId: strangerId } = await seedUser(t, 'Stranger');
+
+	await expect(
+		asUser.mutation(api.transactions.addTransaction, {
+			householdId,
+			categoryId: groceries._id,
+			amount: 1000,
+			note: 'Carrefour',
+			payerName: 'Stranger',
+			paidBy: strangerId,
+		}),
+	).rejects.toThrow(/member of this household/);
+});
+
+test('updateTransaction keeps an unchanged paidBy even after that payer leaves the household', async () => {
+	const t = makeCtx();
+	const { userId: amiraId, asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { userId: samId, asUser: asSam } = await seedSecondMember(t, asUser, householdId, 'Sam');
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Sam',
+		paidBy: samId,
+		spentAt: julyMs(3),
+	});
+
+	// Sam leaves. His past expenses must keep pointing at him: re-validating an
+	// unchanged payer would force the client to drop the attribution just to be
+	// able to save an unrelated edit, destroying the very history `paidBy` exists
+	// to keep.
+	await asSam.mutation(api.households.leaveHousehold, { householdId });
+
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 2500,
+		note: 'Carrefour',
+		payerName: 'Sam',
+		paidBy: samId,
+	});
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all[0]).toMatchObject({ amount: 2500, paidBy: samId, payerName: 'Sam' });
+});
+
+test('updateTransaction can re-attribute paidBy to another member, but not to a non-member', async () => {
+	const t = makeCtx();
+	const { userId: amiraId, asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { userId: samId } = await seedSecondMember(t, asUser, householdId, 'Sam');
+	const { userId: strangerId } = await seedUser(t, 'Stranger');
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		paidBy: amiraId,
+		spentAt: julyMs(3),
+	});
+
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Sam',
+		paidBy: samId,
+	});
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all[0]).toMatchObject({ payerName: 'Sam', paidBy: samId });
+
+	await expect(
+		asUser.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: 1000,
+			note: 'Carrefour',
+			payerName: 'Stranger',
+			paidBy: strangerId,
+		}),
+	).rejects.toThrow(/member of this household/);
+});
+
+test('backfillPaidBy matches payerName to a member case-insensitively and is idempotent', async () => {
+	const t = makeCtx();
+	const { userId: amiraId, asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { userId: samId } = await seedSecondMember(t, asUser, householdId, 'Sam');
+
+	const amiras = await insertLegacyTransaction(t, householdId, groceries._id, '  aMiRa ');
+	const sams = await insertLegacyTransaction(t, householdId, groceries._id, 'Sam');
+
+	expect(await t.mutation(internal.transactions.backfillPaidBy, {})).toBe(2);
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all.find((tx) => tx._id === amiras)).toMatchObject({ payerName: '  aMiRa ', paidBy: amiraId });
+	expect(all.find((tx) => tx._id === sams)).toMatchObject({ payerName: 'Sam', paidBy: samId });
+
+	// Second run has nothing left to do.
+	expect(await t.mutation(internal.transactions.backfillPaidBy, {})).toBe(0);
+});
+
+test('backfillPaidBy leaves a payerName that matches no current member alone', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	await insertLegacyTransaction(t, householdId, groceries._id, 'Jules');
+
+	expect(await t.mutation(internal.transactions.backfillPaidBy, {})).toBe(0);
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all[0].payerName).toBe('Jules');
+	expect(all[0].paidBy).toBeUndefined();
 });

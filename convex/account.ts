@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { deleteHouseholdCascade } from "./households";
 
 /**
  * GDPR data-portability export. Returns every record the caller "owns" or
@@ -78,9 +79,13 @@ export const exportMyData = query({
  * GDPR erasure ("right to be forgotten"). Authorizes the caller, then:
  *
  *  1. For each household the caller belongs to: if the caller is the SOLE
- *     member, the whole household is a cascade delete — its `categories`
- *     and `transactions` are removed along with it, since nothing else
- *     references them. If OTHER members remain, only the caller's own
+ *     member, the whole household is a cascade delete via the shared
+ *     `households:deleteHouseholdCascade` — its `categories`,
+ *     `transactions`, `settings` (every member's, not just the caller's:
+ *     rows left behind by members who departed earlier would otherwise
+ *     outlive the household) and `memberships` are removed along with it,
+ *     since nothing else references them. If OTHER members remain, only
+ *     the caller's own
  *     `memberships` row is removed; the shared `categories` and
  *     `transactions` stay, but their `createdBy` link back to this caller
  *     is cleared (set to `undefined`) so no erased-account foreign key is
@@ -131,46 +136,37 @@ export const deleteMyAccount = mutation({
 			const isSoleMember = householdMembers.every((m) => m.userId === userId);
 
 			if (isSoleMember) {
-				const categories = await ctx.db
-					.query("categories")
-					.withIndex("by_household", (q) => q.eq("householdId", householdId))
-					.collect();
-				for (const category of categories) {
-					await ctx.db.delete(category._id);
-				}
+				// One definition of "delete a household" — the same cascade
+				// `leaveHousehold` runs for the last member out. It takes the
+				// household's `categories`, `transactions`, `settings` (every
+				// member's, including any left behind by members who departed
+				// earlier) and `memberships` — the caller's membership row
+				// included, hence the `continue` instead of deleting it below.
+				await deleteHouseholdCascade(ctx, householdId);
+				continue;
+			}
 
-				const transactions = await ctx.db
-					.query("transactions")
-					.withIndex("by_household", (q) => q.eq("householdId", householdId))
-					.collect();
-				for (const transaction of transactions) {
-					await ctx.db.delete(transaction._id);
-				}
+			// Shared household: the caller's own categories/transactions stay
+			// (other members still use them), but the `createdBy` link back to
+			// this now-erased account must be cleared so nothing dangling
+			// remains. `payerName` is a plain-string tombstone already and is
+			// left untouched.
+			const ownCategories = await ctx.db
+				.query("categories")
+				.withIndex("by_household", (q) => q.eq("householdId", householdId))
+				.filter((q) => q.eq(q.field("createdBy"), userId))
+				.collect();
+			for (const category of ownCategories) {
+				await ctx.db.patch(category._id, { createdBy: undefined });
+			}
 
-				await ctx.db.delete(householdId);
-			} else {
-				// Shared household: the caller's own categories/transactions stay
-				// (other members still use them), but the `createdBy` link back to
-				// this now-erased account must be cleared so nothing dangling
-				// remains. `payerName` is a plain-string tombstone already and is
-				// left untouched.
-				const ownCategories = await ctx.db
-					.query("categories")
-					.withIndex("by_household", (q) => q.eq("householdId", householdId))
-					.filter((q) => q.eq(q.field("createdBy"), userId))
-					.collect();
-				for (const category of ownCategories) {
-					await ctx.db.patch(category._id, { createdBy: undefined });
-				}
-
-				const ownTransactions = await ctx.db
-					.query("transactions")
-					.withIndex("by_household", (q) => q.eq("householdId", householdId))
-					.filter((q) => q.eq(q.field("createdBy"), userId))
-					.collect();
-				for (const transaction of ownTransactions) {
-					await ctx.db.patch(transaction._id, { createdBy: undefined });
-				}
+			const ownTransactions = await ctx.db
+				.query("transactions")
+				.withIndex("by_household", (q) => q.eq("householdId", householdId))
+				.filter((q) => q.eq(q.field("createdBy"), userId))
+				.collect();
+			for (const transaction of ownTransactions) {
+				await ctx.db.patch(transaction._id, { createdBy: undefined });
 			}
 
 			await ctx.db.delete(membership._id);

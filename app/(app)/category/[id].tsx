@@ -252,6 +252,7 @@ export default function CategoryDetail() {
 										note: row.txn.note,
 										memo: row.txn.memo,
 										payerName: row.txn.payerName,
+										paidBy: row.txn.paidBy,
 									})
 								}
 								style={[

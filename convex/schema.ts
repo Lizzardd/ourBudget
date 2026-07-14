@@ -52,7 +52,17 @@ export default defineSchema({
 		note: v.string(),
 		memo: v.optional(v.string()),
 		spentAt: v.number(),
+		// WHO paid, resolved at read time: `paidBy` is the source of truth, and
+		// the UI looks that user up among the household's CURRENT members to get
+		// their live display name and profile colour — so a rename no longer
+		// strands old expenses. `payerName` stays as a denormalized snapshot and
+		// is the only record we have for (a) legacy rows written before `paidBy`
+		// existed and (b) a payer who has since left the household; it is the
+		// fallback whenever `paidBy` is absent or no longer resolves to a member.
+		// Optional because rows predating it must stay valid (see
+		// `transactions:backfillPaidBy`).
 		payerName: v.string(),
+		paidBy: v.optional(v.id("users")),
 		createdBy: v.optional(v.id("users")),
 		source: v.union(v.literal("manual"), v.literal("sms")),
 		raw: v.optional(v.string()),

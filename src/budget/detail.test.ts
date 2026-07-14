@@ -104,40 +104,67 @@ describe('toCategoryDetail()', () => {
 
 describe('payerAvatar()', () => {
 	const members = [
-		{ displayName: 'Daniel Krause', profileColor: '#D98BA4' },
-		{ displayName: 'Kate Krause', profileColor: '#7FA8A0' },
+		{ userId: 'u1', displayName: 'Daniel Krause', profileColor: '#D98BA4' },
+		{ userId: 'u2', displayName: 'Kate Krause', profileColor: '#7FA8A0' },
 	];
 
-	it("uses the member's own profile color", () => {
-		expect(payerAvatar('Daniel Krause', members)).toEqual({
+	it("resolves by paidBy and uses the member's own profile color", () => {
+		expect(payerAvatar('Daniel Krause', 'u1', members)).toEqual({
 			bg: '#D98BA4',
 			color: '#3A1220',
 			initial: 'D',
+			displayName: 'Daniel Krause',
 		});
-		expect(payerAvatar('Kate Krause', members)).toEqual({
+		expect(payerAvatar('Kate Krause', 'u2', members)).toEqual({
 			bg: '#7FA8A0',
 			color: '#3A1220',
 			initial: 'K',
+			displayName: 'Kate Krause',
 		});
 	});
 
+	it("prefers the member's live name and colour over a stale payerName snapshot", () => {
+		expect(payerAvatar('Dan', 'u1', members)).toEqual({
+			bg: '#D98BA4',
+			color: '#3A1220',
+			initial: 'D',
+			displayName: 'Daniel Krause',
+		});
+	});
+
+	it('falls back to the payerName match when paidBy is absent (legacy row)', () => {
+		expect(payerAvatar('Kate Krause', undefined, members)).toEqual({
+			bg: '#7FA8A0',
+			color: '#3A1220',
+			initial: 'K',
+			displayName: 'Kate Krause',
+		});
+	});
+
+	it('falls back to the payerName match when paidBy is no longer a member', () => {
+		expect(payerAvatar('Kate Krause', 'u9', members).bg).toBe('#7FA8A0');
+		expect(payerAvatar('Kate Krause', 'u9', members).color).toBe('#3A1220');
+	});
+
 	it('matches the payer name case-insensitively and ignores surrounding space', () => {
-		expect(payerAvatar('  daniel krause ', members).bg).toBe('#D98BA4');
+		expect(payerAvatar('  daniel krause ', undefined, members).bg).toBe('#D98BA4');
 	});
 
 	it('falls back to a neutral color for a payer who is no longer a member', () => {
-		expect(payerAvatar('Someone Else', members)).toEqual({
+		expect(payerAvatar('Someone Else', 'u9', members)).toEqual({
 			bg: '#7FA8A0',
 			color: '#0F2B26',
 			initial: 'S',
+			displayName: 'Someone Else',
 		});
 	});
 
 	it('falls back when no members are known at all', () => {
-		expect(payerAvatar('Daniel Krause')).toEqual({
+		expect(payerAvatar('Daniel Krause', 'u1')).toEqual({
 			bg: '#7FA8A0',
 			color: '#0F2B26',
 			initial: 'D',
+			displayName: 'Daniel Krause',
 		});
 	});
 });
@@ -162,12 +189,13 @@ describe('formatTxnDate()', () => {
 });
 
 describe('toTxnRow()', () => {
-	const members = [{ displayName: 'Daniel', profileColor: '#D98BA4' }];
+	const members = [{ userId: 'u1', displayName: 'Daniel', profileColor: '#D98BA4' }];
 	const txn: DetailTransaction = {
 		_id: 'txn1',
 		amount: 4500,
 		note: 'Weekly shop',
 		payerName: 'Daniel',
+		paidBy: 'u1',
 		spentAt: new Date(2026, 6, 9, 8, 0, 0).getTime(),
 	};
 	const now = new Date(2026, 6, 9, 15, 0, 0).getTime();
@@ -183,8 +211,20 @@ describe('toTxnRow()', () => {
 		expect(row.meta).toBe('Daniel · Today');
 	});
 
+	it("meta line uses the member's current name when the payerName snapshot is stale", () => {
+		const row = toTxnRow({ ...txn, payerName: 'Dan' }, 'AED', now, members);
+		expect(row.whoBg).toBe('#D98BA4');
+		expect(row.meta).toBe('Daniel · Today');
+	});
+
+	it('falls back to the stored payerName when paidBy is absent (legacy row)', () => {
+		const row = toTxnRow({ ...txn, paidBy: undefined }, 'AED', now, members);
+		expect(row.whoBg).toBe('#D98BA4');
+		expect(row.meta).toBe('Daniel · Today');
+	});
+
 	it('falls back to the neutral avatar for a payer who is not a member', () => {
-		const row = toTxnRow({ ...txn, payerName: 'Kate' }, 'AED', now, members);
+		const row = toTxnRow({ ...txn, payerName: 'Kate', paidBy: 'u9' }, 'AED', now, members);
 		expect(row.whoBg).toBe('#7FA8A0');
 		expect(row.meta).toBe('Kate · Today');
 	});

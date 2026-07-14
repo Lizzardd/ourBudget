@@ -533,7 +533,7 @@ test('leaveHousehold promotes the earliest-joined remaining member when the owne
 	expect(updated?.ownerId).toBe(firstJoinerId);
 });
 
-test('leaveHousehold by the last member deletes the household, its categories and transactions', async () => {
+test('leaveHousehold by the last member deletes the household, its categories, transactions and settings', async () => {
 	const t = makeCtx();
 	const { asUser: owner } = await seedUser(t, 'Owner');
 	const householdId = await owner.mutation(api.households.createHousehold, {
@@ -589,4 +589,54 @@ test('leaveHousehold by the last member deletes the household, its categories an
 			.collect(),
 	);
 	expect(memberships).toHaveLength(0);
+
+	// The per-household `settings` row must go too — it references a household
+	// that no longer exists, and Settings promises the data is erasable.
+	const settings = await t.run(async (ctx) =>
+		ctx.db
+			.query('settings')
+			.filter((q) => q.eq(q.field('householdId'), householdId))
+			.collect(),
+	);
+	expect(settings).toHaveLength(0);
+});
+
+test('leaveHousehold by the last member removes EVERY member\'s settings row, not just the leaver\'s', async () => {
+	const t = makeCtx();
+	const { asUser: owner } = await seedUser(t, 'Owner');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	// Three members, so three `settings` rows...
+	const { asUser: firstJoiner } = await seedUser(t, 'First');
+	await firstJoiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+	const { asUser: secondJoiner } = await seedUser(t, 'Second');
+	await secondJoiner.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+
+	const settingsBefore = await t.run(async (ctx) =>
+		ctx.db
+			.query('settings')
+			.filter((q) => q.eq(q.field('householdId'), householdId))
+			.collect(),
+	);
+	expect(settingsBefore).toHaveLength(3);
+
+	// ...and every one of them must be gone once the household is destroyed,
+	// including the rows of members who left before the final one did.
+	await firstJoiner.mutation(api.households.leaveHousehold, { householdId });
+	await secondJoiner.mutation(api.households.leaveHousehold, { householdId });
+	await owner.mutation(api.households.leaveHousehold, { householdId });
+
+	expect(await t.run(async (ctx) => ctx.db.get(householdId))).toBeNull();
+
+	const settingsAfter = await t.run(async (ctx) =>
+		ctx.db
+			.query('settings')
+			.filter((q) => q.eq(q.field('householdId'), householdId))
+			.collect(),
+	);
+	expect(settingsAfter).toHaveLength(0);
 });

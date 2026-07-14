@@ -267,6 +267,57 @@ export const normalizeExistingInviteCodes = internalMutation({
 const FALLBACK_DISPLAY_NAME = "Member";
 const FALLBACK_PROFILE_COLOR = "#8A7663";
 
+export interface HouseholdMemberProfile {
+	userId: Id<"users">;
+	displayName: string;
+	profileColor: string;
+	initial: string;
+	role: "owner" | "member";
+}
+
+/**
+ * The household's CURRENT members with the display name and profile colour
+ * they go by right now (their per-household `settings` row, falling back to a
+ * neutral placeholder if none exists yet).
+ *
+ * This is the one place that resolves "who is in this household and what are
+ * they called" — `householdMembers` renders it, and `transactions:backfillPaidBy`
+ * matches legacy `payerName` snapshots against it. Keep them on the same
+ * definition of a member's name so a name that once resolved keeps resolving.
+ */
+export async function householdMemberProfiles(
+	ctx: QueryCtx | MutationCtx,
+	householdId: Id<"households">,
+): Promise<HouseholdMemberProfile[]> {
+	const memberships = await ctx.db
+		.query("memberships")
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
+		.collect();
+
+	return await Promise.all(
+		memberships.map(async (membership) => {
+			const settings = await ctx.db
+				.query("settings")
+				.withIndex("by_user_household", (q) =>
+					q.eq("userId", membership.userId).eq("householdId", householdId),
+				)
+				.unique();
+
+			const displayName = settings?.displayName ?? FALLBACK_DISPLAY_NAME;
+			const profileColor = settings?.profileColor ?? FALLBACK_PROFILE_COLOR;
+			const initial = displayName.charAt(0).toUpperCase() || "?";
+
+			return {
+				userId: membership.userId,
+				displayName,
+				profileColor,
+				initial,
+				role: membership.role,
+			};
+		}),
+	);
+}
+
 export const householdMembers = query({
 	args: {
 		householdId: v.id("households"),
@@ -274,34 +325,12 @@ export const householdMembers = query({
 	handler: async (ctx, args) => {
 		const { userId: callerId } = await requireMembership(ctx, args.householdId);
 
-		const memberships = await ctx.db
-			.query("memberships")
-			.withIndex("by_household", (q) => q.eq("householdId", args.householdId))
-			.collect();
+		const profiles = await householdMemberProfiles(ctx, args.householdId);
 
-		const members = await Promise.all(
-			memberships.map(async (membership) => {
-				const settings = await ctx.db
-					.query("settings")
-					.withIndex("by_user_household", (q) =>
-						q.eq("userId", membership.userId).eq("householdId", args.householdId),
-					)
-					.unique();
-
-				const displayName = settings?.displayName ?? FALLBACK_DISPLAY_NAME;
-				const profileColor = settings?.profileColor ?? FALLBACK_PROFILE_COLOR;
-				const initial = displayName.charAt(0).toUpperCase() || "?";
-
-				return {
-					userId: membership.userId,
-					displayName,
-					profileColor,
-					initial,
-					role: membership.role,
-					isMe: membership.userId === callerId,
-				};
-			}),
-		);
+		const members = profiles.map((profile) => ({
+			...profile,
+			isMe: profile.userId === callerId,
+		}));
 
 		members.sort((a, b) => {
 			if (a.isMe === b.isMe) {
@@ -387,31 +416,62 @@ export const removeMember = mutation({
 });
 
 /**
- * Hard-deletes a household and everything hanging off it: each category's
- * transactions (via `by_category`, mirroring `deleteCategory`), then the
- * categories, then the household row. Only called when the last member
- * leaves, so there is nobody left who could ever read this data again.
+ * Hard-deletes a household and EVERYTHING that belongs to it — the single
+ * definition of "delete a household", shared by `leaveHousehold` (last member
+ * out) and `account:deleteMyAccount` (GDPR erasure of a sole member) so the
+ * two paths cannot drift apart.
+ *
+ * Every table that carries a `householdId` is swept here:
+ *  - `transactions` (via `by_household`, which also catches any row whose
+ *    category has already gone away),
+ *  - `categories` (via `by_household`),
+ *  - `settings` — one row PER MEMBER per household, so the whole household's
+ *    rows go, not just the caller's. Settings is only indexed
+ *    `by_user_household`, which cannot be range-scanned by `householdId`
+ *    alone, so this is a filtered scan. Acceptable on a cold delete path; if
+ *    `settings` ever grows hot, add a `by_household` index.
+ *  - `memberships` (via `by_household`) — any stragglers, so no membership can
+ *    outlive its household.
+ * `consents` is keyed by `userId` ONLY (no `householdId`), so it belongs to
+ * the user and not the household: it is deliberately NOT touched here — it is
+ * erased by `account:deleteMyAccount` instead.
+ *
+ * The household row itself goes last.
  */
-async function deleteHouseholdCascade(
+export async function deleteHouseholdCascade(
 	ctx: MutationCtx,
 	householdId: Id<"households">,
 ) {
+	const transactions = await ctx.db
+		.query("transactions")
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
+		.collect();
+	for (const transaction of transactions) {
+		await ctx.db.delete(transaction._id);
+	}
+
 	const categories = await ctx.db
 		.query("categories")
 		.withIndex("by_household", (q) => q.eq("householdId", householdId))
 		.collect();
-
 	for (const category of categories) {
-		const transactions = await ctx.db
-			.query("transactions")
-			.withIndex("by_category", (q) => q.eq("categoryId", category._id))
-			.collect();
-
-		for (const transaction of transactions) {
-			await ctx.db.delete(transaction._id);
-		}
-
 		await ctx.db.delete(category._id);
+	}
+
+	const settingsRows = await ctx.db
+		.query("settings")
+		.filter((q) => q.eq(q.field("householdId"), householdId))
+		.collect();
+	for (const settingsRow of settingsRows) {
+		await ctx.db.delete(settingsRow._id);
+	}
+
+	const memberships = await ctx.db
+		.query("memberships")
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
+		.collect();
+	for (const membership of memberships) {
+		await ctx.db.delete(membership._id);
 	}
 
 	await ctx.db.delete(householdId);

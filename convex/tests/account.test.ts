@@ -287,6 +287,54 @@ test('deleteMyAccount cascades a solely-owned household and erases the user', as
 	await expect(asUser.mutation(api.account.deleteMyAccount, {})).resolves.toBeNull();
 });
 
+test('deleteMyAccount on a solely-owned household clears every settings row for it, not just the caller\'s', async () => {
+	const t = makeCtx();
+
+	const { asUser: owner } = await seedUser(t, 'Amira');
+	const householdId = await owner.mutation(api.households.createHousehold, {
+		name: 'Our Home',
+		currency: 'AED',
+	});
+	const household = await t.run(async (ctx) => ctx.db.get(householdId));
+
+	// A member joins (getting their own `settings` row) and then leaves again,
+	// leaving the caller as the sole member. Erasing the caller's account must
+	// take the whole household down with it — including the departed member's
+	// household-scoped settings row, which would otherwise reference a
+	// household that no longer exists.
+	const { asUser: departed } = await seedUser(t, 'Sam');
+	await departed.mutation(api.households.joinHousehold, { code: household!.inviteCode });
+	await departed.mutation(api.households.leaveHousehold, { householdId });
+
+	const settingsBefore = await t.run(async (ctx) =>
+		ctx.db
+			.query('settings')
+			.filter((q) => q.eq(q.field('householdId'), householdId))
+			.collect(),
+	);
+	expect(settingsBefore).toHaveLength(2);
+
+	await owner.mutation(api.account.deleteMyAccount, {});
+
+	expect(await t.run(async (ctx) => ctx.db.get(householdId))).toBeNull();
+
+	const settingsAfter = await t.run(async (ctx) =>
+		ctx.db
+			.query('settings')
+			.filter((q) => q.eq(q.field('householdId'), householdId))
+			.collect(),
+	);
+	expect(settingsAfter).toHaveLength(0);
+
+	const memberships = await t.run(async (ctx) =>
+		ctx.db
+			.query('memberships')
+			.withIndex('by_household', (q) => q.eq('householdId', householdId))
+			.collect(),
+	);
+	expect(memberships).toHaveLength(0);
+});
+
 test('deleteMyAccount on a shared household only removes the caller\'s membership', async () => {
 	const t = makeCtx();
 

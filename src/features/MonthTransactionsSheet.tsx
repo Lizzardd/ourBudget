@@ -77,6 +77,7 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 			note: row.txn.note,
 			memo: row.txn.memo,
 			payerName: row.txn.payerName,
+			paidBy: row.txn.paidBy,
 		});
 	};
 

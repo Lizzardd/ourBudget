@@ -23,6 +23,8 @@ export interface EditableTransaction {
 	note: string;
 	memo?: string;
 	payerName: string;
+	/** The payer's user id — absent on legacy rows written before `paidBy` existed. */
+	paidBy?: Id<'users'>;
 }
 
 export interface AddExpenseSheetProps {
@@ -63,29 +65,47 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	const { toast } = useToast();
 
 	const payers = members ?? [];
-	const selfName = payers.find((m) => m.isMe)?.displayName ?? '';
+	const self = payers.find((m) => m.isMe);
 
 	const [amount, setAmount] = useState('');
 	const [categoryId, setCategoryId] = useState<string | undefined>(initialCategoryId);
 	const [payee, setPayee] = useState('');
 	const [note, setNote] = useState('');
 	const [payerName, setPayerName] = useState('');
+	const [paidBy, setPaidBy] = useState<Id<'users'> | undefined>(undefined);
 	const [submitting, setSubmitting] = useState(false);
 
 	const isEditing = !!editTxn;
 
 	// Reset to a fresh entry every time the sheet opens, honoring any
 	// pre-selected category — or prefill from the transaction being edited.
+	// The edited row's payer is resolved the same way the detail rows resolve
+	// it: by `paidBy` first, then by the stored `payerName` snapshot for a
+	// legacy row — so the right chip preselects either way.
 	useEffect(() => {
 		if (open) {
+			const editPayer = editTxn
+				? (payers.find((m) => m.userId === editTxn.paidBy) ??
+					payers.find(
+						(m) =>
+							m.displayName.trim().toLowerCase() === editTxn.payerName.trim().toLowerCase()
+					))
+				: undefined;
 			setAmount(editTxn ? toAmountString(editTxn.amount) : '');
 			setPayee(editTxn ? editTxn.note : '');
 			setNote(editTxn?.memo ?? '');
-			setPayerName(editTxn ? editTxn.payerName : selfName);
+			setPayerName(editTxn ? (editPayer?.displayName ?? editTxn.payerName) : (self?.displayName ?? ''));
+			// If the payer has since left the household there is no chip to
+			// preselect, but their id must still be carried back on save —
+			// dropping it would permanently erase who paid, which is the very
+			// history this field exists to keep. `updateTransaction` only
+			// re-checks membership when the payer actually changes, so handing
+			// an ex-member's id straight back is accepted.
+			setPaidBy(editTxn ? (editPayer?.userId ?? editTxn.paidBy) : self?.userId);
 			setCategoryId(editTxn ? editTxn.categoryId : initialCategoryId);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [open, initialCategoryId, editTxn, selfName]);
+	}, [open, initialCategoryId, editTxn, members]);
 
 	const cur = currency ?? 'AED';
 	const amountMinor = parseAmountToMinor(amount);
@@ -118,12 +138,16 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 		setSubmitting(true);
 		try {
 			if (editTxn) {
+				// `paidBy` always goes back through: patching it as undefined
+				// would REMOVE the field and degrade the row to a name-only
+				// record, orphaning it from the member all over again.
 				await updateExpense({
 					transactionId: editTxn._id,
 					amount: amountMinor,
 					note: title,
 					memo,
 					payerName,
+					paidBy,
 				});
 				toast('Expense updated ✓');
 			} else {
@@ -134,6 +158,7 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 					note: title,
 					memo,
 					payerName,
+					paidBy,
 				});
 				toast(`Added ${fmt(amountMinor, cur)} to ${selectedCategory.name} 🎉`);
 			}
@@ -222,7 +247,9 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 				</Text>
 				<View style={styles.payerChips}>
 					{payers.map((member) => {
-						const selected = member.displayName === payerName;
+						const selected = paidBy
+							? member.userId === paidBy
+							: member.displayName === payerName;
 						return (
 							<TouchableOpacity
 								key={member.userId}
@@ -230,7 +257,10 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 								accessibilityLabel={`Paid by ${member.displayName}`}
 								accessibilityState={{ selected }}
 								activeOpacity={0.6}
-								onPress={() => setPayerName(member.displayName)}
+								onPress={() => {
+									setPayerName(member.displayName);
+									setPaidBy(member.userId);
+								}}
 								style={[
 									styles.payerChip,
 									{ backgroundColor: selected ? member.profileColor : 'transparent' },

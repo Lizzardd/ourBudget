@@ -1,9 +1,10 @@
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import { useHousehold } from './useHousehold';
 
 export interface HouseholdMember {
-	userId: string;
+	userId: Id<'users'>;
 	displayName: string;
 	profileColor: string;
 	initial: string;

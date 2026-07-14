@@ -1,9 +1,50 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import type { QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
-import { requireMembership } from "./households";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { householdMemberProfiles, requireMembership } from "./households";
 import { monthLabel, monthRange, monthShort, yearRange } from "../src/budget/periods";
+
+/**
+ * WHO PAID — how `paidBy` and `payerName` relate.
+ *
+ * `paidBy` is the source of truth for the payer; `payerName` is a denormalized
+ * snapshot of what they were called at write time. The client resolves a row in
+ * this order:
+ *
+ *   1. `paidBy` -> look that user up among the household's CURRENT members
+ *      (`households:householdMembers`) -> use their LIVE display name and
+ *      profile colour. A member who renames themselves therefore renames
+ *      themselves on every expense they ever paid for.
+ *   2. Otherwise — `paidBy` is absent (a legacy row written before it existed,
+ *      see `backfillPaidBy`) or the user is no longer a member of the household
+ *      — fall back to the stored `payerName` string, which is then the only
+ *      record of who paid. It renders as a plain name with a neutral avatar.
+ *
+ * `payerName` is required on every write for exactly that reason: each row must
+ * still read sensibly on its own, even once its payer is gone.
+ */
+
+/**
+ * `paidBy` attributes an expense to a real person, so it may only ever point at
+ * a member of that expense's own household — otherwise a caller could pin
+ * someone else's household's spending on an outsider (or on a user in another
+ * household entirely, whose name would then resolve to nothing).
+ */
+async function requirePayerIsMember(
+	ctx: MutationCtx,
+	householdId: Id<"households">,
+	paidBy: Id<"users">,
+) {
+	const membership = await ctx.db
+		.query("memberships")
+		.withIndex("by_household", (q) => q.eq("householdId", householdId))
+		.filter((q) => q.eq(q.field("userId"), paidBy))
+		.unique();
+	if (membership === null) {
+		throw new Error("The payer must be a member of this household");
+	}
+}
 
 export const addTransaction = mutation({
 	args: {
@@ -13,6 +54,7 @@ export const addTransaction = mutation({
 		note: v.string(),
 		memo: v.optional(v.string()),
 		payerName: v.string(),
+		paidBy: v.optional(v.id("users")),
 		spentAt: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
@@ -27,6 +69,10 @@ export const addTransaction = mutation({
 			throw new Error("Category does not belong to this household");
 		}
 
+		if (args.paidBy !== undefined) {
+			await requirePayerIsMember(ctx, args.householdId, args.paidBy);
+		}
+
 		return await ctx.db.insert("transactions", {
 			householdId: args.householdId,
 			categoryId: args.categoryId,
@@ -35,6 +81,7 @@ export const addTransaction = mutation({
 			memo: args.memo,
 			spentAt: args.spentAt ?? Date.now(),
 			payerName: args.payerName,
+			paidBy: args.paidBy,
 			createdBy: userId,
 			source: "manual",
 			createdAt: Date.now(),
@@ -52,6 +99,9 @@ export const addTransaction = mutation({
  * Every spend aggregate (`summary`, `monthTotals`, `weeklySummary`) is derived
  * from these rows at read time, so patching the amount here moves the totals
  * with no extra bookkeeping.
+ *
+ * Re-attributing the payer patches `paidBy` and its `payerName` snapshot
+ * together — see the "WHO PAID" note at the top of this file.
  */
 export const updateTransaction = mutation({
 	args: {
@@ -60,6 +110,7 @@ export const updateTransaction = mutation({
 		note: v.string(),
 		memo: v.optional(v.string()),
 		payerName: v.string(),
+		paidBy: v.optional(v.id("users")),
 	},
 	returns: v.null(),
 	handler: async (ctx, args) => {
@@ -78,11 +129,23 @@ export const updateTransaction = mutation({
 			throw new Error("Transaction note cannot be empty");
 		}
 
+		// Only a CHANGE of payer has to be a current member. Re-validating an
+		// unchanged `paidBy` would make every edit of an expense paid by someone
+		// who has since left the household throw — which in turn would force the
+		// client to drop the attribution just to be able to save. That is exactly
+		// the history this field exists to protect, so leaving an existing id in
+		// place is always allowed.
+		const paidByChanged = args.paidBy !== transaction.paidBy;
+		if (args.paidBy !== undefined && paidByChanged) {
+			await requirePayerIsMember(ctx, transaction.householdId, args.paidBy);
+		}
+
 		await ctx.db.patch(args.transactionId, {
 			amount: args.amount,
 			note,
 			memo: args.memo,
 			payerName: args.payerName,
+			paidBy: args.paidBy,
 		});
 		return null;
 	},
@@ -111,6 +174,11 @@ export const deleteTransaction = mutation({
 	},
 });
 
+/**
+ * A category's transactions, newest first. Returns whole transaction rows —
+ * including both `paidBy` and `payerName`, so the client can run the payer
+ * resolution documented at the top of this file.
+ */
 export const listByCategory = query({
 	args: {
 		categoryId: v.id("categories"),
@@ -138,7 +206,8 @@ export const listByCategory = query({
  * A category's transactions within `[startMs, endMs)`, newest first — feeds
  * the Reports "Month Transactions Sheet" (a month range for monthly
  * categories, a year range for annual ones). Authorized via the category's
- * household, same as `listByCategory`.
+ * household, same as `listByCategory`, and like it returns whole rows —
+ * `paidBy` included.
  */
 export const listByCategoryInRange = query({
 	args: {
@@ -382,5 +451,62 @@ export const weeklySummary = query({
 			watch: watch ? { categoryId: watch.categoryId, name: watch.name, emoji: watch.emoji, overBy: watch.overBy } : null,
 			onTrack,
 		};
+	},
+});
+
+/**
+ * One-off backfill for expenses written before `paidBy` existed, when
+ * `payerName` was the only record of who paid. For each such row it matches the
+ * stored `payerName` against the display names of that household's CURRENT
+ * members (via `households:householdMemberProfiles`, so the match uses exactly
+ * the same names the UI renders), trimmed and case-insensitively, and on a hit
+ * patches `paidBy` — from then on the row follows that member's renames.
+ *
+ * A row whose `payerName` matches nobody is LEFT ALONE: it belongs to an
+ * ex-member or is a freehand name, and `payerName` remains its only record (the
+ * documented fallback). An ambiguous name — two current members going by the
+ * same display name — is also left alone rather than guessed at.
+ *
+ * Idempotent: rows that already have `paidBy` are skipped, so a second run
+ * patches nothing and returns 0. Returns the number of rows patched.
+ *
+ * Run once with `npx convex run transactions:backfillPaidBy [--prod]`.
+ */
+export const backfillPaidBy = internalMutation({
+	args: {},
+	returns: v.number(),
+	handler: async (ctx) => {
+		const transactions = await ctx.db.query("transactions").collect();
+
+		// One lookup per household, not per transaction: name (normalized) ->
+		// the single member who goes by it, or `null` when two members share it.
+		const byHousehold = new Map<Id<"households">, Map<string, Id<"users"> | null>>();
+
+		let patched = 0;
+		for (const transaction of transactions) {
+			if (transaction.paidBy !== undefined) {
+				continue;
+			}
+
+			let byName = byHousehold.get(transaction.householdId);
+			if (byName === undefined) {
+				byName = new Map();
+				for (const member of await householdMemberProfiles(ctx, transaction.householdId)) {
+					const key = member.displayName.trim().toLowerCase();
+					byName.set(key, byName.has(key) ? null : member.userId);
+				}
+				byHousehold.set(transaction.householdId, byName);
+			}
+
+			const paidBy = byName.get(transaction.payerName.trim().toLowerCase());
+			if (paidBy === undefined || paidBy === null) {
+				continue;
+			}
+
+			await ctx.db.patch(transaction._id, { paidBy });
+			patched++;
+		}
+
+		return patched;
 	},
 });
