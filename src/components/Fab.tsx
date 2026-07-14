@@ -5,9 +5,16 @@ import { useAddExpenseSheet } from '../features/AddExpenseProvider';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
 
-const TAB_BAR_ROW_HEIGHT = 68;
-const NAV_INSET_PAD = 12;
-const FAB_GAP = 18;
+/**
+ * Distance from the bottom, before the safe-area inset — the prototype's
+ * `bottom: calc(66px + env(safe-area-inset-bottom, 0px))`.
+ *
+ * This used to be derived from a local copy of the tab bar's height, which then
+ * drifted: the tab bar shrank to 48px but this file still said 68, so the pill
+ * floated higher than the design. Taking the offset straight from the prototype
+ * removes the duplicated constant along with the chance to drift again.
+ */
+const BOTTOM_OFFSET = 66;
 
 /**
  * Accent "+ Add expense" pill floating bottom-right above the tab bar. Per
@@ -31,7 +38,7 @@ export function Fab() {
 				{
 					backgroundColor: accent,
 					shadowColor: accent,
-					bottom: TAB_BAR_ROW_HEIGHT + NAV_INSET_PAD + insets.bottom + FAB_GAP,
+					bottom: BOTTOM_OFFSET + insets.bottom,
 					transform: [{ scale: pressed ? 0.96 : 1 }],
 				},
 			]}
@@ -46,12 +53,12 @@ const styles = StyleSheet.create({
 	fab: {
 		position: 'absolute',
 		right: 18,
-		height: 56,
-		paddingHorizontal: 22,
+		height: 46,
+		paddingHorizontal: 18,
 		borderRadius: 999,
 		flexDirection: 'row',
 		alignItems: 'center',
-		gap: 8,
+		gap: 6,
 		shadowOffset: { width: 0, height: 10 },
 		shadowOpacity: 0.4,
 		shadowRadius: 28,
@@ -64,7 +71,7 @@ const styles = StyleSheet.create({
 		color: '#2B0E1A',
 	},
 	label: {
-		fontSize: 16,
+		fontSize: 14,
 		color: '#2B0E1A',
 	},
 });
