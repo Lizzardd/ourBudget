@@ -53,7 +53,8 @@ export function MondayNotification() {
 	const now = new Date(nowMs);
 	const monthSummary = useQuery(
 		api.transactions.summary,
-		householdId ? { householdId, year: now.getFullYear(), month: now.getMonth() + 1 } : 'skip'
+		// 0-based month — see the note in app/(app)/home.tsx.
+		householdId ? { householdId, year: now.getFullYear(), month: now.getMonth() } : 'skip'
 	);
 	const { weekly } = useWeeklySummary(nowMs);
 

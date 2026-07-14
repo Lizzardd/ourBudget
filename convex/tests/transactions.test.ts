@@ -209,6 +209,40 @@ test('summary sums two July transactions for a monthly category', async () => {
 	expect(groceriesSummary?.spent).toBe(12000);
 });
 
+test('summary: month is 0-indexed, so passing getMonth() + 1 reads the WRONG month', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 5800,
+		note: 'Blavkabka',
+		payerName: 'Amira',
+		spentAt: julyMs(14),
+	});
+
+	const spentIn = async (month: number) => {
+		const result = await asUser.query(api.transactions.summary, {
+			householdId,
+			year: 2026,
+			month,
+		});
+		return result.categories.find((c) => c.categoryId === groceries._id)?.spent;
+	};
+
+	// July is 6. This is the convention `monthRange` uses (Date.UTC is 0-based),
+	// and what the category screens pass.
+	expect(await spentIn(6)).toBe(5800);
+
+	// 7 is AUGUST, which is empty. Home passed `getMonth() + 1` and so reported
+	// Đ0 spent while the category detail — passing getMonth() — showed the real
+	// figure. The off-by-one is silent: it returns a valid, empty month rather
+	// than an error, which is exactly why it survived to production.
+	expect(await spentIn(7)).toBe(0);
+});
+
 test('summary: annual-category March transaction still counts in July YTD', async () => {
 	const t = makeCtx();
 	const { asUser } = await seedUser(t, 'Amira');

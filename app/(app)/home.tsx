@@ -27,7 +27,11 @@ export default function Home() {
 	const router = useRouter();
 	const { open: openNewCategory } = useNewCategorySheet();
 	const now = new Date();
-	const { sections, summary, loading } = useSummary(now.getFullYear(), now.getMonth() + 1);
+	// `month` is 0-based, matching Date.getMonth() and monthRange()'s Date.UTC()
+	// call. Passing `getMonth() + 1` here queried NEXT month, which is empty —
+	// so Home showed Đ0 spent while the category screens, which pass getMonth(),
+	// showed the real figures.
+	const { sections, summary, loading } = useSummary(now.getFullYear(), now.getMonth());
 	const { settings } = useSettings();
 	const { householdName, members } = useHouseholdMembers();
 	const layout = settings?.layout ?? 'cozy-cards';
