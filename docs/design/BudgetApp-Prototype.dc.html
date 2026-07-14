@@ -609,6 +609,13 @@
             </sc-for>
           </div>
           <input value="{{ payee }}" onChange="{{ payeeChange }}" placeholder="Where? (e.g. Carrefour)" style="height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 700; outline: none">
+          <sc-if value="{{ hasPayeeSuggestions }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; background: var(--el, #3A2F27); border-radius: 12px; overflow: hidden; margin-top: -6px">
+              <sc-for list="{{ payeeSuggestions }}" as="p" hint-placeholder-count="3">
+                <button onClick="{{ p.pick }}" style="text-align: left; height: 38px; padding: 0 14px; border: none; background: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; color: var(--text, #F6EDE3); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))" style-active="background: rgba(201,98,135,0.15)"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 16px; color: var(--sub, #B5A493)">history</span>{{ p.name }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
           <input value="{{ note }}" onChange="{{ noteChange }}" placeholder="Add a note (optional)" style="height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 600; outline: none">
           <div style="display: flex; align-items: center; gap: 8px">
             <div style="font-size: 12px; font-weight: 700; color: var(--sub, #B5A493); flex: none">Paid by</div>
@@ -1336,6 +1343,27 @@ class Component extends DCLogic {
       noteChange: e => this.setState({ note: e.target.value }),
       payee: s.payee,
       payeeChange: e => this.setState({ payee: e.target.value }),
+      payeeSuggestions: (() => {
+        const seen = new Map();
+        [...this.MCATS, ...this.ACATS].forEach(c => {
+          this.displayTxns(c, 0).forEach(t => {
+            const name = (t.note || '').trim();
+            if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+          });
+        });
+        const all = [...seen.values()];
+        const q = s.payee.trim().toLowerCase();
+        if (!q) return [];
+        const matches = all.filter(n => n.toLowerCase().includes(q) && n.toLowerCase() !== q);
+        return matches.slice(0, 4).map(n => ({ name: n, pick: () => this.setState({ payee: n }) }));
+      })(),
+      hasPayeeSuggestions: (() => {
+        const seen = new Set();
+        [...this.MCATS, ...this.ACATS].forEach(c => this.displayTxns(c, 0).forEach(t => { const n = (t.note || '').trim(); if (n) seen.add(n.toLowerCase()); }));
+        const q = s.payee.trim().toLowerCase();
+        if (!q) return false;
+        return [...seen].filter(n => n.includes(q) && n !== q).length > 0;
+      })(),
       payerName,
       payers: [{ id: 'self', name: selfName, color: s.profColor, textColor: '#3A1220' }, ...s.members.map(m => ({ id: m.name, name: m.name, color: m.color, textColor: m.textColor }))].map(p => {
         const sel = s.payer === p.id;

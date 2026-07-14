@@ -208,6 +208,54 @@ export const deleteTransaction = mutation({
 	},
 });
 
+/** How many past payee names the sheet's autocomplete draws from. */
+const PAYEE_HISTORY_LIMIT = 100;
+
+/**
+ * The household's previously-used payee names ("Where?" titles), most recent
+ * first and de-duplicated case-insensitively.
+ *
+ * Returns the whole (bounded) list rather than taking a search term: the sheet
+ * filters it locally on every keystroke, so a round trip per character would be
+ * both slower and pointless. Bounded at `PAYEE_HISTORY_LIMIT` so this can never
+ * grow into an unbounded read as a household's history piles up.
+ *
+ * The first spelling wins, so a payee typed as "carrefour" once and "Carrefour"
+ * twenty times is suggested however it was most recently written.
+ */
+export const payeeHistory = query({
+	args: {
+		householdId: v.id("households"),
+	},
+	returns: v.array(v.string()),
+	handler: async (ctx, args) => {
+		await requireMembership(ctx, args.householdId);
+
+		const transactions = await ctx.db
+			.query("transactions")
+			.withIndex("by_household", (q) => q.eq("householdId", args.householdId))
+			.collect();
+
+		const byRecency = transactions.sort((a, b) => b.spentAt - a.spentAt);
+
+		const seen = new Map<string, string>();
+		for (const transaction of byRecency) {
+			const name = transaction.note.trim();
+			if (name === "") {
+				continue;
+			}
+			const key = name.toLowerCase();
+			if (!seen.has(key)) {
+				seen.set(key, name);
+			}
+			if (seen.size >= PAYEE_HISTORY_LIMIT) {
+				break;
+			}
+		}
+		return [...seen.values()];
+	},
+});
+
 /**
  * A category's transactions, newest first. Returns whole transaction rows —
  * including both `paidBy` and `payerName`, so the client can run the payer

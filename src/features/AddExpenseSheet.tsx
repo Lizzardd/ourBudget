@@ -3,8 +3,13 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { Id } from '../../convex/_generated/dataModel';
+import { useQuery } from 'convex/react';
+
+import { api } from '../../convex/_generated/api';
 import { expenseDateLabel } from '../budget/detail';
 import { fmt, glyph, parseAmountToMinor, sanitizeAmountInput } from '../budget/money';
+import { filterPayeeSuggestions } from '../budget/payees';
+import { hexToRgba } from '../lib/color';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
@@ -69,6 +74,10 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 
 	const payers = members ?? [];
 	const self = payers.find((m) => m.isMe);
+	const payeeHistory = useQuery(
+		api.transactions.payeeHistory,
+		householdId ? { householdId } : 'skip'
+	);
 
 	const [amount, setAmount] = useState('');
 	const [categoryId, setCategoryId] = useState<string | undefined>(initialCategoryId);
@@ -130,6 +139,10 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	const confirmColor = canAdd ? '#2B0E1A' : t.sub;
 
 	const dateLabel = expenseDateLabel(spentAt, Date.now());
+
+	// The whole (bounded) history comes down once; filtering happens here on every
+	// keystroke, so typing costs no round trips.
+	const payeeSuggestions = filterPayeeSuggestions(payeeHistory ?? [], payee);
 
 	/**
 	 * The Android dialog is fire-and-forget: it fires `onChange` once — with
@@ -296,6 +309,33 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 				style={[styles.payeeInput, { backgroundColor: t.el, color: t.text }]}
 			/>
 
+			{payeeSuggestions.length > 0 ? (
+				<View style={[styles.suggestions, { backgroundColor: t.el }]}>
+					{payeeSuggestions.map((name, i) => (
+						<Pressable
+							key={name}
+							accessibilityRole="button"
+							accessibilityLabel={`Use ${name}`}
+							onPress={() => setPayee(name)}
+							style={({ pressed }) => [
+								styles.suggestion,
+								// The last row has no divider — a border under the final item
+								// would just draw a line along the panel's own edge.
+								i < payeeSuggestions.length - 1
+									? { borderBottomWidth: 1, borderBottomColor: t.line }
+									: null,
+								pressed ? { backgroundColor: hexToRgba(accent, 0.15) } : null,
+							]}
+						>
+							<Icon name="history" size={16} color={t.sub} />
+							<Text style={[styles.suggestionText, { color: t.text, fontFamily: fontFamily(700) }]}>
+								{name}
+							</Text>
+						</Pressable>
+					))}
+				</View>
+			) : null}
+
 			<TextInput
 				value={note}
 				onChangeText={setNote}
@@ -397,6 +437,24 @@ const styles = StyleSheet.create({
 	amountBlock: {
 		alignItems: 'center',
 		paddingVertical: 2,
+	},
+	suggestions: {
+		flexDirection: 'column',
+		borderRadius: 12,
+		overflow: 'hidden',
+		// Pulls the panel up against the "Where?" field so it reads as attached to
+		// it rather than floating as a third input.
+		marginTop: -6,
+	},
+	suggestion: {
+		height: 38,
+		paddingHorizontal: 14,
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+	},
+	suggestionText: {
+		fontSize: 13,
 	},
 	amountRow: {
 		flexDirection: 'row',
