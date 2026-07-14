@@ -31,16 +31,29 @@ export function OtaDiagnostics() {
 	 * embedded one before any JS of ours runs — so nothing in the React tree
 	 * ever sees why. These entries are what say why.
 	 *
-	 * `embeddedAssetFileMap` entries dominate the log and carry no signal, so
-	 * they are dropped: they bury the handful of lines that matter.
+	 * Two kinds of noise dominate the log and bury the handful of lines that
+	 * matter, so both are stripped:
+	 *
+	 * - `embeddedAssetFileMap` entries — one per bundled asset, no signal.
+	 * - the `latestManifest` / `downloadedManifest` JSON that every state-change
+	 *   entry carries. Each is tens of KB, and it is what made the whole log
+	 *   167KB — far past what Android's share intent will accept, so sharing
+	 *   simply failed. Each line is capped instead; the state name and any error
+	 *   sit at the front, which is the part worth reading.
 	 */
+	const MAX_LINE = 300;
+	const MAX_LINES = 60;
+
 	const readLogs = async (): Promise<string[]> => {
 		const entries = await Updates.readLogEntriesAsync(3600_000);
 		const useful = entries.filter((e) => !e.message.startsWith('embeddedAssetFileMap'));
 		if (useful.length === 0) {
 			return ['(no useful update log entries in the last hour)'];
 		}
-		return useful.map((e) => `${e.code ?? 'log'}: ${e.message}`);
+		return useful.slice(-MAX_LINES).map((e) => {
+			const line = `${e.code ?? 'log'}: ${e.message}`;
+			return line.length > MAX_LINE ? `${line.slice(0, MAX_LINE)}…` : line;
+		});
 	};
 
 	const loadLogs = async () => {

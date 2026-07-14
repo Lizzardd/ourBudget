@@ -1,6 +1,6 @@
 {
   "name": "mobile-budget",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "dependencies": {
     "@auth/core": "^0.41.2",
