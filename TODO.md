@@ -93,18 +93,6 @@ The household-delete cascade has to `.filter()`-scan `settings`, which is only
 indexed `by_user_household`. Fine on a cold delete path; add the index if that
 table ever grows.
 
-### Push the tags
-`main` is pushed; tags `v0.1.0`–`v0.1.11` are local only:
-
-```
-git push origin main --tags
-```
-
-### Shell keeps reverting to Node 22
-`.nvmrc` pins 24 but `pnpm` still prints the engine warning in fresh shells.
-Worth a shell hook — the machine that bundles an OTA update should be on the
-version the project declares.
-
 ---
 
 ## P3 — Untested surfaces
