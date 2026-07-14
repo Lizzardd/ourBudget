@@ -17,9 +17,42 @@ Legend: **P0** blocks the app working · **P1** ships a lie to the user ·
 
 ---
 
-## P0 — Blocking
+## P0 — none. OTA works.
 
-### OTA: the font hang is fixed in code, but NOT verified on a device
+**Confirmed on device (v0.1.10):** `embedded=false`, `running=019f5f82…`,
+`failureCount=0`, 35/35 assets, no ErrorRecovery lines. The app is running an
+over-the-air bundle.
+
+**The cause, finally.** `getModulesRunBeforeMainModule` lists the modules Metro
+runs BEFORE the entry file. `InitializeCore` — which installs RN's fetch polyfill
+and with it `globalThis.Headers` — was not guaranteed to be first in an *export*
+bundle (`expo export`, which is what `eas update` publishes; EAS Build uses
+`expo export:embed` and was always fine). Expo's winter runtime ran ahead of it,
+found no `Headers`, and threw before React rendered. expo-updates rolled back to
+the embedded bundle and blacklisted the update — silently, with nothing visible
+from JS. See expo#36099.
+
+Fixed by pinning `InitializeCore` first in `metro.config.js`. It cannot be fixed
+from the entry file: those modules run *before* the entry, so an import at the
+top of `index.native.js` is already too late.
+
+**Four earlier "fixes" were all real bugs but none was the blocker** — recorded
+so they are not re-litigated: the `appVersion` and `fingerprint` runtime policies
+(both churned the runtime and orphaned installs), the dev-vs-prod Convex URL in
+locally-bundled updates, the ~10MB font payload that blocked first render, and
+the `EXPO_PUBLIC_USE_RN_FETCH` flag. All are fixed and worth keeping.
+
+**The lesson:** read the native update log first, and search for the error
+string. Hours went into inferring causes from symptoms when the exception was
+sitting in `Updates.readLogEntriesAsync` the whole time.
+
+**Rules that still hold:** build first, then publish updates (an update older
+than the embedded bundle can never launch). Only bump `runtimeVersion` (`"1"` →
+`"2"`) when the native layer changes.
+
+---
+
+## Historical — the font hang (fixed in v0.1.6, was never the blocker)
 
 The cause is finally understood. It was never a crash or a rollback — it was a
 **hang**. `app/_layout.tsx` refused to render until every font resolved, and an
