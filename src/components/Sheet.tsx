@@ -103,7 +103,7 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 	}
 
 	return (
-		<View style={[StyleSheet.absoluteFill, { pointerEvents: 'box-none' }]}>
+		<View style={[StyleSheet.absoluteFill, styles.layer, { pointerEvents: 'box-none' }]}>
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel="Close"
@@ -137,6 +137,20 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 }
 
 const styles = StyleSheet.create({
+	/**
+	 * Sit above the FAB and the tab bar, matching the prototype's stacking
+	 * (`z-index: 40` on the sheet, `20` on the "+ Add expense" pill, `15` on the
+	 * tab bar).
+	 *
+	 * `elevation` is what actually matters on Android: it beats sibling paint
+	 * order, so the FAB — which sets `elevation: 6` for its shadow — drew on top
+	 * of the sheet even though the sheet renders after it, covering the numpad's
+	 * "9" key. Setting `zIndex` alone would not have fixed it.
+	 */
+	layer: {
+		zIndex: 40,
+		elevation: 40,
+	},
 	scrim: {
 		...StyleSheet.absoluteFill,
 		backgroundColor: 'rgba(15, 9, 5, 0.6)',
