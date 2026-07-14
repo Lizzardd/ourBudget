@@ -1,7 +1,8 @@
 import * as Updates from 'expo-updates';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
+import { clearStartupCrash, readStartupCrash, type StartupCrash } from '../diagnostics/crashRecorder';
 import { useTheme } from '../theme/useTheme';
 
 const short = (value: string | null | undefined) =>
@@ -24,6 +25,41 @@ export function OtaDiagnostics() {
 	const { isUpdateAvailable, isUpdatePending, isChecking, isDownloading, checkError, downloadError } =
 		Updates.useUpdates();
 	const [logs, setLogs] = useState<string[] | null>(null);
+
+	/**
+	 * The last startup crash, written to disk by the bundle that died.
+	 *
+	 * Read once on mount. The file was written by a PREVIOUS process, so nothing
+	 * can change it while this screen is open — one read is enough.
+	 */
+	const [crash, setCrash] = useState<StartupCrash | null>(null);
+
+	useEffect(() => {
+		let alive = true;
+		readStartupCrash().then((found) => {
+			if (alive) {
+				setCrash(found);
+			}
+		});
+		return () => {
+			alive = false;
+		};
+	}, []);
+
+	const forgetCrash = () => {
+		clearStartupCrash();
+		setCrash(null);
+	};
+
+	const crashText = crash
+		? [
+				`STARTUP CRASH (${crash.fatal ? 'fatal' : 'non-fatal'})`,
+				`at=${new Date(crash.at).toISOString()}`,
+				`update=${crash.updateId} fromUpdate=${crash.fromUpdate}`,
+				crash.message,
+				crash.stack,
+			].join('\n')
+		: '';
 
 	/**
 	 * The native update logs are the only place a launch failure is recorded.
@@ -114,7 +150,12 @@ export function OtaDiagnostics() {
 			]
 				.filter(Boolean)
 				.join('\n');
-			await Share.share({ message: `OTA DIAGNOSTICS\n${header}\n\nLOGS\n${lines.join('\n')}` });
+			// The crash goes FIRST. It is the only part of this dump that says why,
+			// and everything under it is context for it.
+			const crashBlock = crashText ? `${crashText}\n\n` : '';
+			await Share.share({
+				message: `${crashBlock}OTA DIAGNOSTICS\n${header}\n\nLOGS\n${lines.join('\n')}`,
+			});
 		} catch (err) {
 			setLogs([`could not share logs: ${err instanceof Error ? err.message : String(err)}`]);
 		}
@@ -135,6 +176,28 @@ export function OtaDiagnostics() {
 	return (
 		<View style={[styles.card, { backgroundColor: t.card }]}>
 			<Text style={[styles.title, { color: t.sub }]}>OTA DIAGNOSTICS</Text>
+
+			{crash ? (
+				<View style={[styles.crash, { borderColor: accent }]}>
+					<Text style={[styles.crashTitle, { color: accent }]}>
+						⚠ STARTUP CRASH — {crash.fromUpdate ? 'an OTA update died on launch' : 'embedded bundle'}
+					</Text>
+					<Text style={[styles.crashMeta, { color: t.sub }]} selectable>
+						{new Date(crash.at).toLocaleString()} · update {short(crash.updateId)} ·{' '}
+						{crash.fatal ? 'fatal' : 'non-fatal'}
+					</Text>
+					<Text style={[styles.crashMsg, { color: t.text }]} selectable>
+						{crash.message}
+					</Text>
+					<Text style={[styles.log, { color: t.sub }]} selectable>
+						{crash.stack}
+					</Text>
+					<Pressable onPress={forgetCrash} accessibilityRole="button" style={styles.logsBtn}>
+						<Text style={[styles.logsBtnLabel, { color: accent }]}>Dismiss crash report</Text>
+					</Pressable>
+				</View>
+			) : null}
+
 			{rows.map(([label, value]) => (
 				<View key={label} style={styles.row}>
 					<Text style={[styles.label, { color: t.sub }]}>{label}</Text>
@@ -191,6 +254,26 @@ const styles = StyleSheet.create({
 	},
 	error: {
 		fontSize: 11,
+		marginTop: 8,
+	},
+	crash: {
+		borderWidth: 1,
+		borderRadius: 12,
+		padding: 12,
+		marginBottom: 12,
+	},
+	crashTitle: {
+		fontSize: 11,
+		fontWeight: '800',
+		letterSpacing: 0.5,
+	},
+	crashMeta: {
+		fontSize: 10,
+		marginTop: 4,
+	},
+	crashMsg: {
+		fontSize: 12,
+		fontWeight: '700',
 		marginTop: 8,
 	},
 	logsRow: {

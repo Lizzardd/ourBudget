@@ -29,8 +29,34 @@ Legend: **P0** blocks the app working · **P1** ships a lie to the user ·
    "missing function": it just looks like the update refuses to apply. The tell
    is `embedded=true` alongside a `failureCount` above zero. Verify with
    `npx convex function-spec --prod` before publishing.
-3. **Only bump `runtimeVersion`** (`"1"` → `"2"`) when the native layer changes —
-   which is exactly when a rebuild is needed anyway.
+3. **Only bump `runtimeVersion`** (now `"3"`) when the native layer changes —
+   which is exactly when a rebuild is needed anyway. `"2"` → `"3"` came with
+   `expo-file-system`, added for the crash recorder below.
+
+### The OTA on the runtime-2 build never launched, and we could not see why
+
+Every update published against the v0.2.x build downloaded, verified, staged,
+launched, and was then rolled back with `failureCount = 1`. Ruled out with
+evidence, not argument:
+
+- **Delivery.** Fine — `NEW_UPDATE_LOADED`, correct channel and runtime.
+- **Module ordering** (the v0.1.10 bug). Not it. The export bundle and the
+  embedded bundle run the *same* three modules before the entry (`__r(1)`,
+  `__r(1964)`, `__r(0)`), so `metro.config.js` still does its job.
+- **The missing `payeeHistory` query.** A real bug, now deployed — but not this
+  one, since v0.2.3 failed identically after the deploy.
+
+The blocker is that **nothing records why a launch failed**. expo-updates notes
+*that* it happened and rolls back; the process that knew the reason is gone. So
+`src/diagnostics/crashRecorder.ts` writes the error to the document directory —
+which belongs to the install, not the update, and so survives the rollback — and
+the diagnostics panel reads it back. The write is synchronous (`FileHandle`)
+because a global error handler is racing its own teardown.
+
+Next OTA failure should therefore come with the actual exception. If the panel
+shows a crash record, that is the answer. **If it shows none, the update is not
+crashing at all** — it is being failed for never signalling "ready" (first render
+never completing), which is a different bug and wants a different fix.
 
 ---
 

@@ -32,4 +32,19 @@
 // not supported on web"), and web has these globals from the browser anyway.
 import 'react-native/Libraries/Core/InitializeCore';
 
-import 'expo-router/entry';
+// Arm the black box before the app can throw. When an OTA update dies on launch,
+// expo-updates rolls back to the embedded bundle and the error dies with the
+// process — the update log records THAT a launch failed, never why. This writes
+// the error to disk so the surviving bundle can show it. It must come before the
+// entry import: an error thrown while the app's own modules evaluate is exactly
+// the error worth catching, and a handler installed after them would miss it.
+import { installCrashRecorder } from './src/diagnostics/crashRecorder';
+
+installCrashRecorder();
+
+// `require`, NOT `import`. ES imports are hoisted and all evaluate before any
+// statement in this file, so an `import 'expo-router/entry'` here would run the
+// entire app — and any error it throws — BEFORE installCrashRecorder() ever
+// executed, which is precisely the error the recorder exists to catch. require()
+// runs where it is written.
+require('expo-router/entry');
