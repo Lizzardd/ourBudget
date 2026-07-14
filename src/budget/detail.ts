@@ -165,25 +165,24 @@ export function payerAvatar(
 }
 
 /**
- * Formats a transaction's `spentAt` (ms) relative to `nowMs`: "Today" or
- * "Yesterday" for the current/previous calendar day, otherwise "MMM D"
- * (e.g. "Jun 3"). Day boundaries use the local calendar day.
+ * A transaction row's date: "Jul 14" — the prototype's `fmtWhen`.
+ *
+ * Always the actual date. This used to say "Today" and "Yesterday", which reads
+ * nicely for the newest row and then tells you nothing: a list where the top two
+ * entries are relative and the rest are dates cannot be scanned, and "Today"
+ * goes stale the moment the app is left open past midnight. A ledger states when
+ * something happened.
+ *
+ * (The Add/Edit sheet's date PILL does say "Today" — see `expenseDateLabel`. It
+ * is a control being set right now, not a record of the past.)
+ *
+ * The month comes from a lookup rather than `toLocaleString`, which Hermes
+ * resolves against the DEVICE locale — the same row would read differently on
+ * two phones.
  */
-export function formatTxnDate(spentAtMs: number, nowMs: number): string {
+export function formatTxnDate(spentAtMs: number): string {
 	const spent = new Date(spentAtMs);
-	const now = new Date(nowMs);
-
-	const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-	const dayDiff = Math.round((startOfDay(now) - startOfDay(spent)) / 86400000);
-
-	if (dayDiff === 0) {
-		return 'Today';
-	}
-	if (dayDiff === 1) {
-		return 'Yesterday';
-	}
-	const month = spent.toLocaleString('en-US', { month: 'short' });
-	return month + ' ' + spent.getDate();
+	return `${MONTHS[spent.getMonth()]} ${spent.getDate()}`;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -233,11 +232,10 @@ export interface DetailTransaction {
 export function toTxnRow(
 	txn: DetailTransaction,
 	cur: string,
-	nowMs: number,
 	members: readonly PayerMember[] = []
 ): TxnRowVM {
 	const avatar = payerAvatar(txn.payerName, txn.paidBy, members);
-	const when = formatTxnDate(txn.spentAt, nowMs);
+	const when = formatTxnDate(txn.spentAt);
 	const memo = txn.memo?.trim();
 
 	return {

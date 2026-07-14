@@ -10,32 +10,38 @@ export function glyph(cur: string): string {
 	return CURRENCY_GLYPHS[cur] ?? '';
 }
 
+/** U+2009 THIN SPACE, between the currency glyph and the figure. */
+const THIN_SPACE = ' ';
+
 /**
- * Group an integer with commas every 3 digits, WITHOUT relying on
- * `Number.toLocaleString(locale)`. React Native's Hermes engine formats
- * `toLocaleString('en-US')` with the device locale (e.g. "10295,00" with a
- * comma decimal), so we group manually to guarantee "10,295" on every
- * engine (web + native).
+ * A money figure, exactly as the prototype's `fmt`:
+ *
+ *     sym() + ' ' + n.toFixed(2).replace('.', ',')
+ *
+ * Two things about this are deliberate and easy to "fix" by mistake:
+ *
+ * - **Two decimals, always.** This used to round to whole units, which silently
+ *   threw the cents away — an expense of 58.50 displayed as "59". Money is not a
+ *   quantity to be approximated; if the user typed cents, the app owes them the
+ *   cents back.
+ * - **The comma is the DECIMAL POINT, not a thousands separator**, and there is
+ *   no grouping. So it is "Đ 5500,00", not "Đ 5,500.00". The two conventions
+ *   cannot coexist — a grouped "5,500" would be unreadable next to a decimal
+ *   "58,50" — so the prototype picks one, and so do we.
+ *
+ * Built by hand rather than with `toLocaleString`: Hermes formats it against the
+ * DEVICE locale, so the same code renders differently on two phones.
  */
-function groupThousands(n: number): string {
-	const negative = n < 0;
-	const digits = String(Math.abs(Math.trunc(n)));
-	let out = '';
-	for (let i = 0; i < digits.length; i++) {
-		if (i > 0 && (digits.length - i) % 3 === 0) {
-			out += ',';
-		}
-		out += digits[i];
-	}
-	return (negative ? '-' : '') + out;
-}
-
 export function fmt(minor: number, cur: string): string {
-	return glyph(cur) + groupThousands(Math.round(minor / 100));
+	return glyph(cur) + THIN_SPACE + (minor / 100).toFixed(2).replace('.', ',');
 }
 
+/**
+ * A bare figure with no currency and no decimals — the prototype's `fmtN`, used
+ * for limits ("of 5500 this month"), where the cents are noise.
+ */
 export function fmtN(minor: number): string {
-	return groupThousands(Math.round(minor / 100));
+	return String(Math.round(minor / 100));
 }
 
 export function fmtK(minor: number): string {

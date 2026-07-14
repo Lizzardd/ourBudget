@@ -26,16 +26,16 @@ describe('toCategoryCard()', () => {
 		expect(card.emoji).toBe('grocery');
 		expect(card.name).toBe('Groceries');
 		expect(card.isAnnual).toBe(false);
-		expect(card.amtFmt).toBe('Đ1,250');
-		expect(card.ofFmt).toBe('of 2,500');
-		expect(card.sub1).toBe('Đ1,250 left');
+		expect(card.amtFmt).toBe('Đ 1250,00');
+		expect(card.ofFmt).toBe('of 2500');
+		expect(card.sub1).toBe('Đ 1250,00 left');
 		expect(card.sub2).toBe('');
 	});
 
 	it('builds an annual card with isAnnual true and no year suffix', () => {
 		const card = toCategoryCard(carService, 200000, 'AED', true);
 		expect(card.isAnnual).toBe(true);
-		expect(card.sub1).toBe('Đ2,000 left');
+		expect(card.sub1).toBe('Đ 2000,00 left');
 		expect(card.sub2).toBe('');
 	});
 
@@ -43,7 +43,7 @@ describe('toCategoryCard()', () => {
 		const card = toCategoryCard(groceries, 50000, 'AED', true);
 		expect(card.bar).toEqual({ from: '#86B478', to: null });
 		expect(card.subColor).toBe('#8FBF7E');
-		expect(card.sub1).toBe('Đ2,000 left');
+		expect(card.sub1).toBe('Đ 2000,00 left');
 		expect(card.sub2).toBe('');
 	});
 
@@ -51,7 +51,7 @@ describe('toCategoryCard()', () => {
 		const card = toCategoryCard(groceries, 225000, 'AED', true);
 		expect(card.bar).toEqual({ from: '#86B478', to: null });
 		expect(card.subColor).toBe('#8FBF7E');
-		expect(card.sub1).toBe('Đ250 left');
+		expect(card.sub1).toBe('Đ 250,00 left');
 		expect(card.sub2).toBe('nearly there 🌿');
 	});
 
@@ -59,7 +59,7 @@ describe('toCategoryCard()', () => {
 		const card = toCategoryCard(groceries, 300000, 'AED', true);
 		expect(card.bar).toEqual({ from: '#CE4B3A', to: '#B7301F' });
 		expect(card.subColor).toBe('#DE4B37');
-		expect(card.sub1).toBe('Đ500 over');
+		expect(card.sub1).toBe('Đ 500,00 over');
 		expect(card.sub2).toBe('it happens 💛');
 	});
 
@@ -87,8 +87,8 @@ describe('toSummary()', () => {
 
 	it('formats total spent and total limit', () => {
 		const summary = toSummary(cards, 325000, 500000, 'AED', true);
-		expect(summary.totalSpentFmt).toBe('Đ3,250');
-		expect(summary.totalLimitFmt).toBe('Đ5,000');
+		expect(summary.totalSpentFmt).toBe('Đ 3250,00');
+		expect(summary.totalLimitFmt).toBe('Đ 5000,00');
 	});
 
 	it('reports ringLabel as budget-usage percentage', () => {
@@ -132,19 +132,19 @@ describe('toSummary()', () => {
 
 	it('summaryLine1/summaryLine2 report amount left with encouragement copy when under/at limit', () => {
 		const summary = toSummary(cards, 325000, 500000, 'AED', true);
-		expect(summary.summaryLine1).toBe('Đ1,750 left');
+		expect(summary.summaryLine1).toBe('Đ 1750,00 left');
 		expect(summary.summaryLine2).toBe('you’ve got this 🌿');
 	});
 
 	it('summaryLine1/summaryLine2 report amount over with different copy when over limit', () => {
 		const summary = toSummary(cards, 600000, 500000, 'AED', true);
-		expect(summary.summaryLine1).toBe('Đ1,000 over');
+		expect(summary.summaryLine1).toBe('Đ 1000,00 over');
 		expect(summary.summaryLine2).toBe('deep breath 💛');
 	});
 
 	it('summaryLine1 treats exactly-at-limit as "left" (0 left)', () => {
 		const summary = toSummary(cards, 500000, 500000, 'AED', true);
-		expect(summary.summaryLine1).toBe('Đ0 left');
+		expect(summary.summaryLine1).toBe('Đ 0,00 left');
 		expect(summary.summaryLine2).toBe('you’ve got this 🌿');
 	});
 

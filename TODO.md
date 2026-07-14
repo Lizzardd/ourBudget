@@ -11,13 +11,26 @@ Legend: **P0** blocks the app working · **P1** ships a lie to the user ·
 
 | | State |
 |---|---|
-| **Convex prod** (`shiny-scorpion-150`) | Current — `paidBy`, edit/delete transaction, the household-delete cascade, and both migrations are live. |
+| **Convex prod** (`shiny-scorpion-150`) | Current as of v0.2.3 — `paidBy`, edit/delete transaction, the household-delete cascade, `payeeHistory`, the `settings.by_household` index, and both migrations are live. |
 | **Phone (APK)** | v0.1.10 build, running OTA bundles. **OTA works** — JS changes land via `pnpm update:android` in seconds, no rebuild. |
 | **Migrations** | `normalizeExistingInviteCodes` ✅ · `backfillPaidBy` ✅ (0 rows — table was empty). |
 
-**Rules that must hold:** build first, then publish updates (an update older than
-the embedded bundle can never launch). Only bump `runtimeVersion` (`"1"` → `"2"`)
-when the native layer changes — which is exactly when a rebuild is needed anyway.
+**Rules that must hold:**
+
+1. **Build first, then publish updates.** An update older than the embedded
+   bundle can never launch.
+2. **Deploy Convex BEFORE publishing an OTA that calls a new function.** This is
+   not housekeeping — it is a hard dependency, and getting it backwards bricks
+   the app in a silent rollback loop. v0.2.2 added the `payeeHistory` query and
+   shipped the OTA without `pnpm convex:deploy`; the bundle downloaded, booted,
+   called a function that did not exist on the deployment, threw, and
+   expo-updates marked it failed (`failureCount = 1`) and rolled back to the
+   embedded bundle — on every launch, forever. Nothing in the update log says
+   "missing function": it just looks like the update refuses to apply. The tell
+   is `embedded=true` alongside a `failureCount` above zero. Verify with
+   `npx convex function-spec --prod` before publishing.
+3. **Only bump `runtimeVersion`** (`"1"` → `"2"`) when the native layer changes —
+   which is exactly when a rebuild is needed anyway.
 
 ---
 

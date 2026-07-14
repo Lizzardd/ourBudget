@@ -77,24 +77,24 @@ describe('toCategoryDetail()', () => {
 	it('builds a monthly detail with periodLabel, ofFmt suffix, and limit copy', () => {
 		const det = toCategoryDetail(groceries, 125000, 'AED', true, 2026, 6);
 		expect(det.periodLabel).toBe('Monthly budget · July 2026');
-		expect(det.amtFmt).toBe('Đ1,250');
-		expect(det.ofFmt).toBe('of 2,500 this month');
+		expect(det.amtFmt).toBe('Đ 1250,00');
+		expect(det.ofFmt).toBe('of 2500 this month');
 		expect(det.limitLabel).toBe('MONTHLY LIMIT');
-		expect(det.limitFmt).toBe('Đ2,500');
-		expect(det.limitVal).toBe('2,500');
+		expect(det.limitFmt).toBe('Đ 2500,00');
+		expect(det.limitVal).toBe('2500');
 		expect(det.curSym).toBe('Đ');
 		expect(det.addLabel).toBe('+ Add to Groceries');
 		expect(det.isAnnual).toBe(false);
-		expect(det.sub1).toBe('Đ1,250 left');
+		expect(det.sub1).toBe('Đ 1250,00 left');
 		expect(det.sub2).toBe('');
 	});
 
 	it('builds an annual detail with " this year" suffix and ANNUAL LIMIT label', () => {
 		const det = toCategoryDetail(carService, 200000, 'AED', true, 2026, 6);
-		expect(det.ofFmt).toBe('of 4,000 this year');
+		expect(det.ofFmt).toBe('of 4000 this year');
 		expect(det.limitLabel).toBe('ANNUAL LIMIT');
 		expect(det.isAnnual).toBe(true);
-		expect(det.limitVal).toBe('4,000');
+		expect(det.limitVal).toBe('4000');
 	});
 
 	it('forces pctW to 0% when not yet mounted', () => {
@@ -171,21 +171,20 @@ describe('payerAvatar()', () => {
 });
 
 describe('formatTxnDate()', () => {
-	const now = new Date(2026, 6, 9, 15, 0, 0).getTime();
+	it('reports "MMM D"', () => {
+		expect(formatTxnDate(new Date(2026, 5, 3, 10, 0, 0).getTime())).toBe('Jun 3');
+		expect(formatTxnDate(new Date(2026, 0, 1, 0, 0, 0).getTime())).toBe('Jan 1');
+		expect(formatTxnDate(new Date(2026, 11, 31, 23, 59, 0).getTime())).toBe('Dec 31');
+	});
 
-	it('reports "Today" for the same calendar day', () => {
+	// A row said "Today" until midnight and then silently meant something else.
+	// A ledger states when a thing happened, so today's date is a date like
+	// any other. (The Add sheet's date PILL still says "Today" — see below.)
+	it('says the date even for today and yesterday', () => {
 		const today = new Date(2026, 6, 9, 8, 0, 0).getTime();
-		expect(formatTxnDate(today, now)).toBe('Today');
-	});
-
-	it('reports "Yesterday" for the previous calendar day', () => {
 		const yesterday = new Date(2026, 6, 8, 23, 0, 0).getTime();
-		expect(formatTxnDate(yesterday, now)).toBe('Yesterday');
-	});
-
-	it('reports "MMM D" for earlier dates', () => {
-		const earlier = new Date(2026, 5, 3, 10, 0, 0).getTime();
-		expect(formatTxnDate(earlier, now)).toBe('Jun 3');
+		expect(formatTxnDate(today)).toBe('Jul 9');
+		expect(formatTxnDate(yesterday)).toBe('Jul 8');
 	});
 });
 
@@ -226,43 +225,43 @@ describe('toTxnRow()', () => {
 	const now = new Date(2026, 6, 9, 15, 0, 0).getTime();
 
 	it('formats amount, note, avatar, and meta line', () => {
-		const row = toTxnRow(txn, 'AED', now, members);
+		const row = toTxnRow(txn, 'AED', members);
 		expect(row.id).toBe('txn1');
-		expect(row.amtFmt).toBe('Đ45');
+		expect(row.amtFmt).toBe('Đ 45,00');
 		expect(row.note).toBe('Weekly shop');
 		expect(row.whoInitial).toBe('D');
 		expect(row.whoBg).toBe('#D98BA4');
 		expect(row.whoColor).toBe('#3A1220');
-		expect(row.meta).toBe('Daniel · Today');
+		expect(row.meta).toBe('Daniel · Jul 9');
 	});
 
 	it("meta line uses the member's current name when the payerName snapshot is stale", () => {
-		const row = toTxnRow({ ...txn, payerName: 'Dan' }, 'AED', now, members);
+		const row = toTxnRow({ ...txn, payerName: 'Dan' }, 'AED', members);
 		expect(row.whoBg).toBe('#D98BA4');
-		expect(row.meta).toBe('Daniel · Today');
+		expect(row.meta).toBe('Daniel · Jul 9');
 	});
 
 	it('falls back to the stored payerName when paidBy is absent (legacy row)', () => {
-		const row = toTxnRow({ ...txn, paidBy: undefined }, 'AED', now, members);
+		const row = toTxnRow({ ...txn, paidBy: undefined }, 'AED', members);
 		expect(row.whoBg).toBe('#D98BA4');
-		expect(row.meta).toBe('Daniel · Today');
+		expect(row.meta).toBe('Daniel · Jul 9');
 	});
 
 	it('falls back to the neutral avatar for a payer who is not a member', () => {
-		const row = toTxnRow({ ...txn, payerName: 'Kate', paidBy: 'u9' }, 'AED', now, members);
+		const row = toTxnRow({ ...txn, payerName: 'Kate', paidBy: 'u9' }, 'AED', members);
 		expect(row.whoBg).toBe('#7FA8A0');
-		expect(row.meta).toBe('Kate · Today');
+		expect(row.meta).toBe('Kate · Jul 9');
 	});
 
 	it('leads the meta line with the memo when there is one', () => {
-		const row = toTxnRow({ ...txn, memo: 'Birthday cake' }, 'AED', now, members);
+		const row = toTxnRow({ ...txn, memo: 'Birthday cake' }, 'AED', members);
 		expect(row.note).toBe('Weekly shop');
-		expect(row.meta).toBe('Birthday cake · Daniel · Today');
+		expect(row.meta).toBe('Birthday cake · Daniel · Jul 9');
 	});
 
 	it('ignores a blank memo', () => {
-		const row = toTxnRow({ ...txn, memo: '   ' }, 'AED', now, members);
-		expect(row.meta).toBe('Daniel · Today');
+		const row = toTxnRow({ ...txn, memo: '   ' }, 'AED', members);
+		expect(row.meta).toBe('Daniel · Jul 9');
 	});
 });
 

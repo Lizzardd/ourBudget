@@ -36,7 +36,7 @@ describe('categoryBars', () => {
 			id: 'b',
 			emoji: '🍔',
 			name: 'B',
-			amtFmt: '$50',
+			amtFmt: '$ 50,00',
 			color: '#E3B063',
 			w: '100%',
 		});
@@ -48,7 +48,7 @@ describe('categoryBars', () => {
 		const spentByCat = { a: 4000 };
 		const bars = categoryBars(cats, spentByCat, cur);
 		expect(bars.map((b) => b.name)).toEqual(['A', 'B']);
-		expect(bars[1].amtFmt).toBe('$0');
+		expect(bars[1].amtFmt).toBe('$ 0,00');
 		expect(bars[1].w).toBe('0%');
 	});
 
@@ -164,7 +164,7 @@ describe('annualPace', () => {
 			emoji: '🍔',
 			name: 'Travel',
 			color: '#86B478',
-			usedFmt: '$600 of 1,000',
+			usedFmt: '$ 600,00 of 1000',
 			w: '60%',
 			pace: '60% used · a little ahead of the year 💛',
 			paceColor: '#E3B063',

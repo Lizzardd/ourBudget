@@ -1327,7 +1327,7 @@ class Component extends DCLogic {
       switchSide: isDark ? 'flex-end' : 'flex-start',
       // sheet
       sheetOpen: s.sheet,
-      openSheet: () => this.setState({ sheet: true, sheetCat: null, editId: null, editCat: null, amount: '', note: '', payee: '', payer: 'self', txDate: '2026-07-14' }),
+      openSheet: () => this.setState({ sheet: true, sheetCat: null, editId: null, editCat: null, amount: '', note: '', payee: '', payer: 'self', txDate: s.txDate || '2026-07-14' }),
       closeSheet: () => this.setState({ sheet: false, editId: null, editCat: null }),
       txDate: s.txDate,
       txDateLabel: (() => { const [y,m,d] = s.txDate.split('-').map(Number); const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]; return (d === 14 && m === 7 && y === 2026) ? 'Today' : (d + ' ' + mo + ' ' + y); })(),

@@ -96,7 +96,7 @@ export default function CategoryDetail() {
 	// Only the live period is editable: the current month for monthly
 	// categories, always for annual ones — history stays read-only.
 	const rows = (txns ?? []).map((txn) => ({
-		...toTxnRow(txn, currency, nowMs, members ?? []),
+		...toTxnRow(txn, currency, members ?? []),
 		txn,
 		editable: isTxnEditable(txn.spentAt, nowMs, det.isAnnual),
 	}));

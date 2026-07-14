@@ -57,7 +57,7 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 	const nowMs = Date.now();
 	const isAnnual = params?.isAnnual ?? false;
 	const rows = (txns ?? []).map((txn) => ({
-		...toTxnRow(txn, cur, nowMs, members ?? []),
+		...toTxnRow(txn, cur, members ?? []),
 		txn,
 		editable: isTxnEditable(txn.spentAt, nowMs, isAnnual),
 	}));

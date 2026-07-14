@@ -32,12 +32,32 @@ test('a trailing decimal point survives so the user can keep typing', () => {
 	expect(parseAmountToMinor('45.')).toBe(4500);
 });
 
-test('fmt rounds and groups with glyph', () => {
-	expect(fmt(134000, 'AED')).toBe('Đ1,340');
-	expect(fmt(500, 'USD')).toBe('$5');
+test('fmt prints the glyph, a thin space, and two decimals', () => {
+	expect(fmt(134000, 'AED')).toBe('Đ 1340,00');
+	expect(fmt(500, 'USD')).toBe('$ 5,00');
 });
 
-test('fmtN has no glyph', () => expect(fmtN(1200000)).toBe('12,000'));
+// The regression this guards: fmt used to round to whole units, so an expense
+// entered as 58.50 was displayed as "59". Money the user typed must come back.
+test('fmt keeps the cents', () => {
+	expect(fmt(5850, 'AED')).toBe('Đ 58,50');
+	expect(fmt(5899, 'AED')).toBe('Đ 58,99');
+	expect(fmt(1, 'AED')).toBe('Đ 0,01');
+});
+
+// The comma is the DECIMAL separator, not a thousands separator, so there is no
+// grouping at all: "Đ 5500,00", never "Đ 5,500.00".
+test('fmt does not group thousands', () => {
+	expect(fmt(550000, 'AED')).toBe('Đ 5500,00');
+	expect(fmt(123456789, 'AED')).toBe('Đ 1234567,89');
+});
+
+test('fmt handles a negative amount', () => expect(fmt(-5850, 'AED')).toBe('Đ -58,50'));
+
+test('fmtN has no glyph, no decimals, and no grouping', () => {
+	expect(fmtN(1200000)).toBe('12000');
+	expect(fmtN(550000)).toBe('5500');
+});
 
 test('glyph maps currencies', () => expect(glyph('ZAR')).toBe('R'));
 

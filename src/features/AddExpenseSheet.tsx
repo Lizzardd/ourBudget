@@ -117,7 +117,13 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 			// an ex-member's id straight back is accepted.
 			setPaidBy(editTxn ? (editPayer?.userId ?? editTxn.paidBy) : self?.userId);
 			setCategoryId(editTxn ? editTxn.categoryId : initialCategoryId);
-			setSpentAt(editTxn ? editTxn.spentAt : Date.now());
+			// The date is STICKY, unlike every other field here: opening the sheet
+			// for a new expense keeps whatever date was last used rather than
+			// snapping back to today (prototype: `txDate: s.txDate || <today>`).
+			// Expenses get entered in batches — a stack of receipts from last
+			// Saturday — and resetting to today between each one meant re-picking
+			// the same date over and over. It still starts at today on first open.
+			setSpentAt((prev) => (editTxn ? editTxn.spentAt : prev));
 			setShowPicker(false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -289,6 +295,11 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 				horizontal={false}
 				style={styles.chipsScroll}
 				contentContainerStyle={styles.chipsRow}
+				// The amount field is autoFocused, so the keyboard is up the moment the
+				// sheet opens. By default a ScrollView swallows the first tap to dismiss
+				// it, which made picking a category take two taps: one to close the
+				// keyboard, one to actually choose. "handled" lets the chip take it.
+				keyboardShouldPersistTaps="handled"
 			>
 				{categories.map((cat) => (
 					<Chip
