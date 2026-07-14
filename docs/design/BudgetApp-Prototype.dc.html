@@ -461,13 +461,14 @@
           </div>
           <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 4px 18px">
             <sc-for list="{{ det.txns }}" as="t" hint-placeholder-count="3">
-              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+              <div onClick="{{ t.edit }}" style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07)); cursor: pointer" style-active="opacity: 0.6">
                 <div style="width: 36px; height: 36px; border-radius: 50%; background: {{ t.whoBg }}; color: {{ t.whoColor }}; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ t.whoInitial }}</div>
                 <div style="flex: 1; min-width: 0">
                   <div style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ t.note }}</div>
                   <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">{{ t.meta }}</div>
                 </div>
                 <div style="font-size: 15px; font-weight: 800">{{ t.amtFmt }}</div>
+                <span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px; color: var(--sub, #B5A493); flex: none">chevron_right</span>
               </div>
             </sc-for>
           </div>
@@ -583,26 +584,29 @@
     <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="Add expense" style="position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: {{ kbPad }}; transition: padding-bottom 0.2s ease">
         <div onClick="{{ closeSheet }}" style="position: absolute; inset: 0; background: rgba(15,9,5,0.6); animation: fadeIn 0.25s ease"></div>
-        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 12px">
+        <div style="position: relative; background: var(--card, #2D251F); border-radius: 28px 28px 0 0; padding: 10px 20px calc(28px + env(safe-area-inset-bottom, 0px)); animation: sheetUp 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); display: flex; flex-direction: column; gap: 12px; max-height: 100%; overflow-y: auto">
           <div style="width: 40px; height: 4px; border-radius: 99px; background: var(--track, rgba(246,237,227,0.2)); align-self: center"></div>
           <div style="display: flex; align-items: center">
-            <div style="font-size: 17px; font-weight: 800; flex: 1">Add expense</div>
+            <div style="font-size: 17px; font-weight: 800; flex: 1">{{ sheetTitle }}</div>
             <button onClick="{{ closeSheet }}" style="border: none; background: var(--el, #3A2F27); color: var(--sub, #B5A493); width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif">✕</button>
           </div>
           <div style="text-align: center; padding: 4px 0">
             <div style="font-size: 42px; font-weight: 900; letter-spacing: -1px; color: {{ amountColor }}">{{ amountFmt }}</div>
-            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Today · paid by {{ payer }}</div>
+            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">Today · paid by {{ payerName }}</div>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 7px; justify-content: center">
             <sc-for list="{{ chips }}" as="ch" hint-placeholder-count="8">
               <button onClick="{{ ch.pick }}" style="height: 36px; padding: 0 13px; border-radius: 999px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px; border: 1.5px solid {{ ch.border }}; background: {{ ch.bg }}; color: {{ ch.color }}" style-active="transform: scale(0.95)"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 16px">{{ ch.emoji }}</span>{{ ch.name }}</button>
             </sc-for>
           </div>
-          <div style="display: flex; gap: 8px">
-            <input value="{{ note }}" onChange="{{ noteChange }}" placeholder="Add a note (optional)" style="flex: 1; height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 600; outline: none">
-            <div style="display: flex; border-radius: 14px; background: var(--el, #3A2F27); padding: 4px; gap: 4px">
-              <button onClick="{{ paySara }}" style="height: 36px; padding: 0 12px; border: none; border-radius: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ saraBg }}; color: {{ saraColor }}">{{ profFirst }}</button>
-              <button onClick="{{ payOmar }}" style="height: 36px; padding: 0 12px; border: none; border-radius: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ omarBg }}; color: {{ omarColor }}">Omar</button>
+          <input value="{{ payee }}" onChange="{{ payeeChange }}" placeholder="Where? (e.g. Carrefour)" style="height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 700; outline: none">
+          <input value="{{ note }}" onChange="{{ noteChange }}" placeholder="Add a note (optional)" style="height: 44px; border-radius: 14px; border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); padding: 0 16px; font-size: 14px; font-weight: 600; outline: none">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 12px; font-weight: 700; color: var(--sub, #B5A493); flex: none">Paid by</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; flex: 1">
+              <sc-for list="{{ payers }}" as="p" hint-placeholder-count="2">
+                <button onClick="{{ p.pick }}" style="height: 36px; padding: 0 14px; border: none; border-radius: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; background: {{ p.bg }}; color: {{ p.color }}" style-active="transform: scale(0.95)">{{ p.name }}</button>
+              </sc-for>
             </div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px">
@@ -611,6 +615,9 @@
             </sc-for>
           </div>
           <button onClick="{{ addNow }}" style="height: 56px; border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; background: {{ confirmBg }}; color: {{ confirmColor }}; transition: background 0.25s" style-active="transform: scale(0.98)">{{ confirmLabel }}</button>
+          <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ deleteTx }}" style="height: 48px; border: none; border-radius: 999px; background: none; color: #DE4B37; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px" style-active="opacity: 0.6"><span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 18px">delete</span>Delete expense</button>
+          </sc-if>
         </div>
       </div>
     </sc-if>
@@ -631,7 +638,7 @@
           </div>
           <div style="overflow-y: auto; margin: 0 -4px; padding: 0 4px">
             <sc-for list="{{ histSheet.txns }}" as="t" hint-placeholder-count="4">
-              <div style="display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+              <div onClick="{{ t.edit }}" style="display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07)); cursor: pointer" style-active="opacity: 0.6">
                 <div style="width: 36px; height: 36px; border-radius: 50%; background: {{ t.whoBg }}; color: {{ t.whoColor }}; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">{{ t.whoInitial }}</div>
                 <div style="flex: 1; min-width: 0">
                   <div style="font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ t.note }}</div>
@@ -823,8 +830,9 @@ class Component extends DCLogic {
 
   state = {
     phase: null, tab: 'home', mounted: false, catId: null,
-    sheet: false, sheetCat: null, amount: '', note: '', payer: 'Sara',
+    sheet: false, sheetCat: null, amount: '', note: '', payee: '', payer: 'self',
     monthIdx: 0, theme: null, toast: null, extra: {}, extraTx: {}, limitOv: {},
+    editId: null, editCat: null, editOldAmt: 0, txEdits: {}, txDeleted: {},
     customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
     notif: false, weekly: false, confirmDelete: false, archived: [],
     profOpen: false, profName: 'Sara', profEmail: 'sara.almarri@gmail.com', profColor: '#D98BA4',
@@ -862,7 +870,13 @@ class Component extends DCLogic {
   }
 
   cur() { return this.state.currency ?? this.props.currency ?? 'AED'; }
-  sym() { return { AED: 'Đ', USD: '$', GBP: '£', EUR: '€', ZAR: 'R' }[this.cur()] || this.cur(); }
+  whoStyle(name) {
+    const self = (this.state.profName || 'Sara').trim();
+    if (name === 'Sara' || name === self) return { initial: (self[0] || 'S').toUpperCase(), display: self, bg: this.state.profColor, textColor: '#3A1220' };
+    const m = this.state.members.find(x => x.name === name);
+    if (m) return { initial: name[0].toUpperCase(), display: name, bg: m.color, textColor: m.textColor };
+    return { initial: name[0].toUpperCase(), display: name, bg: '#7FA8A0', textColor: '#0F2B26' };
+  }  sym() { return { AED: 'Đ', USD: '$', GBP: '£', EUR: '€', ZAR: 'R' }[this.cur()] || this.cur(); }
   fmt(n) { return this.sym() + '\u2009' + n.toFixed(2).replace('.', ','); }
   fmtN(n) { return String(Math.round(n)); }
 
@@ -929,6 +943,32 @@ class Component extends DCLogic {
     return txns.reverse();
   }
 
+  displayTxns(c, monthIdx) {
+    const st = this.state;
+    const editable = (monthIdx === 0 || c.ytd !== undefined);
+    let raw;
+    if (editable) {
+      const extra = st.extraTx[c.id] || [];
+      const seed = (this.TXNS[c.id] || []).map((t, i) => ({ ...t, id: 'seed:' + c.id + ':' + i }));
+      raw = [...extra, ...seed];
+    } else {
+      raw = this.txnsFor(c, monthIdx);
+    }
+    return raw
+      .filter(t => !(t.id && st.txDeleted[t.id]))
+      .map(t => (t.id && st.txEdits[t.id]) ? { ...t, ...st.txEdits[t.id] } : t)
+      .map(t => ({ ...t, _editable: editable && !!t.id, _catId: c.id }));
+  }
+
+  openEditTx(catId, t) {
+    const self = (this.state.profName || 'Sara').trim();
+    this.setState({
+      sheet: true, sheetCat: catId, editId: t.id, editCat: catId, editOldAmt: t.amt,
+      amount: String(t.amt), payee: t.note || '', note: t.memo || '',
+      payer: (t.who === self || t.who === 'Sara') ? 'self' : t.who,
+    });
+  }
+
   toastNow(msg) {
     clearTimeout(this._tt);
     this.setState({ toast: msg });
@@ -984,12 +1024,14 @@ class Component extends DCLogic {
           ? 'This removes the category and its expenses for everyone. This can\u2019t be undone.'
           : 'It disappears from your budgets but past months keep their history. You can add it back anytime.',
         deleteConfirmCta: detIsCustom ? 'Delete' : 'Archive',
-        txns: [...(s.extraTx[detCatDef.id] || []), ...(this.TXNS[detCatDef.id] || [])].map(t => ({
+        txns: this.displayTxns(detCatDef, 0).map(t => ({
           note: t.note, amtFmt: this.fmt(t.amt),
-          whoInitial: t.who === 'Sara' ? (s.profName.trim()[0] || 'S').toUpperCase() : t.who[0],
-          whoBg: t.who === 'Sara' ? s.profColor : '#7FA8A0',
-          whoColor: t.who === 'Sara' ? '#3A1220' : '#0F2B26',
-          meta: (t.who === 'Sara' ? (s.profName.trim() || 'Sara') : t.who) + ' · ' + t.when,
+          whoInitial: this.whoStyle(t.who).initial,
+          whoBg: this.whoStyle(t.who).bg,
+          whoColor: this.whoStyle(t.who).textColor,
+          meta: (t.memo ? t.memo + ' · ' : '') + this.whoStyle(t.who).display + ' · ' + t.when,
+          editable: t._editable,
+          edit: t._editable ? () => this.openEditTx(detCatDef.id, t) : null,
         })),
       };
     }
@@ -1050,7 +1092,7 @@ class Component extends DCLogic {
     const histCatDef = s.histCat ? [...allM, ...allA].find(c => c.id === s.histCat) : null;
     let histSheet = null;
     if (histCatDef) {
-      const txns = this.txnsFor(histCatDef, s.monthIdx);
+      const txns = this.displayTxns(histCatDef, s.monthIdx);
       histSheet = {
         emoji: histCatDef.emoji, name: histCatDef.name,
         tileBg: histCatDef.color + '30',
@@ -1059,10 +1101,12 @@ class Component extends DCLogic {
         totalFmt: this.fmt(txns.reduce((a, t) => a + t.amt, 0)),
         txns: txns.map(t => ({
           note: t.note, amtFmt: this.fmt(t.amt),
-          whoInitial: t.who[0],
-          whoBg: t.who === 'Sara' ? s.profColor : '#7FA8A0',
-          whoColor: t.who === 'Sara' ? '#3A1220' : '#0F2B26',
-          meta: t.who + ' · ' + t.when,
+          whoInitial: this.whoStyle(t.who).initial,
+          whoBg: this.whoStyle(t.who).bg,
+          whoColor: this.whoStyle(t.who).textColor,
+          meta: (t.memo ? t.memo + ' · ' : '') + this.whoStyle(t.who).display + ' · ' + t.when,
+          editable: t._editable,
+          edit: t._editable ? () => this.setState({ histCat: null }, () => this.openEditTx(histCatDef.id, t)) : null,
         })),
       };
     }
@@ -1094,15 +1138,38 @@ class Component extends DCLogic {
       },
     }));
 
+    const selfName = (s.profName || 'Sara').trim();
+    const payerName = s.payer === 'self' ? selfName : s.payer;
+    const isEditing = !!s.editId;
     const addNow = () => {
       if (!canAdd) { this.toastNow('Pick a category and amount first 🙂'); return; }
-      const tx = { note: s.note.trim() || selCat.name, amt: amtNum, who: s.payer, when: 'Jul 10' };
+      const title = s.payee.trim() || selCat.name;
+      const memo = s.note.trim();
+      if (isEditing) {
+        const delta = amtNum - s.editOldAmt;
+        this.setState(st => ({
+          extra: { ...st.extra, [st.editCat]: (st.extra[st.editCat] || 0) + delta },
+          txEdits: { ...st.txEdits, [st.editId]: { amt: amtNum, note: title, memo, who: payerName } },
+          sheet: false, editId: null, editCat: null, amount: '', note: '', payee: '',
+        }));
+        this.toastNow('Expense updated ✓');
+        return;
+      }
+      const tx = { id: 'tx:' + Date.now(), note: title, memo, amt: amtNum, who: payerName, when: 'Jul 14' };
       this.setState(st => ({
         extra: { ...st.extra, [selCat.id]: (st.extra[selCat.id] || 0) + amtNum },
         extraTx: { ...st.extraTx, [selCat.id]: [tx, ...(st.extraTx[selCat.id] || [])] },
-        sheet: false, amount: '', note: '',
+        sheet: false, amount: '', note: '', payee: '',
       }));
       this.toastNow('Added ' + this.fmt(amtNum) + ' to ' + selCat.name + ' 🎉');
+    };
+    const deleteTx = () => {
+      this.setState(st => ({
+        extra: { ...st.extra, [st.editCat]: (st.extra[st.editCat] || 0) - st.editOldAmt },
+        txDeleted: { ...st.txDeleted, [st.editId]: true },
+        sheet: false, editId: null, editCat: null, amount: '', note: '', payee: '',
+      }));
+      this.toastNow('Expense deleted');
     };
 
     const tabColor = t => (s.tab === t && !s.catId ? 'var(--accent, #C96287)' : 'var(--sub, #B5A493)');
@@ -1194,7 +1261,7 @@ class Component extends DCLogic {
         const val = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0;
         this.setState(st => ({ limitOv: { ...st.limitOv, [detCatDef.id]: val - detCatDef.limit } }));
       },
-      addToThisCat: () => this.setState({ sheet: true, sheetCat: s.catId, amount: '', note: '' }),
+      addToThisCat: () => this.setState({ sheet: true, sheetCat: s.catId, amount: '', note: '', payee: '' }),
       // reports
       reportBars, trendCols, annualReport,
       yearTick: yearPct + '%',
@@ -1239,23 +1306,31 @@ class Component extends DCLogic {
       switchSide: isDark ? 'flex-end' : 'flex-start',
       // sheet
       sheetOpen: s.sheet,
-      openSheet: () => this.setState({ sheet: true, sheetCat: null, amount: '', note: '' }),
-      closeSheet: () => this.setState({ sheet: false }),
+      openSheet: () => this.setState({ sheet: true, sheetCat: null, editId: null, editCat: null, amount: '', note: '', payee: '', payer: 'self' }),
+      closeSheet: () => this.setState({ sheet: false, editId: null, editCat: null }),
+      isEditing,
+      deleteTx,
+      sheetTitle: isEditing ? 'Edit expense' : 'Add expense',
       amountFmt: this.sym() + '\u2009' + (s.amount ? s.amount.replace('.', ',') : '0'),
       amountColor: amtNum > 0 ? 'var(--text, #F6EDE3)' : 'var(--sub, #B5A493)',
       chips, padKeys,
       note: s.note,
       noteChange: e => this.setState({ note: e.target.value }),
-      payer: s.payer,
-      paySara: () => this.setState({ payer: 'Sara' }),
-      payOmar: () => this.setState({ payer: 'Omar' }),
-      saraBg: s.payer === 'Sara' ? s.profColor : 'transparent',
-      saraColor: s.payer === 'Sara' ? '#3A1220' : 'var(--sub, #B5A493)',
-      omarBg: s.payer === 'Omar' ? '#7FA8A0' : 'transparent',
-      omarColor: s.payer === 'Omar' ? '#0F2B26' : 'var(--sub, #B5A493)',
+      payee: s.payee,
+      payeeChange: e => this.setState({ payee: e.target.value }),
+      payerName,
+      payers: [{ id: 'self', name: selfName, color: s.profColor, textColor: '#3A1220' }, ...s.members.map(m => ({ id: m.name, name: m.name, color: m.color, textColor: m.textColor }))].map(p => {
+        const sel = s.payer === p.id;
+        return {
+          name: p.name,
+          bg: sel ? p.color : 'transparent',
+          color: sel ? p.textColor : 'var(--sub, #B5A493)',
+          pick: () => this.setState({ payer: p.id }),
+        };
+      }),
       confirmBg: canAdd ? accent : 'var(--el, #3A2F27)',
       confirmColor: canAdd ? '#2B0E1A' : 'var(--sub, #B5A493)',
-      confirmLabel: canAdd ? 'Add ' + this.fmt(amtNum) + ' to ' + selCat.name : 'Add expense',
+      confirmLabel: isEditing ? (canAdd ? 'Save changes' : 'Save changes') : (canAdd ? 'Add ' + this.fmt(amtNum) + ' to ' + selCat.name : 'Add expense'),
       addNow,
       // weekly check-in
       notifShown: s.notif && s.prefWeekly && s.tab === 'home' && !s.catId && !s.sheet && !s.weekly && !s.ncOpen,

@@ -1,15 +1,17 @@
 import { useQuery } from 'convex/react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { fmt } from '../budget/money';
-import { toTxnRow } from '../budget/detail';
+import { isTxnEditable, toTxnRow } from '../budget/detail';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
 import { useHousehold } from '../hooks/useHousehold';
+import { useHouseholdMembers } from '../hooks/useHouseholdMembers';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
+import { useAddExpenseSheet } from './AddExpenseProvider';
 
 export interface MonthTransactionsSheetParams {
 	categoryId: Id<'categories'>;
@@ -18,6 +20,8 @@ export interface MonthTransactionsSheetParams {
 	color: string;
 	/** 'Year to date' for annual categories, else the selected month's label. */
 	monthLabel: string;
+	/** Annual categories are always editable; monthly ones only in the current month. */
+	isAnnual: boolean;
 	startMs: number;
 	endMs: number;
 }
@@ -33,11 +37,14 @@ export interface MonthTransactionsSheetProps {
  * a month range for monthly categories, a year-to-date range for annual
  * ones. Opened from Reports (trend/category/annual rows) via
  * `useMonthTransactionsSheet()`. Reuses the transaction-row styling from
- * the category-detail screen (`toTxnRow`).
+ * the category-detail screen (`toTxnRow`), including the tap-to-edit row —
+ * historical months stay read-only (`isTxnEditable`).
  */
 export function MonthTransactionsSheet({ open, onClose, params }: MonthTransactionsSheetProps) {
 	const { t } = useTheme();
 	const { currency } = useHousehold();
+	const { members } = useHouseholdMembers();
+	const { openEdit: openEditExpense } = useAddExpenseSheet();
 
 	const txns = useQuery(
 		api.transactions.listByCategoryInRange,
@@ -47,8 +54,31 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 	);
 
 	const cur = currency ?? 'AED';
-	const rows = (txns ?? []).map((txn) => toTxnRow(txn, cur, Date.now()));
+	const nowMs = Date.now();
+	const isAnnual = params?.isAnnual ?? false;
+	const rows = (txns ?? []).map((txn) => ({
+		...toTxnRow(txn, cur, nowMs, members ?? []),
+		txn,
+		editable: isTxnEditable(txn.spentAt, nowMs, isAnnual),
+	}));
 	const total = (txns ?? []).reduce((sum, txn) => sum + txn.amount, 0);
+
+	// The prototype hands the row off to the Add-Expense sheet in edit mode,
+	// closing this one first so only one sheet is ever on screen.
+	const editRow = (row: (typeof rows)[number]) => {
+		if (!params) {
+			return;
+		}
+		onClose();
+		openEditExpense({
+			_id: row.txn._id,
+			categoryId: params.categoryId,
+			amount: row.txn.amount,
+			note: row.txn.note,
+			memo: row.txn.memo,
+			payerName: row.txn.payerName,
+		});
+	};
 
 	return (
 		<Sheet open={open} onClose={onClose} maxHeight="75%">
@@ -72,8 +102,13 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 							<Text style={[styles.empty, { color: t.sub }]}>No expenses in this period</Text>
 						) : (
 							rows.map((row, i) => (
-								<View
+								<TouchableOpacity
 									key={row.id}
+									accessibilityRole={row.editable ? 'button' : undefined}
+									accessibilityLabel={row.editable ? `Edit ${row.note}` : undefined}
+									disabled={!row.editable}
+									activeOpacity={0.6}
+									onPress={() => editRow(row)}
 									style={[
 										styles.row,
 										i < rows.length - 1 ? { borderBottomColor: t.line, borderBottomWidth: 1 } : null,
@@ -96,7 +131,8 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 									<Text style={[styles.rowAmt, { color: t.text, fontFamily: fontFamily(800) }]}>
 										{row.amtFmt}
 									</Text>
-								</View>
+									{row.editable ? <Icon name="chevron_right" size={18} color={t.sub} /> : null}
+								</TouchableOpacity>
 							))
 						)}
 					</ScrollView>

@@ -9,7 +9,7 @@ import { ReportsView, type ReportsRow } from '../../src/screens/ReportsView';
  * Reports tab container — wires `useReports()` (Convex data + selected-month
  * state) and `useMonthTransactionsSheet()` (the app-wide Month Transactions
  * sheet) into the pure `ReportsView`. See `ReportsView` for the actual
- * layout and `app/preview/reports.tsx` for a mock-data preview.
+ * layout.
  */
 export default function Reports() {
 	const {
@@ -39,6 +39,7 @@ export default function Reports() {
 			name: row.name,
 			color: row.color,
 			monthLabel: selectedLabel,
+			isAnnual: false,
 			startMs,
 			endMs,
 		});
@@ -52,6 +53,7 @@ export default function Reports() {
 			name: row.name,
 			color: row.color,
 			monthLabel: 'Year to date',
+			isAnnual: true,
 			startMs,
 			endMs,
 		});

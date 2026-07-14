@@ -11,6 +11,7 @@ export const addTransaction = mutation({
 		categoryId: v.id("categories"),
 		amount: v.number(),
 		note: v.string(),
+		memo: v.optional(v.string()),
 		payerName: v.string(),
 		spentAt: v.optional(v.number()),
 	},
@@ -31,12 +32,82 @@ export const addTransaction = mutation({
 			categoryId: args.categoryId,
 			amount: args.amount,
 			note: args.note,
+			memo: args.memo,
 			spentAt: args.spentAt ?? Date.now(),
 			payerName: args.payerName,
 			createdBy: userId,
 			source: "manual",
 			createdAt: Date.now(),
 		});
+	},
+});
+
+/**
+ * Edits an existing expense in place — the prototype's expense sheet lets you
+ * change the amount, the title (`note`, the "Where?" input), the secondary
+ * `memo` and who paid. Authorized via the transaction's own household: this is
+ * a shared household wallet, so ANY member may edit any of its expenses (same
+ * rule as `renameHousehold`), not just whoever created the row.
+ *
+ * Every spend aggregate (`summary`, `monthTotals`, `weeklySummary`) is derived
+ * from these rows at read time, so patching the amount here moves the totals
+ * with no extra bookkeeping.
+ */
+export const updateTransaction = mutation({
+	args: {
+		transactionId: v.id("transactions"),
+		amount: v.number(),
+		note: v.string(),
+		memo: v.optional(v.string()),
+		payerName: v.string(),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const transaction = await ctx.db.get(args.transactionId);
+		if (transaction === null) {
+			throw new Error("Transaction not found");
+		}
+		await requireMembership(ctx, transaction.householdId);
+
+		if (!Number.isInteger(args.amount) || args.amount <= 0) {
+			throw new Error("Amount must be a positive whole number of minor units");
+		}
+
+		const note = args.note.trim();
+		if (note === "") {
+			throw new Error("Transaction note cannot be empty");
+		}
+
+		await ctx.db.patch(args.transactionId, {
+			amount: args.amount,
+			note,
+			memo: args.memo,
+			payerName: args.payerName,
+		});
+		return null;
+	},
+});
+
+/**
+ * Hard-deletes an expense. Same shared-wallet rule as `updateTransaction`: any
+ * member of the transaction's household may delete it. Nothing references a
+ * transaction row, so there is no cascade to do — and the aggregates recompute
+ * from the remaining rows.
+ */
+export const deleteTransaction = mutation({
+	args: {
+		transactionId: v.id("transactions"),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const transaction = await ctx.db.get(args.transactionId);
+		if (transaction === null) {
+			throw new Error("Transaction not found");
+		}
+		await requireMembership(ctx, transaction.householdId);
+
+		await ctx.db.delete(args.transactionId);
+		return null;
 	},
 });
 

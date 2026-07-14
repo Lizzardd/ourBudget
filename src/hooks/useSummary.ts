@@ -75,6 +75,16 @@ export function useAddExpense() {
 	return useMutation(api.transactions.addTransaction);
 }
 
+/** Thin wrapper over the `updateTransaction` mutation (Add-Expense sheet, edit mode). */
+export function useUpdateExpense() {
+	return useMutation(api.transactions.updateTransaction);
+}
+
+/** Thin wrapper over the `deleteTransaction` mutation (Add-Expense sheet, edit mode). */
+export function useDeleteExpense() {
+	return useMutation(api.transactions.deleteTransaction);
+}
+
 /**
  * Runs `transactions.weeklySummary` for the in-app Monday check-in
  * (`MondayNotification` + `WeeklyCheckIn` — see the NOTES on those files:

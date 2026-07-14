@@ -1,60 +1,91 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import type { Id } from '../../convex/_generated/dataModel';
 import { fmt, glyph, parseAmountToMinor } from '../budget/money';
 import { Chip } from '../components/Chip';
+import { Icon } from '../components/Icon';
 import { Numpad } from '../components/Numpad';
 import { Sheet } from '../components/Sheet';
 import { useCategories } from '../hooks/useCategories';
 import { useHousehold } from '../hooks/useHousehold';
-import { useAddExpense } from '../hooks/useSummary';
+import { useHouseholdMembers } from '../hooks/useHouseholdMembers';
+import { useAddExpense, useDeleteExpense, useUpdateExpense } from '../hooks/useSummary';
 import { useToast } from '../lib/toast';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
+
+/** The transaction fields the sheet needs to prefill an edit. */
+export interface EditableTransaction {
+	_id: Id<'transactions'>;
+	categoryId: Id<'categories'>;
+	amount: number;
+	note: string;
+	memo?: string;
+	payerName: string;
+}
 
 export interface AddExpenseSheetProps {
 	open: boolean;
 	onClose: () => void;
 	/** Pre-selects a category, e.g. when opened from a category detail's "+ Add to <name>". */
 	initialCategoryId?: string;
+	/** When set, the sheet is in edit mode for this transaction instead of adding a new one. */
+	editTxn?: EditableTransaction | null;
 }
 
-type Payer = 'Sara' | 'Omar';
+/** Text color for a selected payer chip, over the member's profile color. */
+const PAYER_CHIP_TEXT = '#3A1220';
 
-const SARA_BG = '#D98BA4';
-const OMAR_BG = '#7FA8A0';
+/** Turns a minor-unit amount into the numpad's amount string ("4550" → "45.5"). */
+function toAmountString(minor: number): string {
+	return String(minor / 100);
+}
 
 /**
  * The core quick-add flow: big amount display, custom numpad, category
- * chips, a note field, and a Sara/Omar payer toggle — fidelity source is
- * `docs/design/BudgetApp-Prototype.dc.html`'s `─── ADD EXPENSE SHEET ───`
- * and its `renderVals()` sheet logic. Mounted once by `AddExpenseProvider`;
- * opened via `useAddExpenseSheet().open()`.
+ * chips, a "Where?" title, an optional memo, and a dynamic "Paid by" chip
+ * row — fidelity source is `docs/design/BudgetApp-Prototype.dc.html`'s
+ * `─── ADD EXPENSE SHEET ───` and its `renderVals()` sheet logic. Mounted
+ * once by `AddExpenseProvider`; opened via `useAddExpenseSheet().open()` for
+ * a new expense, or `.openEdit(txn)` to edit an existing one (which swaps
+ * the title/confirm copy and reveals the Delete expense button, mirroring
+ * the prototype's `isEditing`).
  */
-export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpenseSheetProps) {
+export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: AddExpenseSheetProps) {
 	const { t, accent } = useTheme();
 	const { householdId, currency } = useHousehold();
 	const { categories } = useCategories();
+	const { members } = useHouseholdMembers();
 	const addExpense = useAddExpense();
+	const updateExpense = useUpdateExpense();
+	const deleteExpense = useDeleteExpense();
 	const { toast } = useToast();
+
+	const payers = members ?? [];
+	const selfName = payers.find((m) => m.isMe)?.displayName ?? '';
 
 	const [amount, setAmount] = useState('');
 	const [categoryId, setCategoryId] = useState<string | undefined>(initialCategoryId);
+	const [payee, setPayee] = useState('');
 	const [note, setNote] = useState('');
-	const [payer, setPayer] = useState<Payer>('Sara');
+	const [payerName, setPayerName] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 
+	const isEditing = !!editTxn;
+
 	// Reset to a fresh entry every time the sheet opens, honoring any
-	// pre-selected category.
+	// pre-selected category — or prefill from the transaction being edited.
 	useEffect(() => {
 		if (open) {
-			setAmount('');
-			setNote('');
-			setPayer('Sara');
-			setCategoryId(initialCategoryId);
+			setAmount(editTxn ? toAmountString(editTxn.amount) : '');
+			setPayee(editTxn ? editTxn.note : '');
+			setNote(editTxn?.memo ?? '');
+			setPayerName(editTxn ? editTxn.payerName : selfName);
+			setCategoryId(editTxn ? editTxn.categoryId : initialCategoryId);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [open, initialCategoryId]);
+	}, [open, initialCategoryId, editTxn, selfName]);
 
 	const cur = currency ?? 'AED';
 	const amountMinor = parseAmountToMinor(amount);
@@ -70,9 +101,11 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 		: glyph(cur) + '0';
 	const amountColor = amountMinor > 0 ? t.text : t.sub;
 
-	const confirmLabel = canAdd
-		? `Add ${fmt(amountMinor, cur)} to ${selectedCategory.name}`
-		: 'Add expense';
+	const confirmLabel = isEditing
+		? 'Save changes'
+		: canAdd
+			? `Add ${fmt(amountMinor, cur)} to ${selectedCategory.name}`
+			: 'Add expense';
 	const confirmBg = canAdd ? accent : t.el;
 	const confirmColor = canAdd ? '#2B0E1A' : t.sub;
 
@@ -80,19 +113,49 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 		if (!canAdd || !householdId || !selectedCategory || submitting) {
 			return;
 		}
+		const title = payee.trim() || selectedCategory.name;
+		const memo = note.trim() || undefined;
 		setSubmitting(true);
 		try {
-			await addExpense({
-				householdId,
-				categoryId: selectedCategory._id,
-				amount: amountMinor,
-				note: note.trim() || selectedCategory.name,
-				payerName: payer,
-			});
-			toast(`Added ${fmt(amountMinor, cur)} to ${selectedCategory.name} 🎉`);
+			if (editTxn) {
+				await updateExpense({
+					transactionId: editTxn._id,
+					amount: amountMinor,
+					note: title,
+					memo,
+					payerName,
+				});
+				toast('Expense updated ✓');
+			} else {
+				await addExpense({
+					householdId,
+					categoryId: selectedCategory._id,
+					amount: amountMinor,
+					note: title,
+					memo,
+					payerName,
+				});
+				toast(`Added ${fmt(amountMinor, cur)} to ${selectedCategory.name} 🎉`);
+			}
 			onClose();
 		} catch (err) {
-			toast(err instanceof Error ? err.message : 'Could not add expense');
+			toast(err instanceof Error ? err.message : 'Could not save expense');
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	const handleDelete = async () => {
+		if (!editTxn || submitting) {
+			return;
+		}
+		setSubmitting(true);
+		try {
+			await deleteExpense({ transactionId: editTxn._id });
+			toast('Expense deleted');
+			onClose();
+		} catch (err) {
+			toast(err instanceof Error ? err.message : 'Could not delete expense');
 		} finally {
 			setSubmitting(false);
 		}
@@ -102,7 +165,7 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 		<Sheet open={open} onClose={onClose}>
 			<View style={styles.header}>
 				<Text style={[styles.title, { color: t.text, fontFamily: fontFamily(800) }]}>
-					Add expense
+					{isEditing ? 'Edit expense' : 'Add expense'}
 				</Text>
 				<TouchableOpacity
 					accessibilityRole="button"
@@ -118,7 +181,7 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 				<Text style={[styles.amount, { color: amountColor, fontFamily: fontFamily(900) }]}>
 					{amountFmt}
 				</Text>
-				<Text style={[styles.amountSub, { color: t.sub }]}>Today · paid by {payer}</Text>
+				<Text style={[styles.amountSub, { color: t.sub }]}>Today · paid by {payerName}</Text>
 			</View>
 
 			<ScrollView
@@ -137,53 +200,53 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 				))}
 			</ScrollView>
 
-			<View style={styles.noteRow}>
-				<TextInput
-					value={note}
-					onChangeText={setNote}
-					placeholder="Add a note (optional)"
-					placeholderTextColor={t.sub}
-					style={[styles.noteInput, { backgroundColor: t.el, color: t.text }]}
-				/>
-				<View style={[styles.payerToggle, { backgroundColor: t.el }]}>
-					<TouchableOpacity
-						accessibilityRole="button"
-						accessibilityLabel="Paid by Sara"
-						accessibilityState={{ selected: payer === 'Sara' }}
-						onPress={() => setPayer('Sara')}
-						style={[
-							styles.payerButton,
-							{ backgroundColor: payer === 'Sara' ? SARA_BG : 'transparent' },
-						]}
-					>
-						<Text
-							style={[
-								styles.payerButtonText,
-								{ color: payer === 'Sara' ? '#3A1220' : t.sub },
-							]}
-						>
-							Sara
-						</Text>
-					</TouchableOpacity>
-					<TouchableOpacity
-						accessibilityRole="button"
-						accessibilityLabel="Paid by Omar"
-						accessibilityState={{ selected: payer === 'Omar' }}
-						onPress={() => setPayer('Omar')}
-						style={[
-							styles.payerButton,
-							{ backgroundColor: payer === 'Omar' ? OMAR_BG : 'transparent' },
-						]}
-					>
-						<Text
-							style={[
-								styles.payerButtonText,
-								{ color: payer === 'Omar' ? '#0F2B26' : t.sub },
-							]}
-						>
-							Omar
-						</Text>
-					</TouchableOpacity>
+			<TextInput
+				value={payee}
+				onChangeText={setPayee}
+				placeholder="Where? (e.g. Carrefour)"
+				placeholderTextColor={t.sub}
+				style={[styles.payeeInput, { backgroundColor: t.el, color: t.text }]}
+			/>
+
+			<TextInput
+				value={note}
+				onChangeText={setNote}
+				placeholder="Add a note (optional)"
+				placeholderTextColor={t.sub}
+				style={[styles.noteInput, { backgroundColor: t.el, color: t.text }]}
+			/>
+
+			<View style={styles.payerRow}>
+				<Text style={[styles.payerLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
+					Paid by
+				</Text>
+				<View style={styles.payerChips}>
+					{payers.map((member) => {
+						const selected = member.displayName === payerName;
+						return (
+							<TouchableOpacity
+								key={member.userId}
+								accessibilityRole="button"
+								accessibilityLabel={`Paid by ${member.displayName}`}
+								accessibilityState={{ selected }}
+								activeOpacity={0.6}
+								onPress={() => setPayerName(member.displayName)}
+								style={[
+									styles.payerChip,
+									{ backgroundColor: selected ? member.profileColor : 'transparent' },
+								]}
+							>
+								<Text
+									style={[
+										styles.payerChipText,
+										{ color: selected ? PAYER_CHIP_TEXT : t.sub },
+									]}
+								>
+									{member.displayName}
+								</Text>
+							</TouchableOpacity>
+						);
+					})}
 				</View>
 			</View>
 
@@ -199,6 +262,23 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId }: AddExpense
 			>
 				<Text style={[styles.confirmButtonText, { color: confirmColor }]}>{confirmLabel}</Text>
 			</TouchableOpacity>
+
+			{isEditing ? (
+				<TouchableOpacity
+					accessibilityRole="button"
+					accessibilityLabel="Delete expense"
+					accessibilityState={{ disabled: submitting }}
+					disabled={submitting}
+					onPress={handleDelete}
+					style={styles.deleteButton}
+					activeOpacity={0.6}
+				>
+					<Icon name="delete" size={18} color="#DE4B37" />
+					<Text style={[styles.deleteButtonText, { fontFamily: fontFamily(800) }]}>
+						Delete expense
+					</Text>
+				</TouchableOpacity>
+			) : null}
 		</Sheet>
 	);
 }
@@ -243,32 +323,42 @@ const styles = StyleSheet.create({
 		gap: 7,
 		justifyContent: 'center',
 	},
-	noteRow: {
-		flexDirection: 'row',
-		gap: 8,
+	payeeInput: {
+		height: 44,
+		borderRadius: 14,
+		paddingHorizontal: 16,
+		fontSize: 14,
+		fontFamily: fontFamily(700),
 	},
 	noteInput: {
-		flex: 1,
 		height: 44,
 		borderRadius: 14,
 		paddingHorizontal: 16,
 		fontSize: 14,
 		fontFamily: fontFamily(600),
 	},
-	payerToggle: {
+	payerRow: {
 		flexDirection: 'row',
-		borderRadius: 14,
-		padding: 4,
-		gap: 4,
+		alignItems: 'center',
+		gap: 8,
 	},
-	payerButton: {
+	payerLabel: {
+		fontSize: 12,
+	},
+	payerChips: {
+		flex: 1,
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 6,
+	},
+	payerChip: {
 		height: 36,
-		paddingHorizontal: 12,
+		paddingHorizontal: 14,
 		borderRadius: 11,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
-	payerButtonText: {
+	payerChipText: {
 		fontSize: 13,
 		fontFamily: fontFamily(800),
 	},
@@ -281,5 +371,17 @@ const styles = StyleSheet.create({
 	confirmButtonText: {
 		fontSize: 16,
 		fontFamily: fontFamily(800),
+	},
+	deleteButton: {
+		width: '100%',
+		height: 48,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		gap: 6,
+	},
+	deleteButtonText: {
+		fontSize: 14,
+		color: '#DE4B37',
 	},
 });

@@ -45,7 +45,16 @@ node-compile-cache/
 update-check
 
 # local agent/editor tooling
-.claude/
+# Local Claude Code state stays out of the repo, but project skills are part of
+# how this codebase is meant to be worked on, so they are versioned with it.
+# (A bare `.claude/` would ignore the directory outright and no negation inside
+# it could take effect — git never descends into an excluded directory.)
+.claude/*
+!.claude/skills/
+
+# ...except the Convex skills, which are vendored by `npx convex ai-files
+# install`. They are re-installable and would only drift out of date in here.
+.claude/skills/convex*/
 .agents/
 
 # generated native folders

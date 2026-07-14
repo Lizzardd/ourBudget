@@ -35,8 +35,7 @@ export interface HomeViewProps {
  * budgets" sections, each rendered in whichever layout (`cozy-cards` /
  * `grid` / `compact`) the household picked in Settings. Takes ALL its data
  * and callbacks as props; no Convex/hook data-fetching lives here — see
- * `app/(app)/home.tsx` (the real container) and `app/preview/home.tsx` (the
- * mock-data preview route) for the two callers.
+ * `app/(app)/home.tsx` for the container that supplies them.
  */
 export function HomeView({ greeting, summary, sections, layout, onOpenCategory, onOpenNewCategory }: HomeViewProps) {
 	const { t, accent } = useTheme();

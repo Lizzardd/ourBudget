@@ -16,8 +16,7 @@ import { HomeView } from '../../src/screens/HomeView';
  * Convex-backed hooks (summary, settings, household members) plus the
  * New-category sheet trigger, and hands the resulting view-model to
  * `HomeView` (the pure presentation, in `src/screens/HomeView.tsx`) for
- * rendering. See `app/preview/home.tsx` for the mock-data preview route
- * that renders `HomeView` without auth/Convex.
+ * rendering.
  *
  * `MondayNotification` is mounted here (see its NOTES on why it's an
  * in-app-only simulation) as an absolute-positioned sibling of the

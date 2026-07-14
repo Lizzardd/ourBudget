@@ -1,12 +1,20 @@
-import {
-	DMSans_400Regular,
-	DMSans_500Medium,
-	DMSans_600SemiBold,
-	DMSans_700Bold,
-	DMSans_800ExtraBold,
-	DMSans_900Black,
-} from '@expo-google-fonts/dm-sans';
-import { MaterialSymbolsRounded_300Light } from '@expo-google-fonts/material-symbols-rounded';
+// Import each weight from its own subpath, NOT from the package root.
+//
+// The root index re-exports every weight in the family, and each of those
+// re-exports `require()`s its .ttf — so a single root import drags the entire
+// family into the bundle. That is how an app using 6 DM Sans weights and one
+// Material Symbols weight ended up shipping all 18 DM Sans files (every weight
+// AND italic) plus all 7 Material Symbols weights at 1.2MB each: ~10MB of fonts
+// in every OTA update, which the device must download before `useFonts` can
+// resolve and the app can render at all. Subpath imports bundle only the file
+// named.
+import { DMSans_400Regular } from '@expo-google-fonts/dm-sans/400Regular';
+import { DMSans_500Medium } from '@expo-google-fonts/dm-sans/500Medium';
+import { DMSans_600SemiBold } from '@expo-google-fonts/dm-sans/600SemiBold';
+import { DMSans_700Bold } from '@expo-google-fonts/dm-sans/700Bold';
+import { DMSans_800ExtraBold } from '@expo-google-fonts/dm-sans/800ExtraBold';
+import { DMSans_900Black } from '@expo-google-fonts/dm-sans/900Black';
+import { MaterialSymbolsRounded_300Light } from '@expo-google-fonts/material-symbols-rounded/300Light';
 
 /**
  * Weights loaded for the app's only font family, DM Sans.

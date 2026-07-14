@@ -45,7 +45,12 @@ export default defineSchema({
 		householdId: v.id("households"),
 		categoryId: v.id("categories"),
 		amount: v.number(),
+		// `note` is the transaction TITLE (the prototype's "Where?" input, e.g.
+		// "Carrefour") — the whole app reads it as the title. `memo` is the
+		// secondary free-text note; optional so rows written before it existed
+		// stay valid and no migration is needed.
 		note: v.string(),
+		memo: v.optional(v.string()),
 		spentAt: v.number(),
 		payerName: v.string(),
 		createdBy: v.optional(v.id("users")),

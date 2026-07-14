@@ -52,9 +52,8 @@ export interface ReportsViewProps {
  * trend (spend-vs-budget columns, tap to select a month), a spend-by-category
  * breakdown for the selected month, and an "Annual Budgets" year-to-date
  * pace list. Takes all its data and callbacks as props; no Convex/hook
- * data-fetching lives here — see `app/(app)/reports.tsx` (the real
- * container) and `app/preview/reports.tsx` (the mock-data preview route)
- * for the two callers.
+ * data-fetching lives here — see `app/(app)/reports.tsx` for the container
+ * that supplies them.
  */
 export function ReportsView({
 	categoryBars,

@@ -8,10 +8,11 @@ import { Icon } from '../../../src/components/Icon';
 import { Loading } from '../../../src/components/Loading';
 import { ProgressBar } from '../../../src/components/ProgressBar';
 import { SlideIn } from '../../../src/components/SlideIn';
-import { bumpLimit, toCategoryDetail, toTxnRow } from '../../../src/budget/detail';
+import { bumpLimit, isTxnEditable, toCategoryDetail, toTxnRow } from '../../../src/budget/detail';
 import { useAddExpenseSheet } from '../../../src/features/AddExpenseProvider';
 import { toBudgetCategory } from '../../../src/hooks/categoryMapper';
 import { useHousehold } from '../../../src/hooks/useHousehold';
+import { useHouseholdMembers } from '../../../src/hooks/useHouseholdMembers';
 import { useMounted } from '../../../src/hooks/useMounted';
 import { useToast } from '../../../src/lib/toast';
 import { fontFamily } from '../../../src/theme/fonts';
@@ -32,8 +33,9 @@ export default function CategoryDetail() {
 	const router = useRouter();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const { householdId, currency, loading: householdLoading } = useHousehold();
+	const { members } = useHouseholdMembers();
 	const mounted = useMounted();
-	const { open: openAddExpense } = useAddExpenseSheet();
+	const { open: openAddExpense, openEdit: openEditExpense } = useAddExpenseSheet();
 	const { toast } = useToast();
 
 	const now = new Date();
@@ -90,7 +92,14 @@ export default function CategoryDetail() {
 
 	const spent = summaryData.categories.find((c) => c.categoryId === category._id)?.spent ?? 0;
 	const det = toCategoryDetail(toBudgetCategory(category), spent, currency, mounted, year, month);
-	const rows = (txns ?? []).map((txn) => toTxnRow(txn, currency, Date.now()));
+	const nowMs = Date.now();
+	// Only the live period is editable: the current month for monthly
+	// categories, always for annual ones — history stays read-only.
+	const rows = (txns ?? []).map((txn) => ({
+		...toTxnRow(txn, currency, nowMs, members ?? []),
+		txn,
+		editable: isTxnEditable(txn.spentAt, nowMs, det.isAnnual),
+	}));
 
 	const applyLimit = (dir: 1 | -1) => {
 		const next = bumpLimit(category.limit, category.period, dir);
@@ -229,8 +238,22 @@ export default function CategoryDetail() {
 						<Text style={[styles.empty, { color: t.sub }]}>No expenses yet</Text>
 					) : (
 						rows.map((row, i) => (
-							<View
+							<TouchableOpacity
 								key={row.id}
+								accessibilityRole={row.editable ? 'button' : undefined}
+								accessibilityLabel={row.editable ? `Edit ${row.note}` : undefined}
+								disabled={!row.editable}
+								activeOpacity={0.6}
+								onPress={() =>
+									openEditExpense({
+										_id: row.txn._id,
+										categoryId: category._id,
+										amount: row.txn.amount,
+										note: row.txn.note,
+										memo: row.txn.memo,
+										payerName: row.txn.payerName,
+									})
+								}
 								style={[
 									styles.txnRow,
 									i < rows.length - 1 ? { borderBottomColor: t.line, borderBottomWidth: 1 } : null,
@@ -253,7 +276,8 @@ export default function CategoryDetail() {
 								<Text style={[styles.txnAmt, { color: t.text, fontFamily: fontFamily(800) }]}>
 									{row.amtFmt}
 								</Text>
-							</View>
+								{row.editable ? <Icon name="chevron_right" size={18} color={t.sub} /> : null}
+							</TouchableOpacity>
 						))
 					)}
 				</View>

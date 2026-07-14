@@ -552,3 +552,250 @@ test('weeklySummary throws for non-member', async () => {
 		}),
 	).rejects.toThrow();
 });
+
+test('addTransaction stores the optional memo alongside the note (title)', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		memo: 'weekly shop, split with Sam',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 2000,
+		note: 'Spinneys',
+		payerName: 'Amira',
+		spentAt: julyMs(4),
+	});
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	const carrefour = all.find((tx) => tx.note === 'Carrefour')!;
+	const spinneys = all.find((tx) => tx.note === 'Spinneys')!;
+
+	expect(carrefour.memo).toBe('weekly shop, split with Sam');
+	expect(spinneys.memo).toBeUndefined();
+});
+
+test('updateTransaction changes amount, note, memo and payer', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		memo: 'first guess',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 4500,
+		note: '  Spinneys  ',
+		memo: 'corrected receipt',
+		payerName: 'Sam',
+	});
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all).toHaveLength(1);
+	expect(all[0]).toMatchObject({
+		amount: 4500,
+		note: 'Spinneys',
+		memo: 'corrected receipt',
+		payerName: 'Sam',
+	});
+});
+
+test('updateTransaction rejects an empty note and a non-positive / non-integer amount', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	await expect(
+		asUser.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: 1000,
+			note: '   ',
+			payerName: 'Amira',
+		}),
+	).rejects.toThrow();
+
+	await expect(
+		asUser.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: 0,
+			note: 'Carrefour',
+			payerName: 'Amira',
+		}),
+	).rejects.toThrow();
+
+	await expect(
+		asUser.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: -100,
+			note: 'Carrefour',
+			payerName: 'Amira',
+		}),
+	).rejects.toThrow();
+
+	await expect(
+		asUser.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: 10.5,
+			note: 'Carrefour',
+			payerName: 'Amira',
+		}),
+	).rejects.toThrow();
+});
+
+test('updateTransaction throws for non-member', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { asUser: asStranger } = await seedUser(t, 'Stranger');
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	await expect(
+		asStranger.mutation(api.transactions.updateTransaction, {
+			transactionId,
+			amount: 9999,
+			note: 'hijacked',
+			payerName: 'Stranger',
+		}),
+	).rejects.toThrow();
+});
+
+test('deleteTransaction removes the row', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 2000,
+		note: 'Spinneys',
+		payerName: 'Amira',
+		spentAt: julyMs(4),
+	});
+
+	await asUser.mutation(api.transactions.deleteTransaction, { transactionId });
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all.map((tx) => tx.note)).toEqual(['Spinneys']);
+});
+
+test('deleteTransaction throws for non-member', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+	const { asUser: asStranger } = await seedUser(t, 'Stranger');
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	await expect(
+		asStranger.mutation(api.transactions.deleteTransaction, { transactionId }),
+	).rejects.toThrow();
+
+	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
+	expect(all).toHaveLength(1);
+});
+
+/**
+ * The whole point of allowing edits/deletes: the aggregates are derived from
+ * the transaction rows at read time, so an edited or deleted amount must move
+ * `summary` and `monthTotals` with it.
+ */
+test('summary and monthTotals follow an edited then deleted amount', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const now = julyMs(25);
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 5000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+	await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 7000,
+		note: 'Spinneys',
+		payerName: 'Amira',
+		spentAt: julyMs(20),
+	});
+
+	const before = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
+	expect(before.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(12000);
+	expect(before.totalSpent).toBe(12000);
+
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 1000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+	});
+
+	const afterEdit = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
+	expect(afterEdit.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(8000);
+	expect(afterEdit.totalSpent).toBe(8000);
+
+	const monthsAfterEdit = await asUser.query(api.transactions.monthTotals, { householdId, months: 1, now });
+	expect(monthsAfterEdit[0].total).toBe(8000);
+
+	await asUser.mutation(api.transactions.deleteTransaction, { transactionId });
+
+	const afterDelete = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
+	expect(afterDelete.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(7000);
+	expect(afterDelete.totalSpent).toBe(7000);
+
+	const monthsAfterDelete = await asUser.query(api.transactions.monthTotals, { householdId, months: 1, now });
+	expect(monthsAfterDelete[0].total).toBe(7000);
+});

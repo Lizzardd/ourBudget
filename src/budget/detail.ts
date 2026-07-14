@@ -122,19 +122,33 @@ export function toCategoryDetail(
 	};
 }
 
+/** The bits of a household member needed to colour their avatar. */
+export interface PayerMember {
+	displayName: string;
+	profileColor: string;
+}
+
 /**
- * Payer avatar colors, matching the prototype's rule: Sara's avatar uses
- * the household's profile color (pink), every other payer uses the fixed
- * teal (`#7FA8A0`). Text color follows suit (dark pink / dark teal).
+ * Payer avatar colours, resolved against the real household.
+ *
+ * This used to hardcode `payerName === 'Sara'` — the prototype's demo data
+ * taken literally — which meant every actual member fell through to the same
+ * teal and nobody's chosen profile colour ever showed. The prototype's
+ * `whoStyle()` looks the payer up among the members, so we do too: a known
+ * member gets their own colour, and anyone unrecognised (a member who has
+ * since left, say) gets a neutral so the row still reads.
  */
-export function payerAvatar(payerName: string): { bg: string; color: string; initial: string } {
-	const isSara = payerName === 'Sara';
+export function payerAvatar(
+	payerName: string,
+	members: readonly PayerMember[] = []
+): { bg: string; color: string; initial: string } {
 	const initial = (payerName.trim()[0] || '?').toUpperCase();
-	return {
-		bg: isSara ? '#D98BA4' : '#7FA8A0',
-		color: isSara ? '#3A1220' : '#0F2B26',
-		initial,
-	};
+	const match = members.find(
+		(m) => m.displayName.trim().toLowerCase() === payerName.trim().toLowerCase()
+	);
+	return match
+		? { bg: match.profileColor, color: '#3A1220', initial }
+		: { bg: '#7FA8A0', color: '#0F2B26', initial };
 }
 
 /**
@@ -164,18 +178,26 @@ export interface DetailTransaction {
 	_id: string;
 	amount: number;
 	note: string;
+	memo?: string;
 	payerName: string;
 	spentAt: number;
 }
 
 /**
- * Maps a transaction to its detail-row view-model: amount, note, payer
- * avatar, and the "<Payer> · <when>" meta line — copy verbatim from the
+ * Maps a transaction to its detail-row view-model: amount, note (the
+ * "Where?" title), payer avatar, and the "<memo> · <Payer> · <when>" meta
+ * line — the memo only leads when present, copy verbatim from the
  * prototype's `det.txns` mapper.
  */
-export function toTxnRow(txn: DetailTransaction, cur: string, nowMs: number): TxnRowVM {
-	const avatar = payerAvatar(txn.payerName);
+export function toTxnRow(
+	txn: DetailTransaction,
+	cur: string,
+	nowMs: number,
+	members: readonly PayerMember[] = []
+): TxnRowVM {
+	const avatar = payerAvatar(txn.payerName, members);
 	const when = formatTxnDate(txn.spentAt, nowMs);
+	const memo = txn.memo?.trim();
 
 	return {
 		id: txn._id,
@@ -184,6 +206,21 @@ export function toTxnRow(txn: DetailTransaction, cur: string, nowMs: number): Tx
 		whoInitial: avatar.initial,
 		whoBg: avatar.bg,
 		whoColor: avatar.color,
-		meta: txn.payerName + ' · ' + when,
+		meta: (memo ? memo + ' · ' : '') + txn.payerName + ' · ' + when,
 	};
+}
+
+/**
+ * The prototype's editability rule (`displayTxns`'s `_editable`): a
+ * transaction can be edited or deleted only while its period is still the
+ * live one — the current calendar month for monthly categories, and always
+ * for annual/YTD categories. Historical months are read-only history.
+ */
+export function isTxnEditable(spentAtMs: number, nowMs: number, isAnnual: boolean): boolean {
+	if (isAnnual) {
+		return true;
+	}
+	const spent = new Date(spentAtMs);
+	const now = new Date(nowMs);
+	return spent.getFullYear() === now.getFullYear() && spent.getMonth() === now.getMonth();
 }

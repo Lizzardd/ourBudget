@@ -1,6 +1,6 @@
 import * as Updates from 'expo-updates';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
 
@@ -27,20 +27,55 @@ export function OtaDiagnostics() {
 
 	/**
 	 * The native update logs are the only place a launch failure is recorded.
-	 * When a downloaded bundle crashes on startup, expo-updates rolls back to
-	 * the embedded one before any JS of ours runs — so nothing in the React
-	 * tree ever sees the error. These entries are what say why.
+	 * When a downloaded bundle fails to start, expo-updates falls back to the
+	 * embedded one before any JS of ours runs — so nothing in the React tree
+	 * ever sees why. These entries are what say why.
+	 *
+	 * `embeddedAssetFileMap` entries dominate the log and carry no signal, so
+	 * they are dropped: they bury the handful of lines that matter.
 	 */
+	const readLogs = async (): Promise<string[]> => {
+		const entries = await Updates.readLogEntriesAsync(3600_000);
+		const useful = entries.filter((e) => !e.message.startsWith('embeddedAssetFileMap'));
+		if (useful.length === 0) {
+			return ['(no useful update log entries in the last hour)'];
+		}
+		return useful.map((e) => `${e.code ?? 'log'}: ${e.message}`);
+	};
+
 	const loadLogs = async () => {
 		try {
-			const entries = await Updates.readLogEntriesAsync(3600_000);
-			setLogs(
-				entries.length === 0
-					? ['(no update log entries in the last hour)']
-					: entries.slice(-12).map((e) => `${e.code ?? 'log'}: ${e.message}`)
-			);
+			const lines = await readLogs();
+			setLogs(lines.slice(-12));
 		} catch (err) {
 			setLogs([`could not read logs: ${err instanceof Error ? err.message : String(err)}`]);
+		}
+	};
+
+	/**
+	 * Share the whole log as text. Screenshotting a log this long is unworkable
+	 * — it wraps, truncates, and the one line that matters is never the one in
+	 * frame — so hand it to the OS share sheet and let it go somewhere it can
+	 * actually be read.
+	 */
+	const shareLogs = async () => {
+		try {
+			const lines = await readLogs();
+			const header = [
+				`enabled=${Updates.isEnabled}`,
+				`channel=${Updates.channel ?? '—'}`,
+				`runtime=${Updates.runtimeVersion ?? '—'}`,
+				`running=${Updates.updateId ?? '—'}`,
+				`embedded=${Updates.isEmbeddedLaunch}`,
+				`available=${isUpdateAvailable} pending=${isUpdatePending}`,
+				checkError ? `checkError=${checkError.message}` : '',
+				downloadError ? `downloadError=${downloadError.message}` : '',
+			]
+				.filter(Boolean)
+				.join('\n');
+			await Share.share({ message: `OTA DIAGNOSTICS\n${header}\n\nLOGS\n${lines.join('\n')}` });
+		} catch (err) {
+			setLogs([`could not share logs: ${err instanceof Error ? err.message : String(err)}`]);
 		}
 	};
 
@@ -72,9 +107,14 @@ export function OtaDiagnostics() {
 				<Text style={[styles.error, { color: accent }]}>download: {downloadError.message}</Text>
 			) : null}
 
-			<Pressable onPress={loadLogs} accessibilityRole="button" style={styles.logsBtn}>
-				<Text style={[styles.logsBtnLabel, { color: accent }]}>Show update logs ›</Text>
-			</Pressable>
+			<View style={styles.logsRow}>
+				<Pressable onPress={loadLogs} accessibilityRole="button" style={styles.logsBtn}>
+					<Text style={[styles.logsBtnLabel, { color: accent }]}>Show update logs ›</Text>
+				</Pressable>
+				<Pressable onPress={shareLogs} accessibilityRole="button" style={styles.logsBtn}>
+					<Text style={[styles.logsBtnLabel, { color: accent }]}>Share logs ↗</Text>
+				</Pressable>
+			</View>
 			{logs?.map((line, i) => (
 				<Text key={i} style={[styles.log, { color: t.sub }]} selectable>
 					{line}
@@ -111,6 +151,10 @@ const styles = StyleSheet.create({
 	error: {
 		fontSize: 11,
 		marginTop: 8,
+	},
+	logsRow: {
+		flexDirection: 'row',
+		gap: 16,
 	},
 	logsBtn: {
 		paddingTop: 12,

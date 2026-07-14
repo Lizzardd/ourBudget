@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -55,18 +55,43 @@ const configErrorStyles = StyleSheet.create({
 	},
 });
 
+/**
+ * How long to wait for fonts before rendering anyway.
+ *
+ * Blocking the whole tree on `useFonts` is a trap in an OTA bundle. Fonts are
+ * embedded in `android_res/raw` in a real build, but an over-the-air update has
+ * to fetch them as downloaded assets — and if that never settles, `useFonts`
+ * never resolves, this component returns `null` forever, the splash is never
+ * hidden, and the app is bricked on a blank screen with no error anywhere. That
+ * is not hypothetical: it is what every OTA update did.
+ *
+ * A missing webfont is a cosmetic problem; an app that never renders is a fatal
+ * one. So we give fonts a few seconds and then render regardless — degraded
+ * typography beats a dead app, and it makes the failure visible instead of
+ * silent.
+ */
+const FONT_TIMEOUT_MS = 5000;
+
 export default function RootLayout() {
 	const [fontsLoaded, fontError] = useFonts({ ...dmSansFonts, ...materialSymbolsFonts });
+	const [fontsTimedOut, setFontsTimedOut] = useState(false);
 
 	useOtaUpdates();
 
 	useEffect(() => {
-		if (fontsLoaded || fontError) {
+		const id = setTimeout(() => setFontsTimedOut(true), FONT_TIMEOUT_MS);
+		return () => clearTimeout(id);
+	}, []);
+
+	const fontsSettled = fontsLoaded || !!fontError || fontsTimedOut;
+
+	useEffect(() => {
+		if (fontsSettled) {
 			SplashScreen.hideAsync();
 		}
-	}, [fontsLoaded, fontError]);
+	}, [fontsSettled]);
 
-	if (!fontsLoaded && !fontError) {
+	if (!fontsSettled) {
 		return null;
 	}
 
