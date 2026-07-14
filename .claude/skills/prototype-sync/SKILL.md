@@ -51,6 +51,13 @@ python .claude/skills/prototype-sync/scripts/diff_prototype.py <tool-result-file
 
 If the diff is empty, say so and stop. Nothing to do.
 
+**Read the `->` pairs, not just the line.** Every element in this prototype is a
+single very long line, so a changed line is echoed truncated, and the fragments
+that actually changed are listed beneath it. Trusting the truncated line is how
+the FAB's label going from "Add expense" to "Add" was missed — it sat at the end
+of a ~700-char line, past the cut. The `->` pairs are the change; the line is
+only there to locate it.
+
 ### 2. Triage the diff — most of it is noise
 
 The prototype carries its own **demo data**: fake households ("The Al-Marri

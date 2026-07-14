@@ -44,7 +44,9 @@ export function Fab() {
 			]}
 		>
 			<Text style={[styles.plus, { fontFamily: fontFamily(700) }]}>+</Text>
-			<Text style={[styles.label, { fontFamily: fontFamily(800) }]}>Add expense</Text>
+			{/* The prototype's visible label is just "Add" — the accessibility
+			    label stays "Add expense", which is what a screen reader needs. */}
+			<Text style={[styles.label, { fontFamily: fontFamily(800) }]}>Add</Text>
 		</Pressable>
 	);
 }
@@ -66,8 +68,8 @@ const styles = StyleSheet.create({
 		zIndex: 20,
 	},
 	plus: {
-		fontSize: 22,
-		lineHeight: 24,
+		fontSize: 19,
+		lineHeight: 21,
 		color: '#2B0E1A',
 	},
 	label: {
