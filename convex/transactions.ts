@@ -127,6 +127,15 @@ export const updateTransaction = mutation({
 		memo: v.string(),
 		payerName: v.string(),
 		paidBy: v.optional(v.id("users")),
+		/**
+		 * When the expense happened. Required for the same reason as `memo`: this
+		 * is a full replace, so an omitted field is silently destructive.
+		 *
+		 * Editing this moves the row between months, and the monthly totals are
+		 * derived from `spentAt` at read time — so changing it re-attributes the
+		 * spend with no extra bookkeeping.
+		 */
+		spentAt: v.number(),
 	},
 	returns: v.null(),
 	handler: async (ctx, args) => {
@@ -160,12 +169,17 @@ export const updateTransaction = mutation({
 		// not have to distinguish the two.
 		const memo = args.memo.trim();
 
+		if (!Number.isFinite(args.spentAt)) {
+			throw new Error("spentAt must be a timestamp in milliseconds");
+		}
+
 		await ctx.db.patch(args.transactionId, {
 			amount: args.amount,
 			note,
 			memo: memo === "" ? undefined : memo,
 			payerName: args.payerName,
 			paidBy: args.paidBy,
+			spentAt: args.spentAt,
 		});
 		return null;
 	},

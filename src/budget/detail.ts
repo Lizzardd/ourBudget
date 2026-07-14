@@ -186,6 +186,31 @@ export function formatTxnDate(spentAtMs: number, nowMs: number): string {
 	return month + ' ' + spent.getDate();
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * The label on the Add/Edit-expense sheet's date pill: "Today" for today, and
+ * "14 Jul 2026" otherwise — copy verbatim from the prototype's `txDateLabel`.
+ *
+ * Deliberately NOT `formatTxnDate`, which the transaction rows use: that one
+ * says "Yesterday" and "Jun 3". The pill is a control the user is about to
+ * change, so it spells the year out rather than leaving it to be inferred.
+ */
+export function expenseDateLabel(spentAtMs: number, nowMs: number): string {
+	const spent = new Date(spentAtMs);
+	const now = new Date(nowMs);
+
+	const sameDay =
+		spent.getFullYear() === now.getFullYear() &&
+		spent.getMonth() === now.getMonth() &&
+		spent.getDate() === now.getDate();
+
+	if (sameDay) {
+		return 'Today';
+	}
+	return `${spent.getDate()} ${MONTHS[spent.getMonth()]} ${spent.getFullYear()}`;
+}
+
 /** The subset of a Convex transaction document the detail row needs. */
 export interface DetailTransaction {
 	_id: string;

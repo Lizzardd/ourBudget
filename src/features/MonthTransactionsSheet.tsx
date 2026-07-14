@@ -78,6 +78,7 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 			memo: row.txn.memo,
 			payerName: row.txn.payerName,
 			paidBy: row.txn.paidBy,
+			spentAt: row.txn.spentAt,
 		});
 	};
 

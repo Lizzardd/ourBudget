@@ -2,8 +2,8 @@
   "expo": {
     "name": "Our Budget",
     "slug": "our-budget",
-    "version": "0.1.16",
-    "runtimeVersion": "1",
+    "version": "0.2.0",
+    "runtimeVersion": "2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ourbudget",
@@ -49,7 +49,8 @@
       ],
       "expo-font",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

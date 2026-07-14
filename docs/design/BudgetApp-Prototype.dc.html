@@ -595,7 +595,13 @@
           </div>
           <div style="text-align: center; padding: 2px 0">
             <div style="font-size: 34px; font-weight: 900; letter-spacing: -1px; color: {{ amountColor }}">{{ amountFmt }}</div>
-            <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 1px">Today · paid by {{ payerName }}</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px">
+              <div style="display: flex; align-items: center; gap: 6px; background: var(--el, #3A2F27); border-radius: 999px; padding: 6px 12px">
+                <span style="font-family: 'Material Symbols Rounded'; font-variation-settings: 'FILL' 0, 'wght' 300; font-size: 16px; color: var(--accent, #C96287)">calendar_today</span>
+                <input type="date" value="{{ txDate }}" onChange="{{ txDateChange }}" style="border: none; background: none; color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; outline: none; color-scheme: dark; padding: 0">
+              </div>
+              <span style="font-size: 12px; color: var(--sub, #B5A493)">paid by {{ payerName }}</span>
+            </div>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 7px; justify-content: center">
             <sc-for list="{{ chips }}" as="ch" hint-placeholder-count="8">
@@ -833,7 +839,7 @@ class Component extends DCLogic {
 
   state = {
     phase: null, tab: 'home', mounted: false, catId: null,
-    sheet: false, sheetCat: null, amount: '', note: '', payee: '', payer: 'self',
+    sheet: false, sheetCat: null, amount: '', note: '', payee: '', payer: 'self', txDate: '2026-07-14',
     monthIdx: 0, theme: null, toast: null, extra: {}, extraTx: {}, limitOv: {},
     editId: null, editCat: null, editOldAmt: 0, txEdits: {}, txDeleted: {},
     customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
@@ -967,7 +973,7 @@ class Component extends DCLogic {
     const self = (this.state.profName || 'Sara').trim();
     this.setState({
       sheet: true, sheetCat: catId, editId: t.id, editCat: catId, editOldAmt: t.amt,
-      amount: String(t.amt), payee: t.note || '', note: t.memo || '',
+      amount: String(t.amt), payee: t.note || '', note: t.memo || '', txDate: t.date || '2026-07-14',
       payer: (t.who === self || t.who === 'Sara') ? 'self' : t.who,
     });
   }
@@ -1148,17 +1154,22 @@ class Component extends DCLogic {
       if (!canAdd) { this.toastNow('Pick a category and amount first 🙂'); return; }
       const title = s.payee.trim() || selCat.name;
       const memo = s.note.trim();
+      const fmtWhen = (iso) => {
+        const [y, m, d] = iso.split('-').map(Number);
+        const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1] || 'Jul';
+        return mo + ' ' + d;
+      };
       if (isEditing) {
         const delta = amtNum - s.editOldAmt;
         this.setState(st => ({
           extra: { ...st.extra, [st.editCat]: (st.extra[st.editCat] || 0) + delta },
-          txEdits: { ...st.txEdits, [st.editId]: { amt: amtNum, note: title, memo, who: payerName } },
+          txEdits: { ...st.txEdits, [st.editId]: { amt: amtNum, note: title, memo, who: payerName, when: fmtWhen(s.txDate), date: s.txDate } },
           sheet: false, editId: null, editCat: null, amount: '', note: '', payee: '',
         }));
         this.toastNow('Expense updated ✓');
         return;
       }
-      const tx = { id: 'tx:' + Date.now(), note: title, memo, amt: amtNum, who: payerName, when: 'Jul 14' };
+      const tx = { id: 'tx:' + Date.now(), note: title, memo, amt: amtNum, who: payerName, when: fmtWhen(s.txDate), date: s.txDate };
       this.setState(st => ({
         extra: { ...st.extra, [selCat.id]: (st.extra[selCat.id] || 0) + amtNum },
         extraTx: { ...st.extraTx, [selCat.id]: [tx, ...(st.extraTx[selCat.id] || [])] },
@@ -1309,8 +1320,12 @@ class Component extends DCLogic {
       switchSide: isDark ? 'flex-end' : 'flex-start',
       // sheet
       sheetOpen: s.sheet,
-      openSheet: () => this.setState({ sheet: true, sheetCat: null, editId: null, editCat: null, amount: '', note: '', payee: '', payer: 'self' }),
+      openSheet: () => this.setState({ sheet: true, sheetCat: null, editId: null, editCat: null, amount: '', note: '', payee: '', payer: 'self', txDate: '2026-07-14' }),
       closeSheet: () => this.setState({ sheet: false, editId: null, editCat: null }),
+      txDate: s.txDate,
+      txDateLabel: (() => { const [y,m,d] = s.txDate.split('-').map(Number); const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]; return (d === 14 && m === 7 && y === 2026) ? 'Today' : (d + ' ' + mo + ' ' + y); })(),
+      txDateChange: e => this.setState({ txDate: e.target.value }),
+      openDatePicker: e => { try { e.target.showPicker && e.target.showPicker(); } catch (_) {} },
       isEditing,
       deleteTx,
       sheetTitle: isEditing ? 'Edit expense' : 'Add expense',

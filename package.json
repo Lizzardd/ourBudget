@@ -8,6 +8,7 @@
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/material-symbols-rounded": "^0.4.50",
     "@expo/metro-runtime": "~57.0.3",
+    "@react-native-community/datetimepicker": "9.1.0",
     "convex": "^1.42.1",
     "eas-cli": "^20.5.1",
     "expo": "~57.0.4",

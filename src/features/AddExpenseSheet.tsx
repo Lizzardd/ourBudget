@@ -1,7 +1,9 @@
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { Id } from '../../convex/_generated/dataModel';
+import { expenseDateLabel } from '../budget/detail';
 import { fmt, glyph, parseAmountToMinor } from '../budget/money';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icon';
@@ -25,6 +27,8 @@ export interface EditableTransaction {
 	payerName: string;
 	/** The payer's user id — absent on legacy rows written before `paidBy` existed. */
 	paidBy?: Id<'users'>;
+	/** When the expense happened (ms) — the month's aggregates are derived from it. */
+	spentAt: number;
 }
 
 export interface AddExpenseSheetProps {
@@ -73,6 +77,8 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	const [note, setNote] = useState('');
 	const [payerName, setPayerName] = useState('');
 	const [paidBy, setPaidBy] = useState<Id<'users'> | undefined>(undefined);
+	const [spentAt, setSpentAt] = useState(() => Date.now());
+	const [showPicker, setShowPicker] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
 	const isEditing = !!editTxn;
@@ -103,6 +109,8 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 			// an ex-member's id straight back is accepted.
 			setPaidBy(editTxn ? (editPayer?.userId ?? editTxn.paidBy) : self?.userId);
 			setCategoryId(editTxn ? editTxn.categoryId : initialCategoryId);
+			setSpentAt(editTxn ? editTxn.spentAt : Date.now());
+			setShowPicker(false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, initialCategoryId, editTxn, members]);
@@ -129,6 +137,22 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	const confirmBg = canAdd ? accent : t.el;
 	const confirmColor = canAdd ? '#2B0E1A' : t.sub;
 
+	const dateLabel = expenseDateLabel(spentAt, Date.now());
+
+	/**
+	 * The Android dialog is fire-and-forget: it fires `onChange` once — with
+	 * `set` and a date, or `dismissed` and none — and closes itself, so the
+	 * picker must be unmounted either way or it re-opens on the next render.
+	 * The iOS spinner fires `onChange` per scroll tick and stays mounted until
+	 * we take it down, which the same unmount does the moment a date lands.
+	 */
+	const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
+		setShowPicker(false);
+		if (event.type === 'set' && date) {
+			setSpentAt(date.getTime());
+		}
+	};
+
 	const handleConfirm = async () => {
 		if (!canAdd || !householdId || !selectedCategory || submitting) {
 			return;
@@ -150,6 +174,7 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 					memo,
 					payerName,
 					paidBy,
+					spentAt,
 				});
 				toast('Expense updated ✓');
 			} else {
@@ -161,6 +186,7 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 					memo,
 					payerName,
 					paidBy,
+					spentAt,
 				});
 				toast(`Added ${fmt(amountMinor, cur)} to ${selectedCategory.name} 🎉`);
 			}
@@ -208,8 +234,31 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 				<Text style={[styles.amount, { color: amountColor, fontFamily: fontFamily(900) }]}>
 					{amountFmt}
 				</Text>
-				<Text style={[styles.amountSub, { color: t.sub }]}>Today · paid by {payerName}</Text>
+				<View style={styles.dateRow}>
+					<Pressable
+						accessibilityRole="button"
+						accessibilityLabel={`Date: ${dateLabel}. Change date`}
+						onPress={() => setShowPicker(true)}
+						style={[styles.datePill, { backgroundColor: t.el }]}
+					>
+						<Icon name="calendar_today" size={16} color={accent} />
+						<Text style={[styles.dateText, { color: t.text, fontFamily: fontFamily(700) }]}>
+							{dateLabel}
+						</Text>
+					</Pressable>
+					<Text style={[styles.datePayer, { color: t.sub }]}>paid by {payerName}</Text>
+				</View>
 			</View>
+
+			{showPicker ? (
+				<DateTimePicker
+					value={new Date(spentAt)}
+					mode="date"
+					// An expense cannot have happened tomorrow.
+					maximumDate={new Date()}
+					onChange={handleDateChange}
+				/>
+			) : null}
 
 			<ScrollView
 				horizontal={false}
@@ -342,9 +391,26 @@ const styles = StyleSheet.create({
 		fontSize: 34,
 		letterSpacing: -1,
 	},
-	amountSub: {
+	dateRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		gap: 8,
+		marginTop: 5,
+	},
+	datePill: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 6,
+		borderRadius: 999,
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+	},
+	dateText: {
 		fontSize: 12,
-		marginTop: 1,
+	},
+	datePayer: {
+		fontSize: 12,
 	},
 	chipsScroll: {
 		maxHeight: 92,

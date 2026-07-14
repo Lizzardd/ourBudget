@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	bumpLimit,
+	expenseDateLabel,
 	formatTxnDate,
 	isTxnEditable,
 	limitStep,
@@ -185,6 +186,30 @@ describe('formatTxnDate()', () => {
 	it('reports "MMM D" for earlier dates', () => {
 		const earlier = new Date(2026, 5, 3, 10, 0, 0).getTime();
 		expect(formatTxnDate(earlier, now)).toBe('Jun 3');
+	});
+});
+
+describe('expenseDateLabel()', () => {
+	const now = new Date(2026, 6, 9, 15, 0, 0).getTime();
+
+	it('reports "Today" for the same calendar day', () => {
+		const today = new Date(2026, 6, 9, 8, 0, 0).getTime();
+		expect(expenseDateLabel(today, now)).toBe('Today');
+	});
+
+	it('spells out "D MMM YYYY" for another day — even yesterday', () => {
+		const yesterday = new Date(2026, 6, 8, 23, 0, 0).getTime();
+		expect(expenseDateLabel(yesterday, now)).toBe('8 Jul 2026');
+	});
+
+	it('spells out "D MMM YYYY" for a later day in the same month', () => {
+		const later = new Date(2026, 6, 14, 10, 0, 0).getTime();
+		expect(expenseDateLabel(later, now)).toBe('14 Jul 2026');
+	});
+
+	it('carries the year, so the same day-of-year in another year reads apart', () => {
+		const lastYear = new Date(2025, 6, 9, 8, 0, 0).getTime();
+		expect(expenseDateLabel(lastYear, now)).toBe('9 Jul 2025');
 	});
 });
 

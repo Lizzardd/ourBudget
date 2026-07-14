@@ -73,6 +73,10 @@ function julyMs(day: number) {
 	return Date.UTC(2026, 6, day, 12, 0, 0);
 }
 
+function juneMs(day: number) {
+	return Date.UTC(2026, 5, day, 12, 0, 0);
+}
+
 function marchMs(day: number) {
 	return Date.UTC(2026, 2, day, 12, 0, 0);
 }
@@ -640,6 +644,7 @@ test('updateTransaction changes amount, note, memo and payer', async () => {
 		note: '  Spinneys  ',
 		memo: 'corrected receipt',
 		payerName: 'Sam',
+		spentAt: julyMs(3),
 	});
 
 	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
@@ -673,6 +678,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			note: '   ',
 			memo: '',
 			payerName: 'Amira',
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow();
 
@@ -683,6 +689,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			note: 'Carrefour',
 			memo: '',
 			payerName: 'Amira',
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow();
 
@@ -693,6 +700,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			note: 'Carrefour',
 			memo: '',
 			payerName: 'Amira',
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow();
 
@@ -703,6 +711,7 @@ test('updateTransaction rejects an empty note and a non-positive / non-integer a
 			note: 'Carrefour',
 			memo: '',
 			payerName: 'Amira',
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow();
 });
@@ -729,6 +738,7 @@ test('updateTransaction throws for non-member', async () => {
 			note: 'hijacked',
 			memo: '',
 			payerName: 'Stranger',
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow();
 });
@@ -822,6 +832,7 @@ test('summary and monthTotals follow an edited then deleted amount', async () =>
 		note: 'Carrefour',
 		memo: '',
 		payerName: 'Amira',
+		spentAt: julyMs(3),
 	});
 
 	const afterEdit = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
@@ -839,6 +850,58 @@ test('summary and monthTotals follow an edited then deleted amount', async () =>
 
 	const monthsAfterDelete = await asUser.query(api.transactions.monthTotals, { householdId, months: 1, now });
 	expect(monthsAfterDelete[0].total).toBe(7000);
+});
+
+/**
+ * The point of letting the sheet's date pill change `spentAt`: a receipt filed
+ * under the wrong month can be moved, and because the aggregates are derived
+ * from `spentAt` at read time, the spend leaves the old month and lands in the
+ * new one — no stored per-month totals to reconcile.
+ */
+test('updateTransaction can move a transaction to another month, and summary follows it', async () => {
+	const t = makeCtx();
+	const { asUser } = await seedUser(t, 'Amira');
+	const { householdId, groceries } = await seedHousehold(t, asUser);
+
+	const transactionId = await asUser.mutation(api.transactions.addTransaction, {
+		householdId,
+		categoryId: groceries._id,
+		amount: 5000,
+		note: 'Carrefour',
+		payerName: 'Amira',
+		spentAt: julyMs(3),
+	});
+
+	const julyBefore = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
+	expect(julyBefore.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(5000);
+	const juneBefore = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 5 });
+	expect(juneBefore.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(0);
+	expect(juneBefore.totalSpent).toBe(0);
+
+	// Only the date moves — the receipt was really from June.
+	await asUser.mutation(api.transactions.updateTransaction, {
+		transactionId,
+		amount: 5000,
+		note: 'Carrefour',
+		memo: '',
+		payerName: 'Amira',
+		spentAt: juneMs(28),
+	});
+
+	const julyAfter = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 6 });
+	expect(julyAfter.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(0);
+	expect(julyAfter.totalSpent).toBe(0);
+
+	const juneAfter = await asUser.query(api.transactions.summary, { householdId, year: 2026, month: 5 });
+	expect(juneAfter.categories.find((c) => c.categoryId === groceries._id)?.spent).toBe(5000);
+	expect(juneAfter.totalSpent).toBe(5000);
+
+	const months = await asUser.query(api.transactions.monthTotals, {
+		householdId,
+		months: 2,
+		now: julyMs(25),
+	});
+	expect(months.map((m) => m.total)).toEqual([5000, 0]);
 });
 
 /**
@@ -956,6 +1019,7 @@ test('updateTransaction: memo is required, so "" clears it and a value survives 
 		note: 'Carrefour',
 		memo: 'Birthday cake',
 		payerName: 'Amira',
+		spentAt: julyMs(3),
 	});
 	expect(await memoOf()).toBe('Birthday cake');
 
@@ -966,6 +1030,7 @@ test('updateTransaction: memo is required, so "" clears it and a value survives 
 		note: 'Carrefour',
 		memo: '   ',
 		payerName: 'Amira',
+		spentAt: julyMs(3),
 	});
 	expect(await memoOf()).toBeUndefined();
 });
@@ -999,6 +1064,7 @@ test('updateTransaction keeps an unchanged paidBy even after that payer leaves t
 		memo: '',
 		payerName: 'Sam',
 		paidBy: samId,
+		spentAt: julyMs(3),
 	});
 
 	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
@@ -1029,6 +1095,7 @@ test('updateTransaction can re-attribute paidBy to another member, but not to a 
 		memo: '',
 		payerName: 'Sam',
 		paidBy: samId,
+		spentAt: julyMs(3),
 	});
 
 	const all = await asUser.query(api.transactions.listByCategory, { categoryId: groceries._id });
@@ -1042,6 +1109,7 @@ test('updateTransaction can re-attribute paidBy to another member, but not to a 
 			memo: '',
 			payerName: 'Stranger',
 			paidBy: strangerId,
+			spentAt: julyMs(3),
 		}),
 	).rejects.toThrow(/member of this household/);
 });
