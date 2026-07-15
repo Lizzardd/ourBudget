@@ -20,6 +20,18 @@ const short = (value: string | null | undefined) =>
  *
  * Remove once OTA is confirmed working.
  */
+/** true reads green, false warm-red, an absent value as a muted em-dash. */
+const TRUE_COLOR = '#86B478'; // the theme's "good" green
+const FALSE_COLOR = '#DE4B37'; // the warm red used for destructive actions
+
+type DiagValue = boolean | string | undefined;
+
+const valueText = (v: DiagValue): string =>
+	v === undefined || v === null || v === '' ? '—' : typeof v === 'boolean' ? String(v) : v;
+
+const valueColor = (v: DiagValue, text: string, muted: string): string =>
+	v === true ? TRUE_COLOR : v === false ? FALSE_COLOR : valueText(v) === '—' ? muted : text;
+
 export function OtaDiagnostics() {
 	const { t, accent } = useTheme();
 	const { isUpdateAvailable, isUpdatePending, isChecking, isDownloading, checkError, downloadError } =
@@ -161,16 +173,16 @@ export function OtaDiagnostics() {
 		}
 	};
 
-	const rows: [string, string][] = [
-		['enabled', String(Updates.isEnabled)],
-		['channel', Updates.channel ?? '—'],
-		['runtime', short(Updates.runtimeVersion)],
-		['running', short(Updates.updateId)],
-		['embedded', String(Updates.isEmbeddedLaunch)],
-		['checking', String(isChecking)],
-		['downloading', String(isDownloading)],
-		['available', String(isUpdateAvailable)],
-		['pending', String(isUpdatePending)],
+	const rows: [string, DiagValue][] = [
+		['enabled', Updates.isEnabled],
+		['channel', Updates.channel ?? undefined],
+		['runtime', Updates.runtimeVersion ?? undefined],
+		['running', Updates.updateId ? short(Updates.updateId) : undefined],
+		['embedded', Updates.isEmbeddedLaunch],
+		['checking', isChecking],
+		['downloading', isDownloading],
+		['available', isUpdateAvailable],
+		['pending', isUpdatePending],
 	];
 
 	return (
@@ -198,10 +210,21 @@ export function OtaDiagnostics() {
 				</View>
 			) : null}
 
-			{rows.map(([label, value]) => (
-				<View key={label} style={styles.row}>
+			{rows.map(([label, value], i) => (
+				<View
+					key={label}
+					style={[
+						styles.row,
+						i < rows.length - 1 && {
+							borderBottomColor: t.line,
+							borderBottomWidth: StyleSheet.hairlineWidth,
+						},
+					]}
+				>
 					<Text style={[styles.label, { color: t.sub }]}>{label}</Text>
-					<Text style={[styles.value, { color: t.text }]}>{value}</Text>
+					<Text style={[styles.value, { color: valueColor(value, t.text, t.sub) }]}>
+						{valueText(value)}
+					</Text>
 				</View>
 			))}
 			{checkError ? (
@@ -243,7 +266,8 @@ const styles = StyleSheet.create({
 	row: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
-		paddingVertical: 2,
+		alignItems: 'center',
+		paddingVertical: 6,
 	},
 	label: {
 		fontSize: 12,
@@ -251,6 +275,7 @@ const styles = StyleSheet.create({
 	value: {
 		fontSize: 12,
 		fontWeight: '700',
+		fontFamily: 'monospace',
 	},
 	error: {
 		fontSize: 11,

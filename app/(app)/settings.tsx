@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
-import { useConvex } from 'convex/react';
+import { useConvex, useQuery } from 'convex/react';
 
 import { FadeIn } from '../../src/components/FadeIn';
 import { Icon } from '../../src/components/Icon';
@@ -72,6 +72,10 @@ export default function Settings() {
 	const [exporting, setExporting] = useState(false);
 	const convex = useConvex();
 	const { toast } = useToast();
+	// Developer-only OTA diagnostics. Server-verified against the auth email —
+	// undefined (loading) and false both render nothing, so a normal user never
+	// sees the panel and there's no layout shift.
+	const isDeveloper = useQuery(api.account.isDeveloper);
 
 	const isDark = mode === 'dark';
 	const themeLabel = isDark ? 'Cozy dark mode 🌙' : 'Warm light mode ☀️';
@@ -443,7 +447,7 @@ export default function Settings() {
 				</Text>
 				<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
 			</View>
-			<OtaDiagnostics />
+			{isDeveloper ? <OtaDiagnostics /> : null}
 		</ScrollView>
 		</FadeIn>
 	);

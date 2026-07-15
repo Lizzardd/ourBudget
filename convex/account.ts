@@ -4,6 +4,31 @@ import { mutation, query } from "./_generated/server";
 import { deleteHouseholdCascade } from "./households";
 
 /**
+ * Accounts allowed to see the developer-only OTA diagnostics panel in Settings.
+ *
+ * The gate is `isDeveloper` below, which checks the VERIFIED email on the auth
+ * identity server-side — a normal client cannot spoof its way in, and the panel
+ * renders only when this query returns true (not merely client-side hiding).
+ * Note the honest limit: the panel's *code* still ships in every bundle; what's
+ * gated is whether it renders and pulls data. Add real developer emails here.
+ */
+const DEVELOPER_EMAILS = ["danielkrause.sa@gmail.com"];
+
+export const isDeveloper = query({
+	args: {},
+	returns: v.boolean(),
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (userId === null) {
+			return false;
+		}
+		const user = await ctx.db.get(userId);
+		const email = user?.email?.toLowerCase();
+		return email ? DEVELOPER_EMAILS.includes(email) : false;
+	},
+});
+
+/**
  * GDPR data-portability export. Returns every record the caller "owns" or
  * personally participates in:
  *  - their own `users` row

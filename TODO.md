@@ -22,9 +22,11 @@ Legend: **P1** ships a lie to the user · **P2** correctness / hygiene ·
 
 ## P2 — Correctness & hygiene
 
-- [ ] **Remove the OTA diagnostics panel.** `OtaDiagnostics` (Show/Share update
-  logs at the bottom of Settings) was debug UI; it did its job. Removing it is
-  also a low-risk exercise of the flow. Context: [docs/OTA.md](docs/OTA.md).
+- [x] ~~Remove the OTA diagnostics panel.~~ **Kept, now developer-gated.**
+  `OtaDiagnostics` renders only when `api.account.isDeveloper` returns true — a
+  server-side check against the verified auth email (allowlist in
+  `convex/account.ts`). Invisible and inert for everyone else. Context:
+  [docs/OTA.md](docs/OTA.md).
 
 ## P3 — Nice to have / untested
 
