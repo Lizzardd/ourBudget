@@ -145,15 +145,29 @@ every actual member fell through to the same fallback and nobody's profile
 colour ever appeared. The Add-expense sheet likewise shipped a hardcoded
 `Sara` / `Omar` payer toggle.
 
-After any sync, grep the real source for the prototype's demo values:
+After any sync, grep the real source for the prototype's demo values — the
+specific names, and the tell-tale of a *realistic* fake email leaking in:
 
 ```bash
-grep -rn "'Sara'\|'Omar'\|Al-Marri" src/ app/ convex/ --include=*.ts --include=*.tsx
+grep -rniE "sara|omar|al-marri|@gmail\.com" src/ app/ convex/ --include=*.ts --include=*.tsx
 ```
 
 Anything outside a test fixture is a bug. The prototype's demo names stand in
 for *whatever the household actually contains* — resolve them from real data
-(`useHouseholdMembers()`), never by name.
+(`useHouseholdMembers()`), never by name. This exact trap produced a real one:
+a spec asked for a debug panel gated to `sara.almarri@gmail.com` — a prototype
+persona's email, not a real developer's — which would have shipped a hidden
+panel keyed to a stranger's address.
+
+**The convention:** the design should seed only *unmistakably fake* placeholders
+— names like "Member A", a "Demo Household", and `@example.com` emails (the
+reserved demo domain), never `@gmail.com` or realistic personal names. If the
+prototype still carries realistic-looking demo data, treat it as such and
+substitute placeholders — a real-looking value is a bug waiting to be hardcoded.
+Anything matching `@gmail.com` or a known persona name in real source is that
+bug; flag it. The one expected `@gmail.com` match is the **developer allowlist**
+in `convex/account.ts` (`DEVELOPER_EMAILS`) — a real maintainer address, not
+demo data. Leave it.
 
 Be equally suspicious of any code that **duplicates** the prototype's UI with
 its own mock data. Such a mirror drifts silently on every design change and is
