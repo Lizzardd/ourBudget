@@ -1,6 +1,5 @@
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { Id } from '../../convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
@@ -13,6 +12,7 @@ import { hexToRgba } from '../lib/color';
 import { Chip } from '../components/Chip';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
+import { DateField } from './DateField';
 import { useCategories } from '../hooks/useCategories';
 import { useHousehold } from '../hooks/useHousehold';
 import { useHouseholdMembers } from '../hooks/useHouseholdMembers';
@@ -86,7 +86,6 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	const [payerName, setPayerName] = useState('');
 	const [paidBy, setPaidBy] = useState<Id<'users'> | undefined>(undefined);
 	const [spentAt, setSpentAt] = useState(() => Date.now());
-	const [showPicker, setShowPicker] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
 	const isEditing = !!editTxn;
@@ -124,7 +123,6 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 			// Saturday — and resetting to today between each one meant re-picking
 			// the same date over and over. It still starts at today on first open.
 			setSpentAt((prev) => (editTxn ? editTxn.spentAt : prev));
-			setShowPicker(false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, initialCategoryId, editTxn, members]);
@@ -149,20 +147,6 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 	// The whole (bounded) history comes down once; filtering happens here on every
 	// keystroke, so typing costs no round trips.
 	const payeeSuggestions = filterPayeeSuggestions(payeeHistory ?? [], payee);
-
-	/**
-	 * The Android dialog is fire-and-forget: it fires `onChange` once — with
-	 * `set` and a date, or `dismissed` and none — and closes itself, so the
-	 * picker must be unmounted either way or it re-opens on the next render.
-	 * The iOS spinner fires `onChange` per scroll tick and stays mounted until
-	 * we take it down, which the same unmount does the moment a date lands.
-	 */
-	const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
-		setShowPicker(false);
-		if (event.type === 'set' && date) {
-			setSpentAt(date.getTime());
-		}
-	};
 
 	const handleConfirm = async () => {
 		if (!canAdd || !householdId || !selectedCategory || submitting) {
@@ -262,34 +246,35 @@ export function AddExpenseSheet({ open, onClose, initialCategoryId, editTxn }: A
 						placeholder="0"
 						placeholderTextColor={t.sub}
 						accessibilityLabel="Amount"
-						style={[styles.amount, styles.amountInput, { color: amountColor, fontFamily: fontFamily(900) }]}
+						style={[
+							styles.amount,
+							styles.amountInput,
+							{ color: amountColor, fontFamily: fontFamily(900) },
+							// react-native-web renders this as an <input>, which stretches to
+							// fill the row (a 400px+ box) and shows a browser focus ring when
+							// autofocused — the "giant box" the amount became on web. Native
+							// auto-sizes the field to its content and has no outline, so this
+							// sizes it to the digits and kills the ring on web only.
+							Platform.OS === 'web'
+								? ({
+										width: Math.max(amount.length, 1) * 20 + 6,
+										outlineStyle: 'none',
+									} as object)
+								: null,
+						]}
 					/>
 				</View>
 				<View style={styles.dateRow}>
-					<Pressable
-						accessibilityRole="button"
-						accessibilityLabel={`Date: ${dateLabel}. Change date`}
-						onPress={() => setShowPicker(true)}
-						style={[styles.datePill, { backgroundColor: t.el }]}
-					>
-						<Icon name="calendar_today" size={16} color={accent} />
-						<Text style={[styles.dateText, { color: t.text, fontFamily: fontFamily(700) }]}>
-							{dateLabel}
-						</Text>
-					</Pressable>
+					<DateField
+						spentAtMs={spentAt}
+						onChange={setSpentAt}
+						label={dateLabel}
+						// An expense cannot have happened tomorrow.
+						maximumMs={Date.now()}
+					/>
 					<Text style={[styles.datePayer, { color: t.sub }]}>paid by {payerName}</Text>
 				</View>
 			</View>
-
-			{showPicker ? (
-				<DateTimePicker
-					value={new Date(spentAt)}
-					mode="date"
-					// An expense cannot have happened tomorrow.
-					maximumDate={new Date()}
-					onChange={handleDateChange}
-				/>
-			) : null}
 
 			<ScrollView
 				horizontal={false}
@@ -471,6 +456,9 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'center',
+		// A thin space between the glyph and the digits, matching the prototype's
+		// `sym() + ' ' + n` — otherwise "Đ" and "0" read as one glyph ("ĐO").
+		gap: 6,
 	},
 	amount: {
 		fontSize: 34,
@@ -490,17 +478,6 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		gap: 8,
 		marginTop: 5,
-	},
-	datePill: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 6,
-		borderRadius: 999,
-		paddingVertical: 6,
-		paddingHorizontal: 12,
-	},
-	dateText: {
-		fontSize: 12,
 	},
 	datePayer: {
 		fontSize: 12,
