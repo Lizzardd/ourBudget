@@ -8,7 +8,7 @@ import { mutation, query } from "./_generated/server";
  * `convex/`, so the value is duplicated here. Keep both in sync when the
  * policy changes.
  */
-export const POLICY_VERSION = "2026-07-09";
+export const POLICY_VERSION = "2026-07-15";
 
 /**
  * Records that the authenticated caller consented to a given policy

@@ -7,8 +7,12 @@
  * Convex functions can't import from outside `convex/` cleanly, so the
  * value is duplicated there rather than imported.
  */
-export const POLICY_VERSION = '2026-07-09';
+export const POLICY_VERSION = '2026-07-15';
 
-/** Placeholder policy links — real copy/URLs are a separate legal process item. */
-export const PRIVACY_POLICY_URL = 'https://ourbudget.app/privacy';
-export const TERMS_URL = 'https://ourbudget.app/terms';
+/**
+ * The published policy pages, served by the web app (app/privacy.tsx,
+ * app/terms.tsx). The in-app consent gate and the Google OAuth consent screen
+ * both link here. The content lives in `src/legal/content.ts`.
+ */
+export const PRIVACY_POLICY_URL = 'https://ob.lizzardd.link/privacy';
+export const TERMS_URL = 'https://ob.lizzardd.link/terms';
