@@ -23,7 +23,15 @@ export function useAuth() {
 
 	async function signInWithGoogle() {
 		if (Platform.OS === 'web') {
-			await signIn('google');
+			// Send the browser back to THIS origin after OAuth. With no explicit
+			// redirectTo, Convex Auth falls back to the deployment's SITE_URL — which
+			// on the prod backend is https://ourbudget.app — so a local dev server
+			// (`pnpm web`, pointed at prod) gets bounced there after sign-in and the
+			// `?code=` is never exchanged. Passing the current origin keeps the flow
+			// on localhost. The server must allow this origin (see convex/auth.ts's
+			// redirect callback); on the real web app the origin IS SITE_URL, so this
+			// is a no-op there.
+			await signIn('google', { redirectTo: window.location.origin });
 			return;
 		}
 

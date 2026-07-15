@@ -21,6 +21,14 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 			if (redirectTo.startsWith(APP_SCHEME)) {
 				return redirectTo;
 			}
+			// Local web dev against this deployment: allow a localhost origin so
+			// `pnpm web` (pointed at prod) lands back on the dev server after OAuth
+			// instead of SITE_URL. Low risk — localhost is the developer's own
+			// machine, not an attacker-controllable external domain, and a valid
+			// session is still required to reach anything.
+			if (/^https?:\/\/localhost(?::\d+)?(?:[/?]|$)/.test(redirectTo)) {
+				return redirectTo;
+			}
 			const siteUrl = (process.env.SITE_URL ?? "").replace(/\/$/, "");
 			// Relative paths resolve against the web app.
 			if (redirectTo.startsWith("/") || redirectTo.startsWith("?")) {

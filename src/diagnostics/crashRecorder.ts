@@ -21,8 +21,15 @@
  */
 import { File, Paths } from 'expo-file-system';
 import * as Updates from 'expo-updates';
+import { Platform } from 'react-native';
 
 const CRASH_FILE = 'startup-crash.json';
+
+// The whole recorder is for OTA startup crashes, which only exist on native.
+// On web there is no OTA and no expo-file-system — touching `Paths.document`
+// there throws "expo-file-system is not supported on web". So every entry point
+// no-ops on web rather than reaching for a filesystem that isn't there.
+const IS_WEB = Platform.OS === 'web';
 
 export interface StartupCrash {
 	/** When it died (ms). The reader shows this so a stale record is obvious. */
@@ -76,6 +83,9 @@ function writeSync(json: string): void {
  * bundle instead of rolling back. This observes, it does not intervene.
  */
 export function installCrashRecorder(): void {
+	if (IS_WEB) {
+		return;
+	}
 	const previous = ErrorUtils.getGlobalHandler();
 
 	ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
@@ -105,6 +115,9 @@ export function installCrashRecorder(): void {
  * needs. Only the writer is racing a teardown.
  */
 export async function readStartupCrash(): Promise<StartupCrash | null> {
+	if (IS_WEB) {
+		return null;
+	}
 	try {
 		const file = crashFile();
 		if (!file.exists) {
@@ -118,6 +131,9 @@ export async function readStartupCrash(): Promise<StartupCrash | null> {
 
 /** Forget the recorded crash, once it has been read and acted on. */
 export function clearStartupCrash(): void {
+	if (IS_WEB) {
+		return;
+	}
 	try {
 		const file = crashFile();
 		if (file.exists) {

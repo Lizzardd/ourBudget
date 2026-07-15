@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AppErrorBoundary } from '../src/components/AppErrorBoundary';
 import { UpdateBanner } from '../src/features/UpdateBanner';
 import { useOtaUpdates } from '../src/hooks/useOtaUpdates';
 import { ToastProvider } from '../src/lib/toast';
@@ -114,7 +115,9 @@ export default function RootLayout() {
 			>
 				<ThemeProvider>
 					<ToastProvider>
-						<Stack screenOptions={{ headerShown: false }} />
+						<AppErrorBoundary>
+							<Stack screenOptions={{ headerShown: false }} />
+						</AppErrorBoundary>
 						<UpdateBanner />
 					</ToastProvider>
 				</ThemeProvider>
