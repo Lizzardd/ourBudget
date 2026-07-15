@@ -7,6 +7,40 @@ Legend: **P0** blocks the app working · **P1** ships a lie to the user ·
 
 ---
 
+## Release runbook
+
+Builds and deploys are run by hand, not by the agent. What to run, in order —
+the order is the point, see "Rules that must hold" below.
+
+**Shipping a JS-only change (no new native module):**
+
+```bash
+pnpm exec tsc --noEmit && pnpm exec vitest run    # must both pass
+pnpm convex:deploy                                # ONLY if convex/ changed. Non-interactive: pnpm exec convex deploy -y
+pnpm update:android                               # publish the OTA to the preview channel
+```
+
+Skipping `convex:deploy` when a new query shipped is what bricked v0.2.2 — the
+bundle boots, calls a function the deployment does not have, and rolls back on
+every launch. `npx convex function-spec --prod` lists what prod actually has.
+
+**Shipping a native change (new native module, or `runtimeVersion` bumped):**
+
+```bash
+pnpm build:android      # EAS build. An OTA CANNOT deliver this.
+```
+
+Then install the APK. A native change means bumping `runtimeVersion` in
+`app.json`, which deliberately orphans every update published against the old
+runtime — so build first, then publish updates against the new one.
+
+**EAS free-plan builds are capped per month.** The v0.2.4 build was refused on
+2026-07-14 with the monthly Android quota exhausted (resets 2026-08-01). Either
+upgrade the plan, wait for the reset, or build locally (`eas build --local`,
+which needs a JDK and the Android SDK on the machine).
+
+---
+
 ## Where things are deployed
 
 | | State |
