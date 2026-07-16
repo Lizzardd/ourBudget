@@ -10,13 +10,13 @@ Legend: **P1** ships a lie to the user · **P2** correctness / hygiene ·
 
 ## P1 — UI that promises something it doesn't do
 
-- [ ] **Notification toggles are inert.** Settings offers *Weekly check-in*,
-  *Over-budget nudges*, and *Monthly recap email*. There is no
-  `expo-notifications`, no scheduling, and no push/email anywhere — the toggles
-  write a flag to Convex that nothing reads. The Monday banner is in-app only.
-  Either implement them or stop showing them. **Biggest remaining lie in the UI.**
-- [ ] **Apple sign-in** is a disabled "coming soon" button on the welcome screen —
-  implement or remove it.
+- [x] ~~Notification toggles are inert.~~ **Now shown disabled** (opacity 0.45,
+  non-interactive, per the prototype), so the UI no longer promises notifications
+  the app doesn't send. There's still no `expo-notifications`/push/email — real
+  notifications are future work (P3 below).
+- [x] ~~Apple sign-in is a disabled button.~~ **Now a static "Apple · COMING SOON"
+  pill** on the welcome screen — honest, not tappable. Real Apple auth is still
+  unimplemented (P3 below).
 - [ ] **SMS ingestion.** `transactions.source` allows `"sms"` and there's a `raw`
   field, but nothing ingests SMS. Implement it or drop the union member.
 
@@ -30,6 +30,9 @@ Legend: **P1** ships a lie to the user · **P2** correctness / hygiene ·
 
 ## P3 — Nice to have / untested
 
+- [ ] **Real notifications** — push and/or the weekly recap email. The Settings
+  toggles are disabled until this exists (see P1).
+- [ ] **Apple sign-in** — implement the real flow (currently a "coming soon" pill).
 - [ ] **iOS has never been built or run.** The keyboard-avoidance path, Apple
   auth, and safe areas are all unexercised.
 - [ ] **Google OAuth consent screen shows `shiny-scorpion-150.convex.site`.** Set
