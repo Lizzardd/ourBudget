@@ -322,9 +322,16 @@ export default function Settings() {
 			</View>
 
 			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
-				<Text style={[styles.eyebrow, styles.listEyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
-					NOTIFICATIONS
-				</Text>
+				<View style={styles.notifHeader}>
+					<Text style={[styles.eyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
+						NOTIFICATIONS
+					</Text>
+					<View style={[styles.comingSoon, { backgroundColor: accent + '26' }]}>
+						<Text style={[styles.comingSoonText, { color: accent, fontFamily: fontFamily(800) }]}>
+							COMING SOON
+						</Text>
+					</View>
+				</View>
 				{/*
 				  These toggles are inert — they wrote a flag nothing reads (see TODO).
 				  The prototype now shows the whole list disabled (opacity 0.45,
@@ -505,6 +512,22 @@ const styles = StyleSheet.create({
 	listEyebrow: {
 		paddingTop: 12,
 		paddingBottom: 2,
+	},
+	notifHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 8,
+		paddingTop: 12,
+		paddingBottom: 2,
+	},
+	comingSoon: {
+		borderRadius: 999,
+		paddingVertical: 3,
+		paddingHorizontal: 8,
+	},
+	comingSoonText: {
+		fontSize: 10,
+		letterSpacing: 1,
 	},
 	listRow: {
 		paddingVertical: 14,
