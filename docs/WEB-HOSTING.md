@@ -58,6 +58,17 @@ If the project/domain ever needs recreating:
 
 ## Notes
 
+- **Assets must not live under `node_modules` or a dot-directory.** Cloudflare
+  Pages silently drops any `node_modules/` folder and dotfiles (`.pnpm`, `.git`,
+  `.DS_Store`) from the upload — requests for them fall through to the SPA
+  `index.html` (a 200 that isn't the file). Fonts imported from
+  `@expo-google-fonts` exported under `assets/node_modules/.pnpm/…/*.ttf` and so
+  never served — every bundled font 404'd, text fell back to a system font, and
+  Material Symbols icons rendered as raw ligature names. They're now **vendored
+  to `assets/fonts/`** (see `src/theme/fonts.ts`) so they export to a clean
+  `assets/…` path. If you add another bundled asset, keep it off any
+  `node_modules`/dot path, and sanity-check a deploy with:
+  `grep -rl "node_modules/\.pnpm" dist/_expo/static/js/web/` (should be empty).
 - **No OTA, no server rebuild.** Updating the web app = `pnpm web:deploy` from your
   machine. Same mental model as the APK.
 - **Changing the domain** means re-running step 1 (new `SITE_URL`) and the custom
