@@ -110,7 +110,7 @@
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
             <div style="font-size: 13px; font-weight: 800; letter-spacing: -0.2px">{{ householdName }}</div>
             <div style="display: flex">
-              <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16)">{{ profInitial }}</div>
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ profAvatarBg }}; color: #3A1220; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16)">{{ profInitialShown }}</div>
               <sc-for list="{{ manageMembers }}" as="m" hint-placeholder-count="1">
                 <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ m.color }}; color: {{ m.textColor }}; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg, #221B16); margin-left: -8px">{{ m.initial }}</div>
               </sc-for>
@@ -306,7 +306,7 @@
         <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px">
           <div style="display: flex; align-items: center"><div style="font-size: 13px; font-weight: 700; color: var(--sub, #B5A493); flex: 1">MEMBERS</div><button onClick="{{ openManage }}" style="border: none; background: none; color: var(--accent, #C96287); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer" style-active="opacity: 0.6">Manage ›</button></div>
           <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px">
-            <div onClick="{{ openProfile }}" style="display: flex; align-items: center; gap: 12px; cursor: pointer"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitial }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">You · edit ›</div></div>
+            <div onClick="{{ openProfile }}" style="display: flex; align-items: center; gap: 12px; cursor: pointer"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profAvatarBg }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitialShown }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">You · edit ›</div></div>
             <sc-for list="{{ manageMembers }}" as="m" hint-placeholder-count="1">
               <div style="display: flex; align-items: center; gap: 12px"><div style="width: 40px; height: 40px; border-radius: 50%; background: {{ m.color }}; color: {{ m.textColor }}; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ m.initial }}</div><div style="flex: 1; font-size: 15px; font-weight: 700">{{ m.name }}</div><div style="font-size: 12px; color: var(--sub, #B5A493)">{{ m.role }}</div></div>
             </sc-for>
@@ -525,7 +525,7 @@
           <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 20px; margin-top: 12px">
             <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">MEMBERS</div>
             <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0 2px">
-              <div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitial }}</div>
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: {{ profAvatarBg }}; color: #3A1220; font-weight: 800; display: flex; align-items: center; justify-content: center">{{ profInitialShown }}</div>
               <div style="flex: 1; font-size: 15px; font-weight: 700">{{ profName }}</div>
               <div style="font-size: 12px; font-weight: 700; color: var(--accent, #C96287)">You · Owner</div>
             </div>
@@ -572,9 +572,15 @@
       <div data-screen-label="Profile" style="position: absolute; inset: 0; z-index: 35; background: var(--bg, #221B16); display: flex; flex-direction: column; animation: slideIn 0.3s ease">
         <div style="flex: 1; overflow-y: auto; padding: 12px 18px calc(40px + env(safe-area-inset-bottom, 0px))">
           <button onClick="{{ closeProfile }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; gap: 4px">‹ Back</button>
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 0 20px">
-            <div style="width: 84px; height: 84px; border-radius: 50%; background: {{ profColor }}; color: #3A1220; font-size: 34px; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: background 0.3s">{{ profInitial }}</div>
-            <div style="display: flex; gap: 10px">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 14px 0 20px">
+            <div style="width: 84px; height: 84px; border-radius: 50%; background: {{ profAvatarBg }}; color: #3A1220; font-size: 34px; font-weight: 900; display: flex; align-items: center; justify-content: center; transition: background 0.3s">{{ profInitialShown }}</div>
+            <div style="display: flex; gap: 8px">
+              <button onClick="{{ useGooglePhoto }}" style="border: none; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 9px 15px; cursor: pointer; display: flex; align-items: center; gap: 7px" style-active="transform: scale(0.97)"><span style="font-family: 'Material Symbols Rounded'; font-size: 17px">photo_camera</span>{{ photoBtnLabel }}</button>
+            </div>
+            <sc-if value="{{ profHasPic }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ removePhoto }}" style="border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; margin-top: -6px">Remove photo</button>
+            </sc-if>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 240px">
               <sc-for list="{{ profSwatches }}" as="sw" hint-placeholder-count="6">
                 <button onClick="{{ sw.pick }}" style="width: 30px; height: 30px; border-radius: 50%; background: {{ sw.c }}; border: 2.5px solid {{ sw.ring }}; cursor: pointer; padding: 0" style-active="transform: scale(0.9)"></button>
               </sc-for>
@@ -868,11 +874,13 @@ class Component extends DCLogic {
     editId: null, editCat: null, editOldAmt: 0, txEdits: {}, txDeleted: {},
     customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
     notif: false, weekly: false, confirmDelete: false, archived: [],
-    profOpen: false, profName: 'Member A', profEmail: 'member-a@example.com', profColor: '#D98BA4',
+    profOpen: false, profName: 'Member A', profEmail: 'member-a@example.com', profColor: '#D98BA4', profPic: null,
     prefWeekly: true, prefOver: true, prefMonthly: false,
     householdName: 'Demo Household', manageOpen: false, confirmRemove: null,
     members: [{ id: 'omar', name: 'Member B', color: '#7FA8A0', textColor: '#0F2B26', role: 'Member' }],
   };
+
+  GOOGLE_PHOTO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='168' height='168'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23F4CBA9'/%3E%3Cstop offset='1' stop-color='%23D98E7A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='168' height='168' fill='url(%23bg)'/%3E%3Ccircle cx='84' cy='62' r='30' fill='%23FBE7D6'/%3E%3Crect x='28' y='102' width='112' height='84' rx='42' fill='%23FBE7D6'/%3E%3C/svg%3E";
 
   scheduleNotif() {
     clearTimeout(this._nt);
@@ -1442,11 +1450,17 @@ class Component extends DCLogic {
       profFirst: (s.profName.trim() || 'Member A').split(' ')[0],
       profInitial: (s.profName.trim()[0] || 'S').toUpperCase(),
       profColor: s.profColor,
+      profAvatarBg: s.profPic ? 'transparent url("' + s.profPic + '") center/cover' : s.profColor,
+      profInitialShown: s.profPic ? '' : (s.profName.trim()[0] || 'M').toUpperCase(),
+      profHasPic: !!s.profPic,
+      photoBtnLabel: s.profPic ? 'Change photo' : 'Use Google photo',
+      useGooglePhoto: () => this.setState({ profPic: this.GOOGLE_PHOTO }),
+      removePhoto: () => this.setState({ profPic: null }),
       profNameVal: s.profName,
       profNameChange: e => this.setState({ profName: e.target.value }),
       profEmail: s.profEmail,
       profEmailChange: e => this.setState({ profEmail: e.target.value }),
-      profSwatches: ['#D98BA4', '#7FA8A0', '#E3B063', '#9C8FC7', '#86B478', '#C96287'].map(c => ({
+      profSwatches: ['#D98BA4', '#7FA8A0', '#E3B063', '#9C8FC7', '#86B478', '#C96287', '#E08B6F', '#8AA3C4', '#B98AD4', '#5FA9A0', '#D97A8F', '#C7A15A'].map(c => ({
         c,
         ring: c === s.profColor ? '#F6EDE3' : 'transparent',
         pick: () => this.setState({ profColor: c }),

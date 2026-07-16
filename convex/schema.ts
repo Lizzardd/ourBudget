@@ -85,6 +85,10 @@ export default defineSchema({
 		overNudges: v.boolean(),
 		monthlyRecap: v.boolean(),
 		profileColor: v.string(),
+		// Avatar photo (the member's Google account picture). Absent = show the
+		// `profileColor` + initial instead. Stored here, per-household like
+		// `profileColor`, so every member sees each other's photo.
+		photoUrl: v.optional(v.string()),
 		displayName: v.string(),
 		consentAt: v.optional(v.number()),
 		policyVersion: v.optional(v.string()),

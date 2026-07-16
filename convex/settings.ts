@@ -40,6 +40,9 @@ export const updateSettings = mutation({
 			overNudges: v.optional(v.boolean()),
 			monthlyRecap: v.optional(v.boolean()),
 			profileColor: v.optional(v.string()),
+			// A URL sets the avatar photo; `null` clears it (back to colour +
+			// initial). Absent leaves it unchanged, like every other field here.
+			photoUrl: v.optional(v.union(v.string(), v.null())),
 			displayName: v.optional(v.string()),
 			consentAt: v.optional(v.number()),
 			policyVersion: v.optional(v.string()),
@@ -59,9 +62,15 @@ export const updateSettings = mutation({
 			throw new Error("No settings row found for this member and household");
 		}
 
-		const patch = Object.fromEntries(
+		const patch: Record<string, unknown> = Object.fromEntries(
 			Object.entries(args.patch).filter(([, value]) => value !== undefined),
 		);
+
+		// `photoUrl: null` is the "clear the photo" signal; Convex removes a field
+		// patched to `undefined`, and the schema type is `optional(string)`.
+		if (patch.photoUrl === null) {
+			patch.photoUrl = undefined;
+		}
 
 		await ctx.db.patch(settings._id, patch);
 	},

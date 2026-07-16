@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useMutation, useQuery } from 'convex/react';
 
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { Overlay } from '../components/Overlay';
 import { useHousehold } from '../hooks/useHousehold';
@@ -178,11 +179,12 @@ export function ManageHouseholdOverlay({ open, onClose }: ManageHouseholdOverlay
 					</Text>
 
 					<View style={styles.meRow}>
-						<View style={[styles.avatar, { backgroundColor: me?.profileColor ?? t.el }]}>
-							<Text style={[styles.avatarInitial, { fontFamily: fontFamily(800) }]}>
-								{me?.initial ?? '?'}
-							</Text>
-						</View>
+						<Avatar
+							size={40}
+							initial={me?.initial ?? '?'}
+							bg={me?.profileColor ?? t.el}
+							photoUrl={me?.photoUrl}
+						/>
 						<Text style={[styles.memberName, { color: t.text, fontFamily: fontFamily(700) }]}>
 							{me?.displayName ?? 'You'}
 						</Text>
@@ -195,11 +197,7 @@ export function ManageHouseholdOverlay({ open, onClose }: ManageHouseholdOverlay
 						const confirming = confirmingId === m.userId;
 						return (
 							<View key={m.userId} style={[styles.memberRow, { borderTopColor: t.line }]}>
-								<View style={[styles.avatar, { backgroundColor: m.profileColor }]}>
-									<Text style={[styles.avatarInitial, { fontFamily: fontFamily(800) }]}>
-										{m.initial}
-									</Text>
-								</View>
+								<Avatar size={40} initial={m.initial} bg={m.profileColor} photoUrl={m.photoUrl} />
 								<View style={styles.memberText}>
 									<Text style={[styles.memberName, { color: t.text, fontFamily: fontFamily(700) }]}>
 										{m.displayName}

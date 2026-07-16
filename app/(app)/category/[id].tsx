@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../../convex/_generated/api';
+import { Avatar } from '../../../src/components/Avatar';
 import { Icon } from '../../../src/components/Icon';
 import { Loading } from '../../../src/components/Loading';
 import { ProgressBar } from '../../../src/components/ProgressBar';
@@ -261,11 +262,13 @@ export default function CategoryDetail() {
 									i < rows.length - 1 ? { borderBottomColor: t.line, borderBottomWidth: 1 } : null,
 								]}
 							>
-								<View style={[styles.avatar, { backgroundColor: row.whoBg }]}>
-									<Text style={[styles.avatarText, { color: row.whoColor }]}>
-										{row.whoInitial}
-									</Text>
-								</View>
+								<Avatar
+									size={36}
+									initial={row.whoInitial}
+									bg={row.whoBg}
+									color={row.whoColor}
+									photoUrl={row.whoPhoto}
+								/>
 								<View style={styles.txnMid}>
 									<Text
 										style={[styles.txnNote, { color: t.text, fontFamily: fontFamily(700) }]}

@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Avatar } from '../components/Avatar';
 import { CategoryCard } from '../components/CategoryCard';
 import type { DashboardLayout } from '../components/CategoryCard';
 import { ProgressRing } from '../components/ProgressRing';
@@ -11,7 +12,7 @@ export interface HomeGreeting {
 	firstName: string;
 	householdName: string;
 	monthLabel: string;
-	members: { userId: string; initial: string; profileColor: string; isMe: boolean }[];
+	members: { userId: string; initial: string; profileColor: string; photoUrl?: string; isMe: boolean }[];
 }
 
 export interface HomeSection {
@@ -71,21 +72,15 @@ export function HomeView({
 						</Text>
 						<View style={styles.avatarStack}>
 							{greeting.members.map((member, index) => (
-								<View
+								<Avatar
 									key={member.userId}
-									style={[
-										styles.avatar,
-										{
-											backgroundColor: member.profileColor,
-											borderColor: t.bg,
-											marginLeft: index === 0 ? 0 : -10,
-										},
-									]}
-								>
-									<Text style={[styles.avatarInitial, { fontFamily: fontFamily(800) }]}>
-										{member.initial}
-									</Text>
-								</View>
+									size={28}
+									initial={member.initial}
+									bg={member.profileColor}
+									color="#2B0E1A"
+									photoUrl={member.photoUrl}
+									style={{ borderColor: t.bg, borderWidth: 2, marginLeft: index === 0 ? 0 : -10 }}
+								/>
 							))}
 						</View>
 					</View>

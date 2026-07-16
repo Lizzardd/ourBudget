@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useConvex, useQuery } from 'convex/react';
 
+import { Avatar } from '../../src/components/Avatar';
 import { FadeIn } from '../../src/components/FadeIn';
 import { Icon } from '../../src/components/Icon';
 import { Loading } from '../../src/components/Loading';
@@ -211,11 +212,7 @@ export default function Settings() {
 								accessibilityRole={m.isMe ? 'button' : undefined}
 								style={styles.memberRow}
 							>
-								<View style={[styles.memberAvatar, { backgroundColor: m.profileColor }]}>
-									<Text style={[styles.memberInitial, { fontFamily: fontFamily(800) }]}>
-										{m.initial}
-									</Text>
-								</View>
+								<Avatar size={40} initial={m.initial} bg={m.profileColor} photoUrl={m.photoUrl} />
 								<Text style={[styles.rowTitle, styles.rowText, { color: t.text, fontFamily: fontFamily(700) }]}>
 									{m.displayName}
 								</Text>

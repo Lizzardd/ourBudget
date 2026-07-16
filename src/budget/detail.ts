@@ -45,6 +45,8 @@ export interface TxnRowVM {
 	whoInitial: string;
 	whoBg: string;
 	whoColor: string;
+	/** The payer's avatar photo, or undefined to show the initial on `whoBg`. */
+	whoPhoto?: string;
 	meta: string;
 }
 
@@ -127,6 +129,7 @@ export interface PayerMember {
 	userId: string;
 	displayName: string;
 	profileColor: string;
+	photoUrl?: string;
 }
 
 /** A resolved payer: whose colours to paint, and which name to print. */
@@ -135,6 +138,8 @@ export interface PayerAvatar {
 	color: string;
 	initial: string;
 	displayName: string;
+	/** The member's avatar photo, when they've set one. */
+	photoUrl?: string;
 }
 
 /**
@@ -160,7 +165,7 @@ export function payerAvatar(
 	const initial = (name.trim()[0] || '?').toUpperCase();
 
 	return match
-		? { bg: match.profileColor, color: '#3A1220', initial, displayName: name }
+		? { bg: match.profileColor, color: '#3A1220', initial, displayName: name, photoUrl: match.photoUrl }
 		: { bg: '#7FA8A0', color: '#0F2B26', initial, displayName: name };
 }
 
@@ -245,6 +250,7 @@ export function toTxnRow(
 		whoInitial: avatar.initial,
 		whoBg: avatar.bg,
 		whoColor: avatar.color,
+		whoPhoto: avatar.photoUrl,
 		meta: (memo ? memo + ' · ' : '') + avatar.displayName + ' · ' + when,
 	};
 }

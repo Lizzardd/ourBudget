@@ -29,6 +29,24 @@ export const isDeveloper = query({
 });
 
 /**
+ * The caller's Google account photo URL (captured at sign-in as `user.image`),
+ * or null if none. The Profile overlay's "Use Google photo" reads this and
+ * stores it as the member's avatar (`settings.photoUrl`).
+ */
+export const myGooglePhoto = query({
+	args: {},
+	returns: v.union(v.string(), v.null()),
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (userId === null) {
+			return null;
+		}
+		const user = await ctx.db.get(userId);
+		return user?.image ?? null;
+	},
+});
+
+/**
  * GDPR data-portability export. Returns every record the caller "owns" or
  * personally participates in:
  *  - their own `users` row

@@ -1,6 +1,10 @@
+import { useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { api } from '../../convex/_generated/api';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
 import { Overlay } from '../components/Overlay';
 import { useHousehold } from '../hooks/useHousehold';
 import { useSettings, useUpdateSettings } from '../hooks/useSettings';
@@ -13,15 +17,20 @@ export interface ProfileOverlayProps {
 	onClose: () => void;
 }
 
-/** Swatch order matches the prototype's `profSwatches`, left to right. */
-const SWATCHES = ['#D98BA4', '#7FA8A0', '#E3B063', '#9C8FC7', '#86B478', '#C96287'];
+/** Swatch order matches the prototype's `profSwatches`, left to right, wrapping. */
+const SWATCHES = [
+	'#D98BA4', '#7FA8A0', '#E3B063', '#9C8FC7', '#86B478', '#C96287',
+	'#E08B6F', '#8AA3C4', '#B98AD4', '#5FA9A0', '#D97A8F', '#C7A15A',
+];
 
 /**
- * Profile overlay — editable display name, an avatar that previews the
- * name's initial in the selected `profileColor` live, and the 6 color
- * swatches from the prototype's Profile screen. Both fields patch through
- * `useUpdateSettings` (per-user, per-household), so the change is visible
- * to the rest of the household as soon as it lands.
+ * Profile overlay — editable display name, an avatar that previews either the
+ * chosen Google photo or the name's initial on the selected `profileColor`, the
+ * 12 wrapping colour swatches, and "Use Google photo" / "Remove photo" controls.
+ * Every field patches through `useUpdateSettings` (per-user, per-household), so
+ * the change — colour, name, or photo — is visible to the rest of the household
+ * as soon as it lands (`householdMemberProfiles` reads `settings.photoUrl`). The
+ * Google photo is the caller's `user.image`, read via `account.myGooglePhoto`.
  *
  * Fidelity source: `docs/design/BudgetApp-Prototype.dc.html`'s
  * `─── PROFILE OVERLAY ───`. That markup also has an editable EMAIL field,
@@ -39,6 +48,10 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 
 	const [name, setName] = useState('');
 	const [color, setColor] = useState(SWATCHES[0]);
+	const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+
+	// The caller's Google account picture, offered as their avatar.
+	const googlePhoto = useQuery(api.account.myGooglePhoto);
 
 	// Re-seed local (live-preview) state from the loaded settings each time
 	// the overlay opens, so edits always start from the current value.
@@ -46,6 +59,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 		if (open && settings) {
 			setName(settings.displayName);
 			setColor(settings.profileColor);
+			setPhotoUrl(settings.photoUrl ?? undefined);
 		}
 	}, [open, settings]);
 
@@ -70,6 +84,20 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 		if (settings && next !== settings.profileColor) {
 			patch({ profileColor: next });
 		}
+	};
+
+	const handleUseGooglePhoto = () => {
+		if (!googlePhoto) {
+			toast('No Google photo found on your account');
+			return;
+		}
+		setPhotoUrl(googlePhoto);
+		patch({ photoUrl: googlePhoto });
+	};
+
+	const handleRemovePhoto = () => {
+		setPhotoUrl(undefined);
+		patch({ photoUrl: null });
 	};
 
 	const handleDone = () => {
@@ -97,11 +125,33 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 				</Pressable>
 
 				<View style={styles.avatarBlock}>
-					<View style={[styles.avatar, { backgroundColor: color }]}>
-						<Text style={[styles.avatarInitial, { fontFamily: fontFamily(900) }]}>
-							{initial}
+					<Avatar size={84} initial={initial} bg={color} photoUrl={photoUrl} />
+					<Pressable
+						onPress={handleUseGooglePhoto}
+						accessibilityRole="button"
+						accessibilityLabel={photoUrl ? 'Change photo' : 'Use Google photo'}
+						style={({ pressed }) => [
+							styles.photoBtn,
+							{ backgroundColor: t.el },
+							pressed ? styles.photoBtnPressed : null,
+						]}
+					>
+						<Icon name="photo_camera" size={17} color={t.text} />
+						<Text style={[styles.photoBtnLabel, { color: t.text, fontFamily: fontFamily(700) }]}>
+							{photoUrl ? 'Change photo' : 'Use Google photo'}
 						</Text>
-					</View>
+					</Pressable>
+					{photoUrl ? (
+						<Pressable
+							onPress={handleRemovePhoto}
+							accessibilityRole="button"
+							style={styles.removePhoto}
+						>
+							<Text style={[styles.removePhotoLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
+								Remove photo
+							</Text>
+						</Pressable>
+					) : null}
 					<View style={styles.swatchRow}>
 						{SWATCHES.map((sw) => {
 							const selected = sw === color;
@@ -186,23 +236,35 @@ const styles = StyleSheet.create({
 	},
 	avatarBlock: {
 		alignItems: 'center',
-		gap: 10,
+		gap: 14,
 		paddingVertical: 20,
 	},
-	avatar: {
-		width: 84,
-		height: 84,
-		borderRadius: 42,
+	photoBtn: {
+		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'center',
+		gap: 7,
+		borderRadius: 999,
+		paddingVertical: 9,
+		paddingHorizontal: 15,
 	},
-	avatarInitial: {
-		fontSize: 34,
-		color: '#3A1220',
+	photoBtnPressed: {
+		transform: [{ scale: 0.97 }],
+	},
+	photoBtnLabel: {
+		fontSize: 13,
+	},
+	removePhoto: {
+		marginTop: -6,
+	},
+	removePhotoLabel: {
+		fontSize: 12,
 	},
 	swatchRow: {
 		flexDirection: 'row',
+		flexWrap: 'wrap',
+		justifyContent: 'center',
 		gap: 10,
+		maxWidth: 240,
 	},
 	swatch: {
 		width: 30,

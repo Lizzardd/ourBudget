@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { fmt } from '../budget/money';
 import { isTxnEditable, toTxnRow } from '../budget/detail';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { Sheet } from '../components/Sheet';
 import { useHousehold } from '../hooks/useHousehold';
@@ -150,11 +151,13 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 										i < rows.length - 1 ? { borderBottomColor: t.line, borderBottomWidth: 1 } : null,
 									]}
 								>
-									<View style={[styles.avatar, { backgroundColor: row.whoBg }]}>
-										<Text style={[styles.avatarText, { color: row.whoColor }]}>
-											{row.whoInitial}
-										</Text>
-									</View>
+									<Avatar
+										size={36}
+										initial={row.whoInitial}
+										bg={row.whoBg}
+										color={row.whoColor}
+										photoUrl={row.whoPhoto}
+									/>
 									<View style={styles.rowMid}>
 										<Text
 											style={[styles.rowNote, { color: t.text, fontFamily: fontFamily(700) }]}

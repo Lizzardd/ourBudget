@@ -271,6 +271,8 @@ export interface HouseholdMemberProfile {
 	userId: Id<"users">;
 	displayName: string;
 	profileColor: string;
+	/** Avatar photo URL, or undefined to show the colour + initial. */
+	photoUrl?: string;
 	initial: string;
 	role: "owner" | "member";
 }
@@ -311,6 +313,7 @@ export async function householdMemberProfiles(
 				userId: membership.userId,
 				displayName,
 				profileColor,
+				photoUrl: settings?.photoUrl,
 				initial,
 				role: membership.role,
 			};

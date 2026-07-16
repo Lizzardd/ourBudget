@@ -7,6 +7,8 @@ export interface HouseholdMember {
 	userId: Id<'users'>;
 	displayName: string;
 	profileColor: string;
+	/** Avatar photo URL, or undefined to show the colour + initial. */
+	photoUrl?: string;
 	initial: string;
 	role: 'owner' | 'member';
 	isMe: boolean;
