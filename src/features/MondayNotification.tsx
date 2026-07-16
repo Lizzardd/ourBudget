@@ -15,7 +15,7 @@
  */
 import { useQuery } from 'convex/react';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { api } from '../../convex/_generated/api';
 import { fmt } from '../budget/money';
@@ -159,11 +159,18 @@ const styles = StyleSheet.create({
 		borderRadius: 22,
 		borderWidth: 1,
 		padding: 14,
-		shadowColor: '#000',
-		shadowOpacity: 0.35,
-		shadowRadius: 24,
-		shadowOffset: { width: 0, height: 12 },
-		elevation: 8,
+		// react-native-web deprecated shadow*; boxShadow on web, shadow*/elevation
+		// on native.
+		...Platform.select({
+			web: { boxShadow: '0px 12px 24px rgba(0,0,0,0.35)' },
+			default: {
+				shadowColor: '#000',
+				shadowOpacity: 0.35,
+				shadowRadius: 24,
+				shadowOffset: { width: 0, height: 12 },
+				elevation: 8,
+			},
+		}),
 	},
 	bannerTap: {
 		flex: 1,

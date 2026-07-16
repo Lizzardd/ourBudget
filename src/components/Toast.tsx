@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '../lib/animation';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
 
@@ -33,19 +34,19 @@ export function Toast({ message }: ToastProps) {
 				toValue: 0,
 				duration: 300,
 				easing: Easing.bezier(0.2, 0.8, 0.3, 1),
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}),
 			Animated.timing(scale, {
 				toValue: 1,
 				duration: 300,
 				easing: Easing.bezier(0.2, 0.8, 0.3, 1),
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}),
 			Animated.timing(opacity, {
 				toValue: 1,
 				duration: 300,
 				easing: Easing.bezier(0.2, 0.8, 0.3, 1),
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}),
 		]).start();
 	}, [message, translateY, scale, opacity]);

@@ -1,6 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Animated, Easing, type StyleProp, type ViewStyle } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '../lib/animation';
+
 export interface SlideInProps {
 	children: ReactNode;
 	style?: StyleProp<ViewStyle>;
@@ -28,13 +30,13 @@ export function SlideIn({ children, style, duration = 300 }: SlideInProps) {
 				toValue: 0,
 				duration,
 				easing: Easing.ease,
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}),
 			Animated.timing(opacity, {
 				toValue: 1,
 				duration,
 				easing: Easing.ease,
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}),
 		];
 		Animated.parallel(anims).start();

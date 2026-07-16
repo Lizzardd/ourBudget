@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, BackHandler, Easing, Platform, StyleSheet } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '../lib/animation';
 import { useTheme } from '../theme/useTheme';
 
 export interface OverlayProps {
@@ -33,13 +34,13 @@ export function Overlay({ open, onClose, children }: OverlayProps) {
 				toValue: 0,
 				duration: 300,
 				easing: Easing.ease,
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}).start();
 			Animated.timing(opacity, {
 				toValue: 1,
 				duration: 300,
 				easing: Easing.ease,
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}).start();
 		} else if (mounted) {
 			setMounted(false);

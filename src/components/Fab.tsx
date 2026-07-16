@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAddExpenseSheet } from '../features/AddExpenseProvider';
+import { hexToRgba } from '../lib/color';
 import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
 
@@ -28,6 +29,19 @@ export function Fab() {
 	const insets = useSafeAreaInsets();
 	const { open } = useAddExpenseSheet();
 
+	// A rose glow, tinted by the accent. react-native-web deprecated the
+	// `shadow*` props in favour of `boxShadow`; native still uses shadow*/elevation.
+	const shadow: ViewStyle =
+		Platform.OS === 'web'
+			? { boxShadow: `0px 10px 28px ${hexToRgba(accent, 0.4)}` }
+			: {
+					shadowColor: accent,
+					shadowOffset: { width: 0, height: 10 },
+					shadowOpacity: 0.4,
+					shadowRadius: 28,
+					elevation: 6,
+				};
+
 	return (
 		<Pressable
 			accessibilityRole="button"
@@ -35,9 +49,9 @@ export function Fab() {
 			onPress={() => open()}
 			style={({ pressed }) => [
 				styles.fab,
+				shadow,
 				{
 					backgroundColor: accent,
-					shadowColor: accent,
 					bottom: BOTTOM_OFFSET + insets.bottom,
 					transform: [{ scale: pressed ? 0.96 : 1 }],
 				},
@@ -61,10 +75,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 6,
-		shadowOffset: { width: 0, height: 10 },
-		shadowOpacity: 0.4,
-		shadowRadius: 28,
-		elevation: 6,
 		zIndex: 20,
 	},
 	plus: {

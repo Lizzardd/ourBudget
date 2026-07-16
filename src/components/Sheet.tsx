@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { USE_NATIVE_DRIVER } from '../lib/animation';
 import { useKeyboardInset } from '../hooks/useKeyboardInset';
 import { useTheme } from '../theme/useTheme';
 
@@ -49,13 +50,13 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 					toValue: 0,
 					duration: 350,
 					easing: Easing.bezier(0.2, 0.8, 0.3, 1),
-					useNativeDriver: true,
+					useNativeDriver: USE_NATIVE_DRIVER,
 				}),
 				Animated.timing(opacity, {
 					toValue: 1,
 					duration: 250,
 					easing: Easing.ease,
-					useNativeDriver: true,
+					useNativeDriver: USE_NATIVE_DRIVER,
 				}),
 			]).start();
 		} else if (mounted) {
@@ -63,7 +64,7 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 				toValue: 0,
 				duration: 200,
 				easing: Easing.ease,
-				useNativeDriver: true,
+				useNativeDriver: USE_NATIVE_DRIVER,
 			}).start(({ finished }) => {
 				if (finished) {
 					setMounted(false);
@@ -90,7 +91,7 @@ export function Sheet({ open, onClose, children, maxHeight }: SheetProps) {
 							toValue: 0,
 							duration: 200,
 							easing: Easing.ease,
-							useNativeDriver: true,
+							useNativeDriver: USE_NATIVE_DRIVER,
 						}).start();
 					}
 				},

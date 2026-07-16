@@ -63,3 +63,4 @@ update-check
 
 # Metro file-map cache artifact
 metro-file-map-*
+playwright_chromiumdev_profile-*/

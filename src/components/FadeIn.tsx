@@ -1,6 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Animated, Easing, type StyleProp, type ViewStyle } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '../lib/animation';
+
 export interface FadeInProps {
 	children: ReactNode;
 	style?: StyleProp<ViewStyle>;
@@ -23,7 +25,7 @@ export function FadeIn({ children, style, duration = 300 }: FadeInProps) {
 			toValue: 1,
 			duration,
 			easing: Easing.ease,
-			useNativeDriver: true,
+			useNativeDriver: USE_NATIVE_DRIVER,
 		});
 		anim.start();
 		return () => anim.stop();
