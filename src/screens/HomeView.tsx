@@ -27,6 +27,8 @@ export interface HomeViewProps {
 	layout: DashboardLayout;
 	onOpenCategory: (id: string) => void;
 	onOpenNewCategory: () => void;
+	/** Opens the "All transactions" sheet for the selected month. */
+	onOpenAllTransactions: () => void;
 }
 
 /**
@@ -37,7 +39,15 @@ export interface HomeViewProps {
  * and callbacks as props; no Convex/hook data-fetching lives here — see
  * `app/(app)/home.tsx` for the container that supplies them.
  */
-export function HomeView({ greeting, summary, sections, layout, onOpenCategory, onOpenNewCategory }: HomeViewProps) {
+export function HomeView({
+	greeting,
+	summary,
+	sections,
+	layout,
+	onOpenCategory,
+	onOpenNewCategory,
+	onOpenAllTransactions,
+}: HomeViewProps) {
 	const { t, accent } = useTheme();
 
 	return (
@@ -82,7 +92,16 @@ export function HomeView({ greeting, summary, sections, layout, onOpenCategory, 
 				</View>
 			) : null}
 
-			<View style={[styles.summary, { backgroundColor: t.card }]}>
+			<Pressable
+				onPress={onOpenAllTransactions}
+				accessibilityRole="button"
+				accessibilityLabel="All transactions"
+				style={({ pressed }) => [
+					styles.summary,
+					{ backgroundColor: t.card },
+					pressed ? styles.summaryPressed : null,
+				]}
+			>
 				<ProgressRing
 					pct={summary.ringPct}
 					label={summary.ringLabel}
@@ -105,7 +124,7 @@ export function HomeView({ greeting, summary, sections, layout, onOpenCategory, 
 						{summary.summaryLine2}
 					</Text>
 				</View>
-			</View>
+			</Pressable>
 
 			{sections.map((sec) => (
 				<View key={sec.title}>
@@ -207,6 +226,10 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 18,
+	},
+	// Prototype: the card has style-active="transform: scale(0.99)".
+	summaryPressed: {
+		transform: [{ scale: 0.99 }],
 	},
 	summaryText: {
 		flex: 1,

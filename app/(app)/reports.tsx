@@ -34,6 +34,7 @@ export default function Reports() {
 	const openCategory = (row: ReportsRow) => {
 		const { startMs, endMs } = monthRange(selectedYear, selectedMonth);
 		openMonthTransactions({
+			mode: 'category',
 			categoryId: row.id as Id<'categories'>,
 			emoji: row.emoji,
 			name: row.name,
@@ -48,6 +49,7 @@ export default function Reports() {
 	const openAnnual = (row: ReportsRow) => {
 		const { startMs, endMs } = yearRange(selectedYear);
 		openMonthTransactions({
+			mode: 'category',
 			categoryId: row.id as Id<'categories'>,
 			emoji: row.emoji,
 			name: row.name,

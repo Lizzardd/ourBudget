@@ -13,7 +13,9 @@ import { fontFamily } from '../theme/fonts';
 import { useTheme } from '../theme/useTheme';
 import { useAddExpenseSheet } from './AddExpenseProvider';
 
-export interface MonthTransactionsSheetParams {
+/** A single category's transactions for a range (Reports rows). */
+export interface MonthTransactionsCategoryParams {
+	mode: 'category';
 	categoryId: Id<'categories'>;
 	emoji: string;
 	name: string;
@@ -25,6 +27,23 @@ export interface MonthTransactionsSheetParams {
 	startMs: number;
 	endMs: number;
 }
+
+/**
+ * Every monthly-category transaction for the month, aggregated — the Home
+ * summary card's "All transactions". Annual categories are excluded so the
+ * total matches the dashboard ring (see `transactions.listMonthlyInRange`).
+ */
+export interface MonthTransactionsAllParams {
+	mode: 'all';
+	householdId: Id<'households'>;
+	monthLabel: string;
+	startMs: number;
+	endMs: number;
+}
+
+export type MonthTransactionsSheetParams =
+	| MonthTransactionsCategoryParams
+	| MonthTransactionsAllParams;
 
 export interface MonthTransactionsSheetProps {
 	open: boolean;
@@ -41,21 +60,31 @@ export interface MonthTransactionsSheetProps {
  * historical months stay read-only (`isTxnEditable`).
  */
 export function MonthTransactionsSheet({ open, onClose, params }: MonthTransactionsSheetProps) {
-	const { t } = useTheme();
+	const { t, accent } = useTheme();
 	const { currency } = useHousehold();
 	const { members } = useHouseholdMembers();
 	const { openEdit: openEditExpense } = useAddExpenseSheet();
 
-	const txns = useQuery(
+	// One of these two is always skipped — the sheet shows either a single
+	// category's rows or every monthly category's rows aggregated.
+	const catTxns = useQuery(
 		api.transactions.listByCategoryInRange,
-		params
+		params?.mode === 'category'
 			? { categoryId: params.categoryId, startMs: params.startMs, endMs: params.endMs }
 			: 'skip'
 	);
+	const allTxns = useQuery(
+		api.transactions.listMonthlyInRange,
+		params?.mode === 'all'
+			? { householdId: params.householdId, startMs: params.startMs, endMs: params.endMs }
+			: 'skip'
+	);
+	const txns = params?.mode === 'all' ? allTxns : catTxns;
 
 	const cur = currency ?? 'AED';
 	const nowMs = Date.now();
-	const isAnnual = params?.isAnnual ?? false;
+	// Aggregated rows are all monthly, so they follow the current-month edit rule.
+	const isAnnual = params?.mode === 'category' ? params.isAnnual : false;
 	const rows = (txns ?? []).map((txn) => ({
 		...toTxnRow(txn, cur, members ?? []),
 		txn,
@@ -72,7 +101,8 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 		onClose();
 		openEditExpense({
 			_id: row.txn._id,
-			categoryId: params.categoryId,
+			// In "all" mode each row belongs to its own category.
+			categoryId: params.mode === 'all' ? row.txn.categoryId : params.categoryId,
 			amount: row.txn.amount,
 			note: row.txn.note,
 			memo: row.txn.memo,
@@ -88,11 +118,15 @@ export function MonthTransactionsSheet({ open, onClose, params }: MonthTransacti
 				<>
 					<View style={styles.header}>
 						<View style={styles.tile}>
-							<Icon name={params.emoji} size={26} color={t.text} />
+							<Icon
+								name={params.mode === 'all' ? 'receipt_long' : params.emoji}
+								size={26}
+								color={params.mode === 'all' ? accent : t.text}
+							/>
 						</View>
 						<View style={styles.headerText}>
 							<Text style={[styles.name, { color: t.text, fontFamily: fontFamily(800) }]}>
-								{params.name}
+								{params.mode === 'all' ? 'All transactions' : params.name}
 							</Text>
 							<Text style={[styles.sub, { color: t.sub }]}>
 								{params.monthLabel} · {fmt(total, cur)}

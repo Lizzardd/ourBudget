@@ -314,6 +314,43 @@ export const listByCategoryInRange = query({
 	},
 });
 
+/**
+ * Every transaction across the household's MONTHLY categories within
+ * `[startMs, endMs)`, newest first — feeds the Home "All transactions" sheet.
+ * Annual categories are excluded on purpose, so the sheet's total matches the
+ * dashboard ring's spent figure (which is also monthly-only — see `summary`).
+ * Returns whole rows, `paidBy` included, like the other list queries.
+ */
+export const listMonthlyInRange = query({
+	args: {
+		householdId: v.id("households"),
+		startMs: v.number(),
+		endMs: v.number(),
+	},
+	handler: async (ctx, args) => {
+		await requireMembership(ctx, args.householdId);
+
+		const categories = await ctx.db
+			.query("categories")
+			.withIndex("by_household", (q) => q.eq("householdId", args.householdId))
+			.collect();
+		const monthlyIds = new Set(
+			categories.filter((category) => category.period === "monthly").map((category) => category._id),
+		);
+
+		const transactions = await ctx.db
+			.query("transactions")
+			.withIndex("by_household_spentAt", (q) =>
+				q.eq("householdId", args.householdId).gte("spentAt", args.startMs).lt("spentAt", args.endMs),
+			)
+			.collect();
+
+		return transactions
+			.filter((transaction) => monthlyIds.has(transaction.categoryId))
+			.sort((a, b) => b.spentAt - a.spentAt);
+	},
+});
+
 async function sumSpentInRange(
 	ctx: QueryCtx,
 	householdId: Id<"households">,
