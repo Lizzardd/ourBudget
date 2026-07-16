@@ -43,7 +43,7 @@
       </div>
       <div style="display: flex; flex-direction: column; gap: 12px">
         <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px; font-weight: 800; color: var(--accent, #C96287)">G</span> Continue with Google</button>
-        <button onClick="{{ goFork }}" style="height: 56px; border: none; border-radius: 999px; background: var(--el, #3A2F27); color: var(--text, #F6EDE3); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer" style-active="transform: scale(0.98)"><span style="font-size: 18px"></span> Continue with Apple</button>
+        <div style="height: 56px; border-radius: 999px; background: var(--el, #3A2F27); opacity: 0.5; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px"><span style="font-size: 18px"></span> Apple <span style="font-size: 11px; font-weight: 800; letter-spacing: 1px; background: var(--track, rgba(246,237,227,0.12)); border-radius: 999px; padding: 3px 8px">COMING SOON</span></div>
         <div style="text-align: center; font-size: 12px; color: var(--sub, #B5A493); margin-top: 4px">Free for households of any size</div>
         <div style="text-align: center; font-size: 11px; color: var(--sub, #B5A493); opacity: 0.7; margin-top: 6px">{{ versionLabel }}</div>
       </div>
@@ -53,7 +53,7 @@
   <!-- ══════════ ONBOARDING: FORK ══════════ -->
   <sc-if value="{{ isFork }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Onboarding — Create or Join" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
-      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Welcome, Sara 👋</div>
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Welcome, Member A 👋</div>
       <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">A household shares one pool of budgets. Start yours, or join one that's waiting for you.</div>
       <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 36px">
         <button onClick="{{ goInvite }}" style="border: none; text-align: left; border-radius: 24px; background: var(--accent, #C96287); color: #2B0E1A; padding: 22px 22px; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 16px" style-active="transform: scale(0.98)">
@@ -71,8 +71,8 @@
   <!-- ══════════ ONBOARDING: INVITE CODE ══════════ -->
   <sc-if value="{{ isInvite }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Onboarding — Invite code" style="flex: 1; display: flex; flex-direction: column; padding: 56px 24px calc(40px + env(safe-area-inset-bottom, 0px)); animation: slideIn 0.35s ease">
-      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">The Al-Marri Home is ready 🎉</div>
-      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">Share this code so Omar can join. Everything you both add stays perfectly in sync.</div>
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Demo Household is ready 🎉</div>
+      <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px; line-height: 1.5">Share this code so Member B can join. Everything you both add stays perfectly in sync.</div>
       <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
         <div style="border-radius: 28px; background: var(--card, #2D251F); padding: 32px 40px; text-align: center; border: 1px dashed rgba(201,98,135,0.5)">
           <div style="font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--sub, #B5A493)">INVITE CODE</div>
@@ -91,7 +91,7 @@
       <div style="font-size: 15px; color: var(--sub, #B5A493); margin-top: 8px">It looks like SUNNY4829 — check your messages.</div>
       <input value="{{ joinCode }}" onChange="{{ joinChange }}" placeholder="SUNNY4829" style="margin-top: 32px; height: 64px; border-radius: 20px; border: 1.5px solid rgba(201,98,135,0.4); background: var(--card, #2D251F); color: var(--text, #F6EDE3); font-size: 26px; font-weight: 800; letter-spacing: 2px; text-align: center; outline: none">
       <div style="flex: 1"></div>
-      <button onClick="{{ toDash }}" style="height: 58px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Join The Al-Marri Home</button>
+      <button onClick="{{ toDash }}" style="height: 58px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Join Demo Household</button>
       <button onClick="{{ goFork }}" style="height: 44px; border: none; background: none; color: var(--sub, #B5A493); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px">Back</button>
     </div>
   </sc-if>
@@ -118,7 +118,7 @@
           </div>
         </div>
 
-        <div style="border-radius: 26px; background: var(--card, #2D251F); padding: 20px; display: flex; align-items: center; gap: 18px">
+        <div onClick="{{ openAllTxns }}" style="border-radius: 26px; background: var(--card, #2D251F); padding: 20px; display: flex; align-items: center; gap: 18px; cursor: pointer" style-active="transform: scale(0.99)">
           <div style="width: 96px; height: 96px; border-radius: 50%; background: conic-gradient({{ ringColor }} var(--rp, 0%), var(--track, rgba(246,237,227,0.12)) 0); transition: --rp 1.4s cubic-bezier(0.25, 0.8, 0.3, 1); --rp: {{ ringPct }}; display: flex; align-items: center; justify-content: center; flex: none">
             <div style="width: 76px; height: 76px; border-radius: 50%; background: var(--card, #2D251F); display: flex; flex-direction: column; align-items: center; justify-content: center">
               <div style="font-size: 21px; font-weight: 900; letter-spacing: -0.5px">{{ ringLabel }}</div>
@@ -343,18 +343,20 @@
           </div>
         </div>
         <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 8px 20px; margin-top: 12px">
-          <div style="font-size: 13px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493); padding: 12px 0 2px">NOTIFICATIONS</div>
-          <sc-for list="{{ prefRows }}" as="p" hint-placeholder-count="3">
-            <div onClick="{{ p.toggle }}" style="display: flex; align-items: center; gap: 12px; padding: 14px 0; cursor: pointer; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
-              <div style="flex: 1">
-                <div style="font-size: 15px; font-weight: 700">{{ p.title }}</div>
-                <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">{{ p.sub }}</div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 12px 0 2px"><div style="font-size: 13px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">NOTIFICATIONS</div><div style="font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 8px">COMING SOON</div></div>
+          <div style="opacity: 0.45; pointer-events: none">
+            <sc-for list="{{ prefRows }}" as="p" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                <div style="flex: 1">
+                  <div style="font-size: 15px; font-weight: 700">{{ p.title }}</div>
+                  <div style="font-size: 12px; color: var(--sub, #B5A493); margin-top: 2px">{{ p.sub }}</div>
+                </div>
+                <div style="width: 52px; height: 30px; border-radius: 999px; background: var(--track, rgba(246,237,227,0.15)); padding: 3px; display: flex; justify-content: flex-start; flex: none">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: #FFF6EE; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></div>
+                </div>
               </div>
-              <div style="width: 52px; height: 30px; border-radius: 999px; background: {{ p.bg }}; padding: 3px; display: flex; justify-content: {{ p.side }}; transition: background 0.3s; flex: none">
-                <div style="width: 24px; height: 24px; border-radius: 50%; background: #FFF6EE; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></div>
-              </div>
-            </div>
-          </sc-for>
+            </sc-for>
+          </div>
         </div>
         <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 8px 20px; margin-top: 12px">
           <div style="font-size: 13px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493); padding: 12px 0 2px">PRIVACY &amp; DATA</div>
@@ -397,6 +399,21 @@
           <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.4px; color: var(--sub, #B5A493)">ourbudget<span style="color: var(--accent, #C96287)">.</span></div>
           <div style="font-size: 11px; color: var(--sub, #B5A493); opacity: 0.7; margin-top: 2px">{{ versionLabel }}</div>
         </div>
+        <sc-if value="{{ isDeveloper }}" hint-placeholder-val="{{ false }}">
+          <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 8px 20px; margin-top: 12px">
+            <div style="font-size: 13px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493); padding: 12px 0 6px">OTA DIAGNOSTICS</div>
+            <sc-for list="{{ otaRows }}" as="r" hint-placeholder-count="8">
+              <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line, rgba(246,237,227,0.07))">
+                <div style="flex: 1; font-size: 13px; color: var(--sub, #B5A493)">{{ r.k }}</div>
+                <div style="font-size: 13px; font-weight: 800; font-family: monospace; color: {{ r.color }}">{{ r.v }}</div>
+              </div>
+            </sc-for>
+            <div style="display: flex; gap: 18px; padding: 14px 0 4px">
+              <button onClick="{{ showLogs }}" style="border: none; background: none; color: var(--accent, #C96287); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; padding: 0">Show update logs ›</button>
+              <button onClick="{{ shareLogs }}" style="border: none; background: none; color: var(--accent, #C96287); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; padding: 0">Share logs ↗</button>
+            </div>
+          </div>
+        </sc-if>
       </div>
     </sc-if>
 
@@ -575,8 +592,8 @@
             </div>
           </div>
           <div style="border-radius: 24px; background: var(--card, #2D251F); padding: 8px 20px; margin-top: 12px">
-            <div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493); padding: 12px 0 2px">REMINDERS</div>
-            <div style="font-size: 13px; color: var(--sub, #B5A493); padding: 4px 0 14px; line-height: 1.5">Manage weekly check-ins, over-budget nudges and the monthly recap in <span style="color: var(--text, #F6EDE3); font-weight: 700">Settings → Notifications</span>.</div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 12px 0 2px"><div style="font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--sub, #B5A493)">REMINDERS</div><div style="font-size: 10px; font-weight: 800; letter-spacing: 1px; color: var(--accent, #C96287); background: rgba(201,98,135,0.15); border-radius: 999px; padding: 3px 8px">COMING SOON</div></div>
+            <div style="font-size: 13px; color: var(--sub, #B5A493); padding: 4px 0 14px; line-height: 1.5">Weekly check-ins, over-budget nudges and the monthly recap are on the way. You'll manage them in <span style="color: var(--text, #F6EDE3); font-weight: 700">Settings → Notifications</span>.</div>
           </div>
           <button onClick="{{ closeProfile }}" style="width: 100%; height: 54px; margin-top: 16px; border: none; border-radius: 999px; background: var(--accent, #C96287); color: #2B0E1A; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer" style-active="transform: scale(0.98)">Done</button>
         </div>
@@ -796,50 +813,50 @@ class Component extends DCLogic {
     ];
     this.TXNS = {
       groceries: [
-        { note: 'Carrefour', amt: 520, who: 'Sara', when: 'Jul 10' },
-        { note: 'Spinneys', amt: 448, who: 'Omar', when: 'Jul 5' },
-        { note: 'Union Coop', amt: 340, who: 'Sara', when: 'Jul 3' },
-        { note: 'Lulu', amt: 412, who: 'Omar', when: 'Jul 1' },
+        { note: 'Carrefour', amt: 520, who: 'Member A', when: 'Jul 10' },
+        { note: 'Spinneys', amt: 448, who: 'Member B', when: 'Jul 5' },
+        { note: 'Union Coop', amt: 340, who: 'Member A', when: 'Jul 3' },
+        { note: 'Lulu', amt: 412, who: 'Member B', when: 'Jul 1' },
       ],
-      housing: [{ note: 'July rent', amt: 6000, who: 'Omar', when: 'Jul 1' }],
+      housing: [{ note: 'July rent', amt: 6000, who: 'Member B', when: 'Jul 1' }],
       transport: [
-        { note: 'ENOC fuel', amt: 130, who: 'Omar', when: 'Jul 9' },
-        { note: 'Careem to DIFC', amt: 120, who: 'Sara', when: 'Jul 4' },
-        { note: 'Salik top-up', amt: 100, who: 'Sara', when: 'Jul 3' },
-        { note: 'Nol top-up', amt: 35, who: 'Omar', when: 'Jul 1' },
+        { note: 'ENOC fuel', amt: 130, who: 'Member B', when: 'Jul 9' },
+        { note: 'Careem to DIFC', amt: 120, who: 'Member A', when: 'Jul 4' },
+        { note: 'Salik top-up', amt: 100, who: 'Member A', when: 'Jul 3' },
+        { note: 'Nol top-up', amt: 35, who: 'Member B', when: 'Jul 1' },
       ],
       utilities: [
-        { note: 'DEWA', amt: 520, who: 'Omar', when: 'Jul 6' },
-        { note: 'Etisalat', amt: 260, who: 'Sara', when: 'Jul 2' },
+        { note: 'DEWA', amt: 520, who: 'Member B', when: 'Jul 6' },
+        { note: 'Etisalat', amt: 260, who: 'Member A', when: 'Jul 2' },
       ],
       entertainment: [
-        { note: 'Global Village', amt: 460, who: 'Sara', when: 'Jul 8' },
-        { note: 'VOX Cinema', amt: 180, who: 'Omar', when: 'Jul 5' },
-        { note: 'Arcade — kids', amt: 160, who: 'Sara', when: 'Jul 3' },
-        { note: 'Bowling', amt: 140, who: 'Omar', when: 'Jul 1' },
+        { note: 'Global Village', amt: 460, who: 'Member A', when: 'Jul 8' },
+        { note: 'VOX Cinema', amt: 180, who: 'Member B', when: 'Jul 5' },
+        { note: 'Arcade — kids', amt: 160, who: 'Member A', when: 'Jul 3' },
+        { note: 'Bowling', amt: 140, who: 'Member B', when: 'Jul 1' },
       ],
       subscriptions: [
-        { note: 'OSN+', amt: 184, who: 'Omar', when: 'Jul 4' },
-        { note: 'Netflix', amt: 56, who: 'Sara', when: 'Jul 2' },
-        { note: 'Spotify', amt: 32, who: 'Sara', when: 'Jul 2' },
-        { note: 'Amazon Prime', amt: 16, who: 'Omar', when: 'Jul 1' },
-        { note: 'iCloud', amt: 12, who: 'Sara', when: 'Jul 1' },
+        { note: 'OSN+', amt: 184, who: 'Member B', when: 'Jul 4' },
+        { note: 'Netflix', amt: 56, who: 'Member A', when: 'Jul 2' },
+        { note: 'Spotify', amt: 32, who: 'Member A', when: 'Jul 2' },
+        { note: 'Amazon Prime', amt: 16, who: 'Member B', when: 'Jul 1' },
+        { note: 'iCloud', amt: 12, who: 'Member A', when: 'Jul 1' },
       ],
       maint: [
-        { note: 'Plumber', amt: 450, who: 'Omar', when: 'Jul 7' },
-        { note: 'AC service', amt: 1200, who: 'Sara', when: 'Jun 14' },
-        { note: 'Handyman — shelves', amt: 350, who: 'Omar', when: 'May 30' },
-        { note: 'Paint touch-up', amt: 2300, who: 'Sara', when: 'Apr 12' },
+        { note: 'Plumber', amt: 450, who: 'Member B', when: 'Jul 7' },
+        { note: 'AC service', amt: 1200, who: 'Member A', when: 'Jun 14' },
+        { note: 'Handyman — shelves', amt: 350, who: 'Member B', when: 'May 30' },
+        { note: 'Paint touch-up', amt: 2300, who: 'Member A', when: 'Apr 12' },
       ],
       travel: [
-        { note: 'Flights — Cape Town', amt: 5200, who: 'Omar', when: 'Apr 18' },
-        { note: 'Hotel deposit', amt: 2400, who: 'Sara', when: 'Apr 2' },
-        { note: 'Visa fees', amt: 1000, who: 'Omar', when: 'Mar 20' },
+        { note: 'Flights — Cape Town', amt: 5200, who: 'Member B', when: 'Apr 18' },
+        { note: 'Hotel deposit', amt: 2400, who: 'Member A', when: 'Apr 2' },
+        { note: 'Visa fees', amt: 1000, who: 'Member B', when: 'Mar 20' },
       ],
       health: [
-        { note: 'Gym — quarterly', amt: 1800, who: 'Omar', when: 'May 3' },
-        { note: 'Personal trainer', amt: 600, who: 'Sara', when: 'Apr 10' },
-        { note: 'Vitamins', amt: 250, who: 'Sara', when: 'Feb 15' },
+        { note: 'Gym — quarterly', amt: 1800, who: 'Member B', when: 'May 3' },
+        { note: 'Personal trainer', amt: 600, who: 'Member A', when: 'Apr 10' },
+        { note: 'Vitamins', amt: 250, who: 'Member A', when: 'Feb 15' },
       ],
     };
   }
@@ -851,10 +868,10 @@ class Component extends DCLogic {
     editId: null, editCat: null, editOldAmt: 0, txEdits: {}, txDeleted: {},
     customCats: [], ncOpen: false, ncName: '', ncEmoji: 'flight', ncType: 'monthly', ncLimit: 1000,
     notif: false, weekly: false, confirmDelete: false, archived: [],
-    profOpen: false, profName: 'Sara', profEmail: 'sara.almarri@gmail.com', profColor: '#D98BA4',
+    profOpen: false, profName: 'Member A', profEmail: 'member-a@example.com', profColor: '#D98BA4',
     prefWeekly: true, prefOver: true, prefMonthly: false,
-    householdName: 'The Al-Marri Home', manageOpen: false, confirmRemove: null,
-    members: [{ id: 'omar', name: 'Omar', color: '#7FA8A0', textColor: '#0F2B26', role: 'Member' }],
+    householdName: 'Demo Household', manageOpen: false, confirmRemove: null,
+    members: [{ id: 'omar', name: 'Member B', color: '#7FA8A0', textColor: '#0F2B26', role: 'Member' }],
   };
 
   scheduleNotif() {
@@ -887,8 +904,8 @@ class Component extends DCLogic {
 
   cur() { return this.state.currency ?? this.props.currency ?? 'AED'; }
   whoStyle(name) {
-    const self = (this.state.profName || 'Sara').trim();
-    if (name === 'Sara' || name === self) return { initial: (self[0] || 'S').toUpperCase(), display: self, bg: this.state.profColor, textColor: '#3A1220' };
+    const self = (this.state.profName || 'Member A').trim();
+    if (name === 'Member A' || name === self) return { initial: (self[0] || 'S').toUpperCase(), display: self, bg: this.state.profColor, textColor: '#3A1220' };
     const m = this.state.members.find(x => x.name === name);
     if (m) return { initial: name[0].toUpperCase(), display: name, bg: m.color, textColor: m.textColor };
     return { initial: name[0].toUpperCase(), display: name, bg: '#7FA8A0', textColor: '#0F2B26' };
@@ -939,7 +956,7 @@ class Component extends DCLogic {
     const spent = this.spentOf(c, monthIdx);
     if (!spent) return [];
     const mShort = this.MONTHS[monthIdx].short;
-    if (c.id === 'housing') return [{ note: 'Monthly rent', amt: spent, who: 'Omar', when: mShort + ' 1' }];
+    if (c.id === 'housing') return [{ note: 'Monthly rent', amt: spent, who: 'Member B', when: mShort + ' 1' }];
     const pool = {
       groceries: ['Carrefour', 'Spinneys', 'Union Coop', 'Lulu'],
       transport: ['ENOC fuel', 'Careem', 'Salik top-up', 'Nol top-up'],
@@ -954,7 +971,7 @@ class Component extends DCLogic {
     for (let i = 0; i < 4; i++) {
       const amt = i === 3 ? rest : Math.round(spent * weights[i]);
       rest -= amt;
-      txns.push({ note: pool[i % pool.length], amt, who: i % 2 ? 'Omar' : 'Sara', when: mShort + ' ' + days[i] });
+      txns.push({ note: pool[i % pool.length], amt, who: i % 2 ? 'Member B' : 'Member A', when: mShort + ' ' + days[i] });
     }
     return txns.reverse();
   }
@@ -977,11 +994,11 @@ class Component extends DCLogic {
   }
 
   openEditTx(catId, t) {
-    const self = (this.state.profName || 'Sara').trim();
+    const self = (this.state.profName || 'Member A').trim();
     this.setState({
       sheet: true, sheetCat: catId, editId: t.id, editCat: catId, editOldAmt: t.amt,
       amount: String(t.amt), payee: t.note || '', note: t.memo || '', txDate: t.date || '2026-07-14',
-      payer: (t.who === self || t.who === 'Sara') ? 'self' : t.who,
+      payer: (t.who === self || t.who === 'Member A') ? 'self' : t.who,
     });
   }
 
@@ -1105,9 +1122,27 @@ class Component extends DCLogic {
     }));
 
     // ── month transactions sheet ──
-    const histCatDef = s.histCat ? [...allM, ...allA].find(c => c.id === s.histCat) : null;
+    const isAllTxns = s.histCat === '__all__';
+    const histCatDef = (s.histCat && !isAllTxns) ? [...allM, ...allA].find(c => c.id === s.histCat) : null;
     let histSheet = null;
-    if (histCatDef) {
+    if (isAllTxns) {
+      const txns = allM.flatMap(c => this.displayTxns(c, s.monthIdx));
+      histSheet = {
+        emoji: 'receipt_long', name: 'All transactions',
+        tileBg: accent + '30', iconColor: accent,
+        monthLabel: hm.label,
+        totalFmt: this.fmt(txns.reduce((a, t) => a + t.amt, 0)),
+        txns: txns.map(t => ({
+          note: t.note, amtFmt: this.fmt(t.amt),
+          whoInitial: this.whoStyle(t.who).initial,
+          whoBg: this.whoStyle(t.who).bg,
+          whoColor: this.whoStyle(t.who).textColor,
+          meta: (t.memo ? t.memo + ' · ' : '') + this.whoStyle(t.who).display + ' · ' + t.when,
+          editable: t._editable,
+          edit: t._editable ? () => this.setState({ histCat: null }, () => this.openEditTx(t._catId, t)) : null,
+        })),
+      };
+    } else if (histCatDef) {
       const txns = this.displayTxns(histCatDef, s.monthIdx);
       histSheet = {
         emoji: histCatDef.emoji, name: histCatDef.name,
@@ -1154,7 +1189,7 @@ class Component extends DCLogic {
       },
     }));
 
-    const selfName = (s.profName || 'Sara').trim();
+    const selfName = (s.profName || 'Member A').trim();
     const payerName = s.payer === 'self' ? selfName : s.payer;
     const isEditing = !!s.editId;
     const addNow = () => {
@@ -1209,8 +1244,26 @@ class Component extends DCLogic {
       joinChange: e => this.setState({ joinCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }),
       shareInvite: () => this.toastNow('Invite link copied 📋'),
       signOut: () => this.setState({ phase: 'welcome', tab: 'home', catId: null }),
-      versionLabel: 'Version 0.1.4 (MVP)',
+      versionLabel: 'Version 0.1.4 (Beta)',
       checkUpdates: () => this.toastNow('You\u2019re on the latest version ✨'),
+      isDeveloper: ['member-a@example.com'].includes((s.profEmail || '').trim().toLowerCase()),
+      otaRows: (() => {
+        const dash = 'var(--sub, #B5A493)';
+        const t = '#8FBF7E', f = '#DE4B37';
+        return [
+          { k: 'enabled', v: 'true', color: t },
+          { k: 'channel', v: 'production', color: 'var(--text, #F6EDE3)' },
+          { k: 'runtime', v: '—', color: dash },
+          { k: 'running', v: '—', color: dash },
+          { k: 'embedded', v: 'false', color: f },
+          { k: 'checking', v: 'false', color: f },
+          { k: 'downloading', v: 'false', color: f },
+          { k: 'available', v: 'false', color: f },
+          { k: 'pending', v: 'false', color: f },
+        ];
+      })(),
+      showLogs: () => this.toastNow('No update logs this session'),
+      shareLogs: () => this.toastNow('Diagnostics copied 📋'),
       // household
       householdName: s.householdName,
       openManage: () => this.setState({ manageOpen: true, confirmRemove: null }),
@@ -1292,6 +1345,7 @@ class Component extends DCLogic {
       histLimit: this.fmt(totalLimit),
       histCards,
       histSheetOpen: !!histSheet, histSheet: histSheet || {},
+      openAllTxns: () => this.setState({ histCat: '__all__' }),
       closeHistSheet: () => this.setState({ histCat: null }),
       isPast: s.monthIdx > 0,
       prevMonth: () => this.setState(st => ({ monthIdx: Math.min(this.MONTHS.length - 1, st.monthIdx + 1) })),
@@ -1384,8 +1438,8 @@ class Component extends DCLogic {
       profOpen: s.profOpen,
       openProfile: () => this.setState({ profOpen: true }),
       closeProfile: () => this.setState({ profOpen: false }),
-      profName: s.profName.trim() || 'Sara',
-      profFirst: (s.profName.trim() || 'Sara').split(' ')[0],
+      profName: s.profName.trim() || 'Member A',
+      profFirst: (s.profName.trim() || 'Member A').split(' ')[0],
       profInitial: (s.profName.trim()[0] || 'S').toUpperCase(),
       profColor: s.profColor,
       profNameVal: s.profName,

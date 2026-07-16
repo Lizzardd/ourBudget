@@ -36,10 +36,6 @@ export default function Welcome() {
 		}
 	};
 
-	const continueWithApple = () => {
-		toast('Apple sign-in is coming soon');
-	};
-
 	return (
 		<View
 			style={[
@@ -80,21 +76,19 @@ export default function Welcome() {
 						{signingIn ? 'Continuing…' : 'Continue with Google'}
 					</Text>
 				</Pressable>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Continue with Apple (coming soon)"
-					accessibilityState={{ disabled: true }}
-					onPress={continueWithApple}
-					style={({ pressed }) => [
-						styles.button,
-						{ backgroundColor: t.el, opacity: 0.5 },
-						pressed ? styles.buttonPressed : null,
-					]}
+				<View
+					accessibilityLabel="Apple sign-in coming soon"
+					style={[styles.button, styles.applePill, { backgroundColor: t.el }]}
 				>
-					<Text style={[styles.buttonLabel, { color: t.text, fontFamily: fontFamily(700) }]}>
-						Continue with Apple
+					<Text style={[styles.buttonLabel, { color: t.sub, fontFamily: fontFamily(700) }]}>
+						Apple
 					</Text>
-				</Pressable>
+					<View style={[styles.comingSoon, { backgroundColor: t.track }]}>
+						<Text style={[styles.comingSoonText, { color: t.sub, fontFamily: fontFamily(800) }]}>
+							COMING SOON
+						</Text>
+					</View>
+				</View>
 				<Text style={[styles.footer, { color: t.sub }]}>Free for households of any size</Text>
 				<Text style={[styles.version, { color: t.sub }]}>{versionLabel()}</Text>
 			</View>
@@ -158,6 +152,21 @@ const styles = StyleSheet.create({
 	},
 	buttonPressed: {
 		transform: [{ scale: 0.98 }],
+	},
+	// Apple sign-in is deferred — the prototype shows a static, non-interactive
+	// "Apple  COMING SOON" pill rather than a tappable button.
+	applePill: {
+		opacity: 0.5,
+		gap: 8,
+	},
+	comingSoon: {
+		borderRadius: 999,
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+	},
+	comingSoonText: {
+		fontSize: 11,
+		letterSpacing: 1,
 	},
 	buttonGlyph: {
 		fontSize: 18,

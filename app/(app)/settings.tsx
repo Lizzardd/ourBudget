@@ -328,23 +328,28 @@ export default function Settings() {
 				<Text style={[styles.eyebrow, styles.listEyebrow, { color: t.sub, fontFamily: fontFamily(800) }]}>
 					NOTIFICATIONS
 				</Text>
-				{NOTIF_ROWS.map((row) => (
-					<View
-						key={row.key}
-						style={[styles.rowCard, styles.listRow, { borderBottomColor: t.line }]}
-					>
-						<View style={styles.rowText}>
-							<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
-								{row.title}
-							</Text>
-							<Text style={[styles.rowSub, { color: t.sub }]}>{row.sub}</Text>
+				{/*
+				  These toggles are inert — they wrote a flag nothing reads (see TODO).
+				  The prototype now shows the whole list disabled (opacity 0.45,
+				  non-interactive, toggles off) rather than promising something the app
+				  does not do. `pointerEvents="none"` makes them unresponsive.
+				*/}
+				<View style={styles.notifsDisabled} pointerEvents="none">
+					{NOTIF_ROWS.map((row) => (
+						<View
+							key={row.key}
+							style={[styles.rowCard, styles.listRow, { borderBottomColor: t.line }]}
+						>
+							<View style={styles.rowText}>
+								<Text style={[styles.rowTitle, { color: t.text, fontFamily: fontFamily(700) }]}>
+									{row.title}
+								</Text>
+								<Text style={[styles.rowSub, { color: t.sub }]}>{row.sub}</Text>
+							</View>
+							<Toggle value={false} onValueChange={() => {}} />
 						</View>
-						<Toggle
-							value={settings[row.key]}
-							onValueChange={(next) => patchSettings({ [row.key]: next })}
-						/>
-					</View>
-				))}
+					))}
+				</View>
 			</View>
 
 			<View style={[styles.card, styles.listCard, { backgroundColor: t.card }]}>
@@ -486,6 +491,9 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
+	},
+	notifsDisabled: {
+		opacity: 0.45,
 	},
 	listCard: {
 		paddingVertical: 8,
